@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * PROGRESS RING — Reusable circular progress indicator
+ * PROGRESS RING — Dark Glass Premium Circular Progress
  * =====================================================
- * SVG-based ring with animated stroke-dashoffset.
- * Supports auto-coloring based on progress thresholds.
+ * SVG-based ring with gradient stroke (indigo→cyan).
+ * Glass track background, monospace center text.
  *
  * Usage:
  *   <ProgressRing progress={75} size="md" showPercent />
@@ -30,11 +30,12 @@ const SIZE_CONFIG = {
   lg: { diameter: 96, stroke: 5, fontSize: 'text-lg', labelSize: 'text-xs' },
 } as const;
 
-const COLOR_MAP: Record<string, { track: string; bar: string }> = {
-  green:  { track: 'stroke-green-100 dark:stroke-green-900/30',  bar: 'stroke-green-500' },
-  blue:   { track: 'stroke-blue-100 dark:stroke-blue-900/30',    bar: 'stroke-blue-500' },
-  yellow: { track: 'stroke-yellow-100 dark:stroke-yellow-900/30', bar: 'stroke-yellow-500' },
-  red:    { track: 'stroke-red-100 dark:stroke-red-900/30',      bar: 'stroke-red-500' },
+// Gradient stop colors keyed by resolved color
+const GRADIENT_MAP: Record<string, { start: string; end: string }> = {
+  green:  { start: '#10b981', end: '#14b8a6' },  // emerald→teal
+  blue:   { start: '#6366f1', end: '#06b6d4' },  // indigo→cyan
+  yellow: { start: '#f59e0b', end: '#f97316' },  // amber→orange
+  red:    { start: '#f43f5e', end: '#ef4444' },   // rose→red
 };
 
 function resolveColor(progress: number): string {
@@ -52,13 +53,16 @@ export default function ProgressRing({
 }: ProgressRingProps) {
   const clamped = Math.max(0, Math.min(100, progress));
   const resolvedColor = color === 'auto' ? resolveColor(clamped) : color;
-  const { track, bar } = COLOR_MAP[resolvedColor];
+  const gradient = GRADIENT_MAP[resolvedColor];
   const { diameter, stroke, fontSize, labelSize } = SIZE_CONFIG[size];
 
   const radius = (diameter - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (clamped / 100) * circumference;
   const center = diameter / 2;
+
+  // Unique gradient ID per instance (using color + size to avoid collisions)
+  const gradientId = `progress-ring-${resolvedColor}-${size}`;
 
   return (
     <div
@@ -75,16 +79,22 @@ export default function ProgressRing({
         height={diameter}
         className="transform -rotate-90"
       >
-        {/* Background track */}
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={gradient.start} />
+            <stop offset="100%" stopColor={gradient.end} />
+          </linearGradient>
+        </defs>
+        {/* Background track — glass-style */}
         <circle
           cx={center}
           cy={center}
           r={radius}
           fill="none"
           strokeWidth={stroke}
-          className={track}
+          stroke="rgba(255, 255, 255, 0.08)"
         />
-        {/* Progress arc */}
+        {/* Progress arc — gradient stroke */}
         <circle
           cx={center}
           cy={center}
@@ -94,19 +104,26 @@ export default function ProgressRing({
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          className={`${bar} transition-[stroke-dashoffset] duration-700 ease-out`}
+          stroke={`url(#${gradientId})`}
+          className="transition-[stroke-dashoffset] duration-700 ease-out"
         />
       </svg>
 
       {/* Center text */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {showPercent && (
-          <span className={`font-semibold text-gray-900 dark:text-white ${fontSize} leading-none`}>
+          <span
+            className={`font-semibold ${fontSize} leading-none`}
+            style={{ color: 'var(--k-text-primary)', fontFamily: 'var(--k-font-mono)' }}
+          >
             {Math.round(clamped)}%
           </span>
         )}
         {label && (
-          <span className={`text-gray-500 dark:text-gray-400 ${labelSize} leading-tight mt-0.5 truncate max-w-[80%] text-center`}>
+          <span
+            className={`${labelSize} leading-tight mt-0.5 truncate max-w-[80%] text-center`}
+            style={{ color: 'var(--k-text-tertiary)' }}
+          >
             {label}
           </span>
         )}

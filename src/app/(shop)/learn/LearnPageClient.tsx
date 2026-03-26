@@ -94,14 +94,14 @@ export default function LearnPage() {
   const featuredArticles = articles.filter(a => a.featured);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--k-bg-base)]">
       {/* Hero */}
-      <section className="bg-[#143C78] text-white py-16">
+      <section className="bg-[var(--k-bg-surface)] text-white py-16 border-b border-[var(--k-border-subtle)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-[var(--k-text-primary)]">
             {t('learn.title') || 'Learning Center'}
           </h1>
-          <p className="text-xl text-neutral-300 max-w-2xl mx-auto">
+          <p className="text-xl text-[var(--k-text-secondary)] max-w-2xl mx-auto">
             {t('learn.subtitle') || 'Your comprehensive resource for peptide research knowledge, guides, and scientific insights.'}
           </p>
         </div>
@@ -110,8 +110,8 @@ export default function LearnPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Featured Articles */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-            <span className="text-primary-500">⭐</span>
+          <h2 className="text-2xl font-bold text-[var(--k-text-primary)] mb-8 flex items-center gap-3">
+            <span className="text-[var(--k-accent-amber)]">⭐</span>
             {t('learn.featured') || 'Featured Articles'}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -119,26 +119,26 @@ export default function LearnPage() {
               <Link
                 key={article.id}
                 href={`/learn/${article.slug}`}
-                className="group bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300"
+                className="group bg-[var(--k-glass-regular)] backdrop-blur-xl rounded-xl border border-[var(--k-border-subtle)] shadow-[var(--k-shadow-md)] overflow-hidden hover:shadow-[var(--k-shadow-xl)] hover:border-[var(--k-border-default)] transition-all duration-300"
               >
-                <div className="aspect-video bg-primary-400 relative">
+                <div className="aspect-video bg-[var(--k-accent-indigo-20)] relative">
                   <div className="absolute inset-0 flex items-center justify-center text-white text-6xl opacity-50">
                     📚
                   </div>
                   <div className="absolute top-3 start-3">
-                    <span className="px-3 py-1 bg-white/90 text-primary-600 text-xs font-semibold rounded-full">
+                    <span className="px-3 py-1 bg-[var(--k-glass-thick)] backdrop-blur-md text-[var(--k-accent-indigo)] text-xs font-semibold rounded-full border border-[var(--k-border-subtle)]">
                       {article.category}
                     </span>
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
+                  <h3 className="font-bold text-lg text-[var(--k-text-primary)] mb-2 group-hover:text-[var(--k-accent-indigo)] transition-colors">
                     {article.title}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  <p className="text-[var(--k-text-secondary)] text-sm mb-4 line-clamp-2">
                     {article.excerpt}
                   </p>
-                  <span className="text-xs text-gray-400">{article.readTime}</span>
+                  <span className="text-xs text-[var(--k-text-tertiary)]">{article.readTime}</span>
                 </div>
               </Link>
             ))}
@@ -151,44 +151,44 @@ export default function LearnPage() {
           <aside className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
               {/* Categories */}
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">{t('learn.categories')}</h3>
+              <div className="bg-[var(--k-glass-regular)] backdrop-blur-xl rounded-xl border border-[var(--k-border-subtle)] shadow-[var(--k-shadow-md)] p-6">
+                <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('learn.categories')}</h3>
                 <nav className="space-y-2">
                   {categories.map((cat) => (
                     <button
                       key={cat.name}
-                      className="w-full flex items-center justify-between px-4 py-2 text-start text-gray-600 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-2 text-start text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] hover:text-[var(--k-accent-indigo)] rounded-lg transition-colors"
                     >
                       <span>{cat.name}</span>
-                      <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{cat.count}</span>
+                      <span className="text-xs bg-[var(--k-glass-thin)] text-[var(--k-text-tertiary)] px-2 py-0.5 rounded-full">{cat.count}</span>
                     </button>
                   ))}
                 </nav>
               </div>
 
               {/* Quick Links */}
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">{t('learn.quickLinks')}</h3>
+              <div className="bg-[var(--k-glass-regular)] backdrop-blur-xl rounded-xl border border-[var(--k-border-subtle)] shadow-[var(--k-shadow-md)] p-6">
+                <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('learn.quickLinks')}</h3>
                 <nav className="space-y-2">
-                  <Link href="/faq" className="flex items-center gap-2 text-gray-600 hover:text-primary-600">
+                  <Link href="/faq" className="flex items-center gap-2 text-[var(--k-text-secondary)] hover:text-[var(--k-accent-indigo)]">
                     <span>❓</span> {t('learn.faq')}
                   </Link>
-                  <Link href="/#calculator" className="flex items-center gap-2 text-gray-600 hover:text-primary-600">
+                  <Link href="/#calculator" className="flex items-center gap-2 text-[var(--k-text-secondary)] hover:text-[var(--k-accent-indigo)]">
                     <span>🧮</span> {t('learn.calculator')}
                   </Link>
-                  <Link href="/lab-results" className="flex items-center gap-2 text-gray-600 hover:text-primary-600">
+                  <Link href="/lab-results" className="flex items-center gap-2 text-[var(--k-text-secondary)] hover:text-[var(--k-accent-indigo)]">
                     <span>🔬</span> {t('learn.labResults')}
                   </Link>
                 </nav>
               </div>
 
               {/* Newsletter CTA */}
-              <div className="bg-primary-50 rounded-xl p-6">
-                <h3 className="font-semibold text-gray-900 mb-2">{t('learn.stayUpdated')}</h3>
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="bg-[var(--k-glass-chromatic)] backdrop-blur-xl rounded-xl border border-[var(--k-border-subtle)] p-6">
+                <h3 className="font-semibold text-[var(--k-text-primary)] mb-2">{t('learn.stayUpdated')}</h3>
+                <p className="text-sm text-[var(--k-text-secondary)] mb-4">
                   {t('learn.stayUpdatedDesc')}
                 </p>
-                <button className="w-full py-3 px-4 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors">
+                <button className="w-full py-3 px-4 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white text-sm font-semibold rounded-lg hover:from-[#5558e6] hover:to-[#737de6] transition-colors">
                   {t('learn.subscribe')}
                 </button>
               </div>
@@ -197,28 +197,28 @@ export default function LearnPage() {
 
           {/* Article Grid */}
           <div className="lg:col-span-3">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">{t('learn.allArticles')}</h2>
+            <h2 className="text-xl font-bold text-[var(--k-text-primary)] mb-6">{t('learn.allArticles')}</h2>
             <div className="space-y-6">
               {articles.map((article) => (
                 <Link
                   key={article.id}
                   href={`/learn/${article.slug}`}
-                  className="group flex gap-6 bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300"
+                  className="group flex gap-6 bg-[var(--k-glass-regular)] backdrop-blur-xl rounded-xl border border-[var(--k-border-subtle)] shadow-[var(--k-shadow-md)] overflow-hidden hover:shadow-[var(--k-shadow-lg)] hover:border-[var(--k-border-default)] transition-all duration-300"
                 >
-                  <div className="w-48 h-32 bg-gray-200 flex-shrink-0 flex items-center justify-center text-4xl">
+                  <div className="w-48 h-32 bg-[var(--k-glass-thin)] flex-shrink-0 flex items-center justify-center text-4xl">
                     📄
                   </div>
                   <div className="flex-1 py-4 pe-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 bg-primary-100 text-primary-600 text-xs font-medium rounded">
+                      <span className="px-2 py-0.5 bg-[var(--k-accent-indigo-10)] text-[var(--k-accent-indigo)] text-xs font-medium rounded">
                         {article.category}
                       </span>
-                      <span className="text-xs text-gray-400">{article.readTime}</span>
+                      <span className="text-xs text-[var(--k-text-tertiary)]">{article.readTime}</span>
                     </div>
-                    <h3 className="font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
+                    <h3 className="font-bold text-[var(--k-text-primary)] mb-2 group-hover:text-[var(--k-accent-indigo)] transition-colors">
                       {article.title}
                     </h3>
-                    <p className="text-gray-600 text-sm line-clamp-2">
+                    <p className="text-[var(--k-text-secondary)] text-sm line-clamp-2">
                       {article.excerpt}
                     </p>
                   </div>
@@ -229,21 +229,21 @@ export default function LearnPage() {
         </div>
 
         {/* Free Guide CTA */}
-        <section className="mt-16 bg-primary-500 rounded-2xl p-8 md:p-12 text-white">
+        <section className="mt-16 bg-gradient-to-r from-[#6366f1] to-[#06b6d4] rounded-2xl p-8 md:p-12 text-white">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4">
               {t('learn.guideTitle')}
             </h2>
-            <p className="text-primary-100 mb-6">
+            <p className="text-white/70 mb-6">
               {t('learn.guideDesc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-primary-50 transition-colors">
+              <button className="px-8 py-3 bg-white text-[#6366f1] font-semibold rounded-lg hover:bg-white/90 transition-colors">
                 {t('learn.downloadGuide')}
               </button>
               <Link
                 href="/faq"
-                className="px-8 py-3 border border-white/50 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
+                className="px-8 py-3 border border-white/30 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
               >
                 {t('learn.viewFaq')}
               </Link>

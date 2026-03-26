@@ -63,49 +63,37 @@ function generateConfetti(count: number, type: AchievementType): Particle[] {
   return particles;
 }
 
-// ── Type-specific styles ────────────────────────────────────
+// ── Type-specific glow colors (for dark glass) ──────────────
 
-function getTypeStyles(type: AchievementType) {
+function getTypeGlowStyles(type: AchievementType) {
   switch (type) {
     case 'badge':
       return {
-        gradient: 'from-amber-500 via-yellow-400 to-amber-500',
-        bg: 'bg-amber-50',
-        border: 'border-amber-200',
-        iconBg: 'bg-gradient-to-br from-yellow-400 to-amber-500',
-        textColor: 'text-amber-900',
-        subtextColor: 'text-amber-700',
-        shimmer: 'from-transparent via-yellow-200/40 to-transparent',
+        glowColor: 'rgba(245, 158, 11, 0.3)',
+        accentColor: 'var(--k-accent-amber)',
+        iconBg: 'linear-gradient(135deg, #f59e0b, #d97706)',
+        gradientBorder: 'linear-gradient(135deg, rgba(245, 158, 11, 0.5), rgba(217, 119, 6, 0.3))',
       };
     case 'streak':
       return {
-        gradient: 'from-red-500 via-orange-400 to-red-500',
-        bg: 'bg-orange-50',
-        border: 'border-orange-200',
-        iconBg: 'bg-gradient-to-br from-orange-400 to-red-500',
-        textColor: 'text-orange-900',
-        subtextColor: 'text-orange-700',
-        shimmer: 'from-transparent via-orange-200/40 to-transparent',
+        glowColor: 'rgba(249, 115, 22, 0.3)',
+        accentColor: '#f97316',
+        iconBg: 'linear-gradient(135deg, #f97316, #ef4444)',
+        gradientBorder: 'linear-gradient(135deg, rgba(249, 115, 22, 0.5), rgba(239, 68, 68, 0.3))',
       };
     case 'milestone':
       return {
-        gradient: 'from-purple-500 via-violet-400 to-purple-500',
-        bg: 'bg-purple-50',
-        border: 'border-purple-200',
-        iconBg: 'bg-gradient-to-br from-violet-400 to-purple-500',
-        textColor: 'text-purple-900',
-        subtextColor: 'text-purple-700',
-        shimmer: 'from-transparent via-purple-200/40 to-transparent',
+        glowColor: 'rgba(139, 92, 246, 0.3)',
+        accentColor: '#a78bfa',
+        iconBg: 'linear-gradient(135deg, #a78bfa, #6d28d9)',
+        gradientBorder: 'linear-gradient(135deg, rgba(167, 139, 250, 0.5), rgba(109, 40, 217, 0.3))',
       };
     case 'completion':
       return {
-        gradient: 'from-green-500 via-emerald-400 to-green-500',
-        bg: 'bg-green-50',
-        border: 'border-green-200',
-        iconBg: 'bg-gradient-to-br from-emerald-400 to-green-500',
-        textColor: 'text-green-900',
-        subtextColor: 'text-green-700',
-        shimmer: 'from-transparent via-green-200/40 to-transparent',
+        glowColor: 'rgba(34, 197, 94, 0.3)',
+        accentColor: 'var(--k-accent-emerald)',
+        iconBg: 'linear-gradient(135deg, #10b981, #059669)',
+        gradientBorder: 'linear-gradient(135deg, rgba(16, 185, 129, 0.5), rgba(5, 150, 105, 0.3))',
       };
   }
 }
@@ -262,6 +250,11 @@ export default function AchievementToast({
         0% { transform: translateX(-100%); }
         100% { transform: translateX(100%); }
       }
+      @keyframes gradient-border-spin {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
       .animate-shimmer { animation-name: achievement-shimmer; }
     `;
     document.head.appendChild(style);
@@ -277,7 +270,7 @@ export default function AchievementToast({
     }, 400);
   }, [onDismiss]);
 
-  const styles = getTypeStyles(type);
+  const glowStyles = getTypeGlowStyles(type);
 
   if (!isVisible && isLeaving) return null;
 
@@ -332,38 +325,82 @@ export default function AchievementToast({
         ))}
       </div>
 
-      {/* Toast card */}
-      <div className={`relative overflow-hidden rounded-2xl ${styles.bg} ${styles.border} border-2 shadow-2xl cursor-pointer`}>
+      {/* Glass toast card */}
+      <div
+        className="relative overflow-hidden cursor-pointer"
+        style={{
+          background: 'var(--k-glass-regular)',
+          backdropFilter: 'blur(var(--k-blur-xl))',
+          WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+          border: '1px solid var(--k-border-default)',
+          borderRadius: 'var(--k-radius-2xl)',
+          boxShadow: `var(--k-shadow-xl), 0 0 30px ${glowStyles.glowColor}`,
+        }}
+      >
+        {/* Animated gradient border overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            borderRadius: 'var(--k-radius-2xl)',
+            border: `2px solid transparent`,
+            backgroundImage: glowStyles.gradientBorder,
+            backgroundOrigin: 'border-box',
+            backgroundClip: 'border-box',
+            opacity: 0.6,
+            animation: 'gradient-border-spin 3s ease infinite',
+            backgroundSize: '200% 200%',
+          }}
+        />
+
         {/* Shimmer effect */}
         <div
-          className={`absolute inset-0 bg-gradient-to-r ${styles.shimmer} animate-shimmer pointer-events-none`}
+          className="absolute inset-0 animate-shimmer pointer-events-none"
           style={{
+            background: `linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent)`,
             animationDuration: '2s',
             animationIterationCount: '3',
           }}
         />
 
         {/* Top gradient bar */}
-        <div className={`h-1 bg-gradient-to-r ${styles.gradient}`} />
+        <div
+          className="h-1"
+          style={{ background: glowStyles.iconBg }}
+        />
 
         <div className="relative flex items-center gap-4 px-5 py-4">
-          {/* Icon */}
-          <div className={`flex-shrink-0 w-14 h-14 rounded-2xl ${styles.iconBg} flex items-center justify-center shadow-lg`}>
+          {/* Icon with glow */}
+          <div
+            className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center"
+            style={{
+              background: glowStyles.iconBg,
+              boxShadow: `0 0 20px ${glowStyles.glowColor}`,
+            }}
+          >
             {getDefaultIcon(type)}
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className={`text-xs font-bold uppercase tracking-wider ${styles.subtextColor} mb-0.5`}>
+            <div
+              className="text-xs font-bold uppercase tracking-wider mb-0.5"
+              style={{ color: glowStyles.accentColor }}
+            >
               {type === 'badge' && t('learn.achievement.badgeEarned')}
               {type === 'streak' && t('learn.achievement.streakRecord')}
               {type === 'milestone' && t('learn.achievement.milestoneReached')}
               {type === 'completion' && t('learn.achievement.courseCompleted')}
             </div>
-            <h4 className={`text-base font-bold ${styles.textColor} truncate`}>
+            <h4
+              className="text-base font-bold truncate"
+              style={{ color: 'var(--k-text-primary)' }}
+            >
               {title}
             </h4>
-            <p className={`text-sm ${styles.subtextColor} mt-0.5 line-clamp-2`}>
+            <p
+              className="text-sm mt-0.5 line-clamp-2"
+              style={{ color: 'var(--k-text-secondary)' }}
+            >
               {description}
             </p>
           </div>
@@ -371,20 +408,26 @@ export default function AchievementToast({
           {/* Close hint */}
           <button
             onClick={handleDismiss}
-            className="flex-shrink-0 p-1.5 rounded-lg hover:bg-black/5 transition-colors"
+            className="flex-shrink-0 p-1.5 rounded-lg transition-all"
+            style={{
+              background: 'var(--k-glass-thin)',
+              color: 'var(--k-text-muted)',
+              border: '1px solid var(--k-border-subtle)',
+            }}
             aria-label={t('learn.achievement.dismiss')}
           >
-            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Progress bar (auto-dismiss countdown) */}
-        <div className="h-0.5 bg-black/5">
+        <div style={{ height: '2px', background: 'rgba(255, 255, 255, 0.05)' }}>
           <div
-            className={`h-full bg-gradient-to-r ${styles.gradient} transition-none`}
             style={{
+              height: '100%',
+              background: glowStyles.iconBg,
               width: '100%',
               animation: `shrink-width ${duration}ms linear forwards`,
             }}

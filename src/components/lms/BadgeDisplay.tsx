@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * BADGE DISPLAY — Badge collection + streak counter
- * ==================================================
- * Renders earned badges in full card or compact icon row layout.
- * Shows current learning streak with animated fire indicator.
+ * BADGE DISPLAY — Dark Glass Premium Badge Collection + Streak Counter
+ * =====================================================================
+ * Glass surface badges with category-color glow for earned,
+ * glass-thin with grayscale for locked.
  *
  * Usage:
  *   <BadgeDisplay badges={badges} streak={12} />
@@ -58,11 +58,16 @@ function StreakIndicator({ streak, t }: { streak: number; t: (key: string, param
   const isHot = streak > 7;
 
   return (
-    <div className={`flex items-center gap-2 mb-4 px-3 py-2 rounded-xl ${
-      isHot
-        ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'
-        : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-    }`}>
+    <div
+      className="flex items-center gap-2 mb-4 px-3 py-2"
+      style={{
+        background: isHot ? 'rgba(249, 115, 22, 0.1)' : 'var(--k-glass-thin)',
+        border: `1px solid ${isHot ? 'rgba(249, 115, 22, 0.25)' : 'var(--k-border-subtle)'}`,
+        borderRadius: 'var(--k-radius-lg)',
+        backdropFilter: 'blur(var(--k-blur-md))',
+        WebkitBackdropFilter: 'blur(var(--k-blur-md))',
+      }}
+    >
       <span
         className={`text-xl ${isHot ? 'animate-bounce' : ''}`}
         role="img"
@@ -70,13 +75,20 @@ function StreakIndicator({ streak, t }: { streak: number; t: (key: string, param
       >
         🔥
       </span>
-      <span className={`text-sm font-semibold ${
-        isHot ? 'text-orange-700 dark:text-orange-300' : 'text-gray-700 dark:text-gray-300'
-      }`}>
+      <span
+        className="text-sm font-semibold"
+        style={{ color: isHot ? '#f97316' : 'var(--k-text-primary)' }}
+      >
         {t('learn.badges.streakDays', { count: streak })}
       </span>
       {isHot && (
-        <span className="text-xs text-orange-500 dark:text-orange-400 font-medium">
+        <span
+          className="text-xs font-medium px-2 py-0.5 rounded-full"
+          style={{
+            background: 'rgba(249, 115, 22, 0.15)',
+            color: '#fb923c',
+          }}
+        >
           {t('learn.badges.streakHot')}
         </span>
       )}
@@ -88,14 +100,20 @@ function StreakIndicator({ streak, t }: { streak: number; t: (key: string, param
 
 function EmptyBadges({ t }: { t: (key: string) => string }) {
   return (
-    <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-      <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
-        <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+    <div className="text-center py-6" style={{ color: 'var(--k-text-muted)' }}>
+      <div
+        className="mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3"
+        style={{
+          background: 'var(--k-glass-thin)',
+          border: '1px solid var(--k-border-subtle)',
+        }}
+      >
+        <svg className="w-6 h-6" style={{ color: 'var(--k-text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 01-2.27.308 6.022 6.022 0 01-2.27-.308" />
         </svg>
       </div>
-      <p className="text-sm">{t('learn.badges.noBadges')}</p>
-      <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">{t('learn.badges.noBadgesDesc')}</p>
+      <p className="text-sm" style={{ color: 'var(--k-text-tertiary)' }}>{t('learn.badges.noBadges')}</p>
+      <p className="text-xs mt-1" style={{ color: 'var(--k-text-muted)' }}>{t('learn.badges.noBadgesDesc')}</p>
     </div>
   );
 }
@@ -116,7 +134,15 @@ function CompactBadges({
       {badges.map((badge, idx) => (
         <BadgeTooltip key={idx} badge={badge} formatDate={formatDate} t={t}>
           <div
-            className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-lg hover:scale-110 transition-transform cursor-default"
+            className="w-10 h-10 flex items-center justify-center text-lg hover:scale-110 transition-transform cursor-default"
+            style={{
+              background: 'var(--k-glass-regular)',
+              border: '1px solid var(--k-accent-indigo-20)',
+              borderRadius: 'var(--k-radius-lg)',
+              backdropFilter: 'blur(var(--k-blur-md))',
+              WebkitBackdropFilter: 'blur(var(--k-blur-md))',
+              boxShadow: '0 0 12px rgba(99, 102, 241, 0.15)',
+            }}
             role="listitem"
             aria-label={badge.name}
           >
@@ -144,20 +170,36 @@ function FullBadges({
       {badges.map((badge, idx) => (
         <div
           key={idx}
-          className="flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-shadow"
+          className="flex items-start gap-3 p-4 transition-all hover:-translate-y-0.5"
+          style={{
+            background: 'var(--k-glass-regular)',
+            backdropFilter: 'blur(var(--k-blur-lg))',
+            WebkitBackdropFilter: 'blur(var(--k-blur-lg))',
+            border: '1px solid var(--k-border-subtle)',
+            borderRadius: 'var(--k-radius-xl)',
+            boxShadow: 'var(--k-shadow-md)',
+          }}
           role="listitem"
         >
-          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-2xl">
+          <div
+            className="flex-shrink-0 w-12 h-12 flex items-center justify-center text-2xl"
+            style={{
+              background: 'var(--k-glass-thick)',
+              border: '1px solid var(--k-accent-indigo-20)',
+              borderRadius: 'var(--k-radius-lg)',
+              boxShadow: '0 0 16px rgba(99, 102, 241, 0.2)',
+            }}
+          >
             {badge.icon}
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+            <h4 className="text-sm font-semibold truncate" style={{ color: 'var(--k-text-primary)' }}>
               {badge.name}
             </h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+            <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--k-text-secondary)' }}>
               {badge.description}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-xs mt-1" style={{ color: 'var(--k-text-muted)' }}>
               {formatDate(badge.earnedAt)}
             </p>
           </div>
@@ -208,17 +250,32 @@ function BadgeTooltip({
 
       {show && (
         <div
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 z-50 pointer-events-none"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 z-50 pointer-events-none"
+          style={{
+            background: 'var(--k-glass-thick)',
+            backdropFilter: 'blur(var(--k-blur-xl))',
+            WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+            border: '1px solid var(--k-border-default)',
+            borderRadius: 'var(--k-radius-lg)',
+            boxShadow: 'var(--k-shadow-xl)',
+          }}
           role="tooltip"
         >
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">{badge.name}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{badge.description}</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+          <p className="text-sm font-semibold" style={{ color: 'var(--k-text-primary)' }}>{badge.name}</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--k-text-secondary)' }}>{badge.description}</p>
+          <p className="text-xs mt-1.5" style={{ color: 'var(--k-text-muted)' }}>
             {t('learn.badges.earnedOn')} {formatDate(badge.earnedAt)}
           </p>
           {/* Arrow */}
           <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
-            <div className="w-2.5 h-2.5 bg-white dark:bg-gray-800 border-r border-b border-gray-200 dark:border-gray-700 rotate-45" />
+            <div
+              className="w-2.5 h-2.5 rotate-45"
+              style={{
+                background: 'var(--k-glass-thick)',
+                borderRight: '1px solid var(--k-border-default)',
+                borderBottom: '1px solid var(--k-border-default)',
+              }}
+            />
           </div>
         </div>
       )}

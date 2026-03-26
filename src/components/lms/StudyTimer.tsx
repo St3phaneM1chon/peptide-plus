@@ -207,8 +207,8 @@ export default function StudyTimer({
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - progress);
 
-  const phaseColor = phase === 'break' ? '#22c55e' : '#3b82f6';
-  const phaseColorLight = phase === 'break' ? '#dcfce7' : '#dbeafe';
+  // Gradient IDs
+  const gradientId = phase === 'break' ? 'timer-grad-break' : 'timer-grad-focus';
 
   // ── Compact Mode ──────────────────────────────────────────
 
@@ -217,21 +217,35 @@ export default function StudyTimer({
       <div className="fixed bottom-6 left-6 z-40">
         <button
           onClick={() => setIsCompact(false)}
-          className="group relative flex items-center gap-3 rounded-full shadow-lg border border-gray-200 bg-white px-4 py-2 hover:shadow-xl transition-all"
+          className="group relative flex items-center gap-3 px-4 py-2 transition-all"
+          style={{
+            background: 'var(--k-glass-regular)',
+            backdropFilter: 'blur(var(--k-blur-xl))',
+            WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+            border: '1px solid var(--k-border-default)',
+            borderRadius: 'var(--k-radius-pill)',
+            boxShadow: 'var(--k-shadow-lg)',
+          }}
           aria-label={t('learn.studyTimer.expand')}
         >
           {/* Mini circle */}
           <svg width={36} height={36} className="flex-shrink-0">
+            <defs>
+              <linearGradient id="compact-timer-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={phase === 'break' ? 'var(--k-accent-emerald)' : 'var(--k-accent-indigo)'} />
+                <stop offset="100%" stopColor={phase === 'break' ? '#14b8a6' : 'var(--k-accent-cyan)'} />
+              </linearGradient>
+            </defs>
             <circle
               cx={18} cy={18} r={14}
               fill="none"
-              stroke="#e5e7eb"
+              stroke="rgba(255, 255, 255, 0.08)"
               strokeWidth={3}
             />
             <circle
               cx={18} cy={18} r={14}
               fill="none"
-              stroke={phaseColor}
+              stroke="url(#compact-timer-grad)"
               strokeWidth={3}
               strokeDasharray={2 * Math.PI * 14}
               strokeDashoffset={2 * Math.PI * 14 * (1 - progress)}
@@ -241,8 +255,10 @@ export default function StudyTimer({
             />
           </svg>
           <div className="text-left">
-            <div className="text-sm font-mono font-bold text-gray-900">{formatTime(secondsLeft)}</div>
-            <div className="text-[10px] text-gray-400 font-medium">
+            <div className="text-sm font-bold" style={{ fontFamily: 'var(--k-font-mono)', color: 'var(--k-text-primary)' }}>
+              {formatTime(secondsLeft)}
+            </div>
+            <div className="text-[10px] font-medium" style={{ color: 'var(--k-text-muted)' }}>
               {phase === 'focus'
                 ? t('learn.studyTimer.focusPhase')
                 : phase === 'break'
@@ -251,7 +267,10 @@ export default function StudyTimer({
             </div>
           </div>
           {isRunning && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+            <span
+              className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse"
+              style={{ background: 'var(--k-accent-emerald)', boxShadow: '0 0 8px var(--k-accent-emerald)' }}
+            />
           )}
         </button>
       </div>
@@ -262,12 +281,22 @@ export default function StudyTimer({
 
   return (
     <div className="w-full max-w-sm mx-auto px-4 py-6">
-      <div className="rounded-2xl bg-white shadow-lg border border-gray-100 p-6">
+      <div
+        className="p-6"
+        style={{
+          background: 'var(--k-glass-regular)',
+          backdropFilter: 'blur(var(--k-blur-xl))',
+          WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+          border: '1px solid var(--k-border-subtle)',
+          borderRadius: 'var(--k-radius-2xl)',
+          boxShadow: 'var(--k-shadow-xl)',
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">{t('learn.studyTimer.title')}</h3>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <h3 className="text-lg font-bold" style={{ color: 'var(--k-text-primary)' }}>{t('learn.studyTimer.title')}</h3>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--k-text-muted)' }}>
               {phase === 'focus'
                 ? t('learn.studyTimer.focusPhase')
                 : phase === 'break'
@@ -276,23 +305,33 @@ export default function StudyTimer({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Pomodoro counter */}
+            {/* Pomodoro counter — glass badges */}
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(pomodoroCount, 8) }).map((_, i) => (
-                <span key={i} className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                <span
+                  key={i}
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ background: 'var(--k-accent-rose)', boxShadow: '0 0 6px rgba(244, 63, 94, 0.4)' }}
+                />
               ))}
               {pomodoroCount > 8 && (
-                <span className="text-xs text-gray-400 ml-1">+{pomodoroCount - 8}</span>
+                <span className="text-xs ml-1" style={{ color: 'var(--k-text-muted)' }}>+{pomodoroCount - 8}</span>
               )}
               {pomodoroCount === 0 && (
-                <span className="text-xs text-gray-400">{t('learn.studyTimer.noPomodorosYet')}</span>
+                <span className="text-xs" style={{ color: 'var(--k-text-muted)' }}>{t('learn.studyTimer.noPomodorosYet')}</span>
               )}
             </div>
 
             {/* Compact toggle */}
             <button
               onClick={() => setIsCompact(true)}
-              className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors"
+              className="w-7 h-7 flex items-center justify-center transition-all"
+              style={{
+                background: 'var(--k-glass-thin)',
+                border: '1px solid var(--k-border-subtle)',
+                borderRadius: 'var(--k-radius-md)',
+                color: 'var(--k-text-tertiary)',
+              }}
               aria-label={t('learn.studyTimer.minimize')}
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -302,17 +341,23 @@ export default function StudyTimer({
           </div>
         </div>
 
-        {/* Timer Circle */}
+        {/* Timer Circle with gradient stroke */}
         <div className="flex items-center justify-center mb-6">
           <div className="relative">
             <svg width={circleSize} height={circleSize} className="transform -rotate-90">
+              <defs>
+                <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={phase === 'break' ? 'var(--k-accent-emerald)' : 'var(--k-accent-indigo)'} />
+                  <stop offset="100%" stopColor={phase === 'break' ? '#14b8a6' : 'var(--k-accent-cyan)'} />
+                </linearGradient>
+              </defs>
               {/* Background circle */}
               <circle
                 cx={circleSize / 2}
                 cy={circleSize / 2}
                 r={radius}
                 fill="none"
-                stroke="#f3f4f6"
+                stroke="rgba(255, 255, 255, 0.08)"
                 strokeWidth={strokeWidth}
               />
               {/* Progress circle */}
@@ -321,7 +366,7 @@ export default function StudyTimer({
                 cy={circleSize / 2}
                 r={radius}
                 fill="none"
-                stroke={phaseColor}
+                stroke={`url(#${gradientId})`}
                 strokeWidth={strokeWidth}
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
@@ -331,13 +376,20 @@ export default function StudyTimer({
             </svg>
             {/* Time display */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-mono font-bold text-gray-900">
+              <span
+                className="text-3xl font-bold"
+                style={{ fontFamily: 'var(--k-font-mono)', color: 'var(--k-text-primary)' }}
+              >
                 {formatTime(secondsLeft)}
               </span>
               {phase !== 'idle' && (
                 <span
-                  className="text-xs font-medium mt-1 px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: phaseColorLight, color: phaseColor }}
+                  className="text-xs font-medium mt-1 px-2 py-0.5"
+                  style={{
+                    background: phase === 'break' ? 'var(--k-accent-emerald-10)' : 'var(--k-accent-indigo-10)',
+                    color: phase === 'break' ? 'var(--k-accent-emerald)' : 'var(--k-accent-indigo)',
+                    borderRadius: 'var(--k-radius-pill)',
+                  }}
                 >
                   #{pomodoroCount + (phase === 'focus' ? 1 : 0)}
                 </span>
@@ -350,7 +402,7 @@ export default function StudyTimer({
         {phase === 'idle' && (
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
+              <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--k-text-tertiary)' }}>
                 {t('learn.studyTimer.focusMinutes')}
               </label>
               <div className="flex items-center gap-1">
@@ -358,11 +410,13 @@ export default function StudyTimer({
                   <button
                     key={m}
                     onClick={() => { setFocusDuration(m); setSecondsLeft(m * 60); }}
-                    className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                      focusDuration === m
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                    className="flex-1 py-1.5 text-xs font-medium transition-all"
+                    style={{
+                      background: focusDuration === m ? 'var(--k-accent-indigo-20)' : 'var(--k-glass-thin)',
+                      color: focusDuration === m ? 'var(--k-accent-indigo)' : 'var(--k-text-secondary)',
+                      border: `1px solid ${focusDuration === m ? 'rgba(99, 102, 241, 0.3)' : 'var(--k-border-subtle)'}`,
+                      borderRadius: 'var(--k-radius-md)',
+                    }}
                   >
                     {m}
                   </button>
@@ -370,7 +424,7 @@ export default function StudyTimer({
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
+              <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--k-text-tertiary)' }}>
                 {t('learn.studyTimer.breakMinutes')}
               </label>
               <div className="flex items-center gap-1">
@@ -378,11 +432,13 @@ export default function StudyTimer({
                   <button
                     key={m}
                     onClick={() => setBreakDuration(m)}
-                    className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                      breakDuration === m
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                    className="flex-1 py-1.5 text-xs font-medium transition-all"
+                    style={{
+                      background: breakDuration === m ? 'var(--k-accent-emerald-10)' : 'var(--k-glass-thin)',
+                      color: breakDuration === m ? 'var(--k-accent-emerald)' : 'var(--k-text-secondary)',
+                      border: `1px solid ${breakDuration === m ? 'rgba(16, 185, 129, 0.3)' : 'var(--k-border-subtle)'}`,
+                      borderRadius: 'var(--k-radius-md)',
+                    }}
                   >
                     {m}
                   </button>
@@ -394,23 +450,41 @@ export default function StudyTimer({
 
         {/* Break suggestion */}
         {showBreakSuggestion && (
-          <div className="mb-6 rounded-xl bg-green-50 border border-green-200 p-4 text-center">
-            <p className="text-sm font-semibold text-green-800 mb-1">
+          <div
+            className="mb-6 p-4 text-center"
+            style={{
+              background: 'var(--k-accent-emerald-10)',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+              borderRadius: 'var(--k-radius-lg)',
+            }}
+          >
+            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--k-accent-emerald)' }}>
               {t('learn.studyTimer.pomodoroComplete')}
             </p>
-            <p className="text-xs text-green-600 mb-3">
+            <p className="text-xs mb-3" style={{ color: 'rgba(16, 185, 129, 0.8)' }}>
               {breakSuggestion}
             </p>
             <div className="flex items-center gap-2 justify-center">
               <button
                 onClick={handleStartBreak}
-                className="px-4 py-2 text-xs font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="px-4 py-2 text-xs font-semibold transition-all"
+                style={{
+                  background: 'var(--k-accent-emerald)',
+                  color: '#fff',
+                  borderRadius: 'var(--k-radius-md)',
+                }}
               >
                 {t('learn.studyTimer.takeBreak', { minutes: breakDuration })}
               </button>
               <button
                 onClick={handleSkipBreak}
-                className="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-xs font-semibold transition-all"
+                style={{
+                  background: 'var(--k-glass-thin)',
+                  color: 'var(--k-text-secondary)',
+                  border: '1px solid var(--k-border-subtle)',
+                  borderRadius: 'var(--k-radius-md)',
+                }}
               >
                 {t('learn.studyTimer.skipBreak')}
               </button>
@@ -423,7 +497,13 @@ export default function StudyTimer({
           {!isRunning && phase !== 'break' && !showBreakSuggestion && (
             <button
               onClick={handleStart}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors active:scale-95"
+              className="inline-flex items-center gap-2 px-6 py-3 font-semibold transition-all active:scale-95"
+              style={{
+                background: isRunning ? 'var(--k-glass-thick)' : 'var(--k-gradient-primary)',
+                color: 'var(--k-text-primary)',
+                borderRadius: 'var(--k-radius-lg)',
+                boxShadow: 'var(--k-glow-primary)',
+              }}
               aria-label={t('learn.studyTimer.start')}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -436,7 +516,13 @@ export default function StudyTimer({
           {isRunning && (
             <button
               onClick={handlePause}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-600 text-white font-semibold rounded-xl hover:bg-gray-700 transition-colors active:scale-95"
+              className="inline-flex items-center gap-2 px-6 py-3 font-semibold transition-all active:scale-95"
+              style={{
+                background: 'var(--k-glass-thick)',
+                color: 'var(--k-text-primary)',
+                border: '1px solid var(--k-border-default)',
+                borderRadius: 'var(--k-radius-lg)',
+              }}
               aria-label={t('learn.studyTimer.pause')}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -449,7 +535,13 @@ export default function StudyTimer({
           {phase !== 'idle' && (
             <button
               onClick={handleReset}
-              className="inline-flex items-center gap-2 px-4 py-3 text-gray-500 font-medium rounded-xl hover:bg-gray-100 transition-colors active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-3 font-medium transition-all active:scale-95"
+              style={{
+                background: 'var(--k-glass-thin)',
+                color: 'var(--k-text-tertiary)',
+                border: '1px solid var(--k-border-subtle)',
+                borderRadius: 'var(--k-radius-lg)',
+              }}
               aria-label={t('learn.studyTimer.reset')}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -462,17 +554,20 @@ export default function StudyTimer({
 
         {/* Stats footer */}
         {(pomodoroCount > 0 || totalStudySeconds > 0) && (
-          <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-around text-center">
+          <div
+            className="mt-6 pt-4 flex items-center justify-around text-center"
+            style={{ borderTop: '1px solid var(--k-border-subtle)' }}
+          >
             <div>
-              <div className="text-lg font-bold text-gray-900">{pomodoroCount}</div>
-              <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+              <div className="text-lg font-bold" style={{ color: 'var(--k-text-primary)' }}>{pomodoroCount}</div>
+              <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--k-text-muted)' }}>
                 {t('learn.studyTimer.sessions')}
               </div>
             </div>
-            <div className="w-px h-8 bg-gray-200" />
+            <div style={{ width: '1px', height: '32px', background: 'var(--k-border-subtle)' }} />
             <div>
-              <div className="text-lg font-bold text-gray-900">{Math.round(totalStudySeconds / 60)}</div>
-              <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+              <div className="text-lg font-bold" style={{ color: 'var(--k-text-primary)' }}>{Math.round(totalStudySeconds / 60)}</div>
+              <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--k-text-muted)' }}>
                 {t('learn.studyTimer.minutesStudied')}
               </div>
             </div>

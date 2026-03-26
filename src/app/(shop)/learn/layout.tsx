@@ -22,5 +22,6 @@ export default async function LearnLayout({
     redirect('/auth/signin?callbackUrl=/learn');
   }
 
-  return <>{children}</>;
+  const LearnShell = (await import('./LearnShell')).default;
+  return <LearnShell>{children}</LearnShell>;
 }

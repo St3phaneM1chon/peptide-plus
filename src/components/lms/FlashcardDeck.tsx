@@ -181,9 +181,9 @@ export default function FlashcardDeck({
   // ── Difficulty indicator ──────────────────────────────────
 
   function getDifficultyColor(d: number): string {
-    if (d < 0.33) return 'bg-green-500';
-    if (d < 0.66) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (d < 0.33) return 'var(--k-accent-emerald)';
+    if (d < 0.66) return 'var(--k-accent-amber)';
+    return 'var(--k-accent-rose)';
   }
 
   function getDifficultyLabel(d: number): string {
@@ -197,38 +197,75 @@ export default function FlashcardDeck({
   if (status === 'complete') {
     return (
       <div className="w-full max-w-lg mx-auto px-4 py-8">
-        <div className="rounded-2xl bg-white shadow-lg border border-gray-100 p-8 text-center">
+        <div
+          className="p-8 text-center"
+          style={{
+            background: 'var(--k-glass-regular)',
+            backdropFilter: 'blur(var(--k-blur-xl))',
+            WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+            border: '1px solid var(--k-border-subtle)',
+            borderRadius: 'var(--k-radius-2xl)',
+            boxShadow: 'var(--k-shadow-xl)',
+          }}
+        >
           {/* Trophy icon */}
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-lg">
+          <div
+            className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              boxShadow: '0 0 30px rgba(245, 158, 11, 0.4)',
+            }}
+          >
             <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
             </svg>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--k-text-primary)' }}>
             {t('learn.flashcards.sessionComplete')}
           </h2>
-          <p className="text-gray-500 mb-8">
+          <p className="mb-8" style={{ color: 'var(--k-text-secondary)' }}>
             {t('learn.flashcards.reviewedCards', { count: total })}
           </p>
 
           {/* Stats grid */}
           <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="rounded-xl bg-green-50 border border-green-200 p-4">
-              <div className="text-2xl font-bold text-green-700">{stats.mastered}</div>
-              <div className="text-xs font-medium text-green-600 mt-1">
+            <div
+              className="p-4"
+              style={{
+                background: 'var(--k-accent-emerald-10)',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+                borderRadius: 'var(--k-radius-lg)',
+              }}
+            >
+              <div className="text-2xl font-bold" style={{ color: 'var(--k-accent-emerald)' }}>{stats.mastered}</div>
+              <div className="text-xs font-medium mt-1" style={{ color: 'rgba(16, 185, 129, 0.8)' }}>
                 {t('learn.flashcards.statsMastered')}
               </div>
             </div>
-            <div className="rounded-xl bg-yellow-50 border border-yellow-200 p-4">
-              <div className="text-2xl font-bold text-yellow-700">{stats.learning}</div>
-              <div className="text-xs font-medium text-yellow-600 mt-1">
+            <div
+              className="p-4"
+              style={{
+                background: 'var(--k-accent-amber-10)',
+                border: '1px solid rgba(245, 158, 11, 0.2)',
+                borderRadius: 'var(--k-radius-lg)',
+              }}
+            >
+              <div className="text-2xl font-bold" style={{ color: 'var(--k-accent-amber)' }}>{stats.learning}</div>
+              <div className="text-xs font-medium mt-1" style={{ color: 'rgba(245, 158, 11, 0.8)' }}>
                 {t('learn.flashcards.statsLearning')}
               </div>
             </div>
-            <div className="rounded-xl bg-red-50 border border-red-200 p-4">
-              <div className="text-2xl font-bold text-red-700">{stats.review}</div>
-              <div className="text-xs font-medium text-red-600 mt-1">
+            <div
+              className="p-4"
+              style={{
+                background: 'var(--k-accent-rose-10)',
+                border: '1px solid rgba(244, 63, 94, 0.2)',
+                borderRadius: 'var(--k-radius-lg)',
+              }}
+            >
+              <div className="text-2xl font-bold" style={{ color: 'var(--k-accent-rose)' }}>{stats.review}</div>
+              <div className="text-xs font-medium mt-1" style={{ color: 'rgba(244, 63, 94, 0.8)' }}>
                 {t('learn.flashcards.statsReview')}
               </div>
             </div>
@@ -236,7 +273,13 @@ export default function FlashcardDeck({
 
           <button
             onClick={handleRestart}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 font-semibold transition-all active:scale-95"
+            style={{
+              background: 'var(--k-gradient-primary)',
+              color: 'var(--k-text-primary)',
+              borderRadius: 'var(--k-radius-lg)',
+              boxShadow: 'var(--k-glow-primary)',
+            }}
             aria-label={t('learn.flashcards.studyAgain')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -255,12 +298,13 @@ export default function FlashcardDeck({
     <div className="w-full max-w-lg mx-auto px-4 py-6">
       {/* Header: progress + shuffle */}
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-medium text-gray-600">
+        <span className="text-sm font-medium" style={{ color: 'var(--k-text-secondary)' }}>
           {t('learn.flashcards.cardOf', { current: currentIndex + 1, total })}
         </span>
         <button
           onClick={handleShuffle}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm transition-all"
+          style={{ color: 'var(--k-text-tertiary)' }}
           aria-label={t('learn.flashcards.shuffle')}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -271,18 +315,37 @@ export default function FlashcardDeck({
       </div>
 
       {/* Progress bar */}
-      <div className="w-full h-2 bg-gray-200 rounded-full mb-6 overflow-hidden" role="progressbar" aria-valuenow={currentIndex + 1} aria-valuemin={1} aria-valuemax={total}>
+      <div
+        className="w-full h-2 mb-6 overflow-hidden"
+        style={{
+          background: 'rgba(255, 255, 255, 0.08)',
+          borderRadius: 'var(--k-radius-pill)',
+        }}
+        role="progressbar"
+        aria-valuenow={currentIndex + 1}
+        aria-valuemin={1}
+        aria-valuemax={total}
+      >
         <div
-          className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${progressPercent}%` }}
+          className="h-full transition-all duration-500 ease-out"
+          style={{
+            width: `${progressPercent}%`,
+            background: 'var(--k-gradient-primary)',
+            borderRadius: 'var(--k-radius-pill)',
+          }}
         />
       </div>
 
       {/* Difficulty badge */}
       {currentCard && (
         <div className="flex items-center gap-2 mb-4">
-          <span className={`w-2.5 h-2.5 rounded-full ${getDifficultyColor(currentCard.difficulty)}`} />
-          <span className="text-xs font-medium text-gray-500">{getDifficultyLabel(currentCard.difficulty)}</span>
+          <span
+            className="w-2.5 h-2.5 rounded-full"
+            style={{ background: getDifficultyColor(currentCard.difficulty) }}
+          />
+          <span className="text-xs font-medium" style={{ color: 'var(--k-text-tertiary)' }}>
+            {getDifficultyLabel(currentCard.difficulty)}
+          </span>
         </div>
       )}
 
@@ -310,18 +373,26 @@ export default function FlashcardDeck({
             minHeight: '280px',
           }}
         >
-          {/* Front */}
+          {/* Front — glass-regular */}
           <div
-            className="absolute inset-0 rounded-2xl bg-white shadow-xl border border-gray-200 p-8 flex flex-col items-center justify-center"
-            style={{ backfaceVisibility: 'hidden' }}
+            className="absolute inset-0 p-8 flex flex-col items-center justify-center"
+            style={{
+              backfaceVisibility: 'hidden',
+              background: 'var(--k-glass-regular)',
+              backdropFilter: 'blur(var(--k-blur-xl))',
+              WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+              border: '1px solid var(--k-border-default)',
+              borderRadius: 'var(--k-radius-2xl)',
+              boxShadow: 'var(--k-shadow-xl)',
+            }}
           >
-            <div className="text-xs uppercase tracking-wider text-gray-400 mb-4 font-medium">
+            <div className="text-xs uppercase tracking-wider mb-4 font-medium" style={{ color: 'var(--k-text-muted)' }}>
               {t('learn.flashcards.question')}
             </div>
-            <div className="text-xl font-semibold text-gray-900 text-center leading-relaxed">
+            <div className="text-xl font-semibold text-center leading-relaxed" style={{ color: 'var(--k-text-primary)' }}>
               {currentCard?.front}
             </div>
-            <div className="mt-6 text-sm text-gray-400 flex items-center gap-1.5">
+            <div className="mt-6 text-sm flex items-center gap-1.5" style={{ color: 'var(--k-text-muted)' }}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
               </svg>
@@ -329,15 +400,24 @@ export default function FlashcardDeck({
             </div>
           </div>
 
-          {/* Back */}
+          {/* Back — glass-chromatic */}
           <div
-            className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 shadow-xl border border-blue-200 p-8 flex flex-col items-center justify-center"
-            style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+            className="absolute inset-0 p-8 flex flex-col items-center justify-center"
+            style={{
+              backfaceVisibility: 'hidden',
+              transform: 'rotateY(180deg)',
+              background: 'var(--k-glass-chromatic)',
+              backdropFilter: 'blur(var(--k-blur-xl))',
+              WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
+              borderRadius: 'var(--k-radius-2xl)',
+              boxShadow: 'var(--k-shadow-xl), var(--k-glow-primary)',
+            }}
           >
-            <div className="text-xs uppercase tracking-wider text-blue-400 mb-4 font-medium">
+            <div className="text-xs uppercase tracking-wider mb-4 font-medium" style={{ color: 'var(--k-accent-indigo)' }}>
               {t('learn.flashcards.answer')}
             </div>
-            <div className="text-lg text-gray-800 text-center leading-relaxed">
+            <div className="text-lg text-center leading-relaxed" style={{ color: 'var(--k-text-primary)' }}>
               {currentCard?.back}
             </div>
           </div>
@@ -347,13 +427,13 @@ export default function FlashcardDeck({
       {/* Swipe hint on mobile (only when flipped) */}
       {isFlipped && (
         <div className="flex items-center justify-center gap-6 mt-3 sm:hidden">
-          <span className="text-xs text-gray-400 flex items-center gap-1">
+          <span className="text-xs flex items-center gap-1" style={{ color: 'var(--k-text-muted)' }}>
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             {t('learn.flashcards.swipeLeftAgain')}
           </span>
-          <span className="text-xs text-gray-400 flex items-center gap-1">
+          <span className="text-xs flex items-center gap-1" style={{ color: 'var(--k-text-muted)' }}>
             {t('learn.flashcards.swipeRightGood')}
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -362,7 +442,7 @@ export default function FlashcardDeck({
         </div>
       )}
 
-      {/* ── FSRS Rating Buttons ──────────────────────────── */}
+      {/* ── FSRS Rating Buttons — Glass pills with color coding ── */}
       <div
         className={`mt-6 grid grid-cols-4 gap-2 transition-all duration-300 ${
           isFlipped ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
@@ -370,7 +450,13 @@ export default function FlashcardDeck({
       >
         <button
           onClick={(e) => { e.stopPropagation(); handleRate(1); }}
-          className="flex flex-col items-center gap-1 py-3 rounded-xl bg-red-50 border-2 border-red-200 text-red-700 hover:bg-red-100 hover:border-red-300 transition-all active:scale-95"
+          className="flex flex-col items-center gap-1 py-3 transition-all active:scale-95"
+          style={{
+            background: 'var(--k-accent-rose-10)',
+            border: '1px solid rgba(244, 63, 94, 0.25)',
+            borderRadius: 'var(--k-radius-pill)',
+            color: 'var(--k-accent-rose)',
+          }}
           aria-label={t('learn.flashcards.ratingAgain')}
         >
           <span className="text-sm font-bold">1</span>
@@ -378,7 +464,13 @@ export default function FlashcardDeck({
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); handleRate(2); }}
-          className="flex flex-col items-center gap-1 py-3 rounded-xl bg-orange-50 border-2 border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 transition-all active:scale-95"
+          className="flex flex-col items-center gap-1 py-3 transition-all active:scale-95"
+          style={{
+            background: 'var(--k-accent-amber-10)',
+            border: '1px solid rgba(245, 158, 11, 0.25)',
+            borderRadius: 'var(--k-radius-pill)',
+            color: 'var(--k-accent-amber)',
+          }}
           aria-label={t('learn.flashcards.ratingHard')}
         >
           <span className="text-sm font-bold">2</span>
@@ -386,7 +478,13 @@ export default function FlashcardDeck({
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); handleRate(3); }}
-          className="flex flex-col items-center gap-1 py-3 rounded-xl bg-green-50 border-2 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300 transition-all active:scale-95"
+          className="flex flex-col items-center gap-1 py-3 transition-all active:scale-95"
+          style={{
+            background: 'var(--k-accent-emerald-10)',
+            border: '1px solid rgba(16, 185, 129, 0.25)',
+            borderRadius: 'var(--k-radius-pill)',
+            color: 'var(--k-accent-emerald)',
+          }}
           aria-label={t('learn.flashcards.ratingGood')}
         >
           <span className="text-sm font-bold">3</span>
@@ -394,7 +492,13 @@ export default function FlashcardDeck({
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); handleRate(4); }}
-          className="flex flex-col items-center gap-1 py-3 rounded-xl bg-blue-50 border-2 border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all active:scale-95"
+          className="flex flex-col items-center gap-1 py-3 transition-all active:scale-95"
+          style={{
+            background: 'var(--k-accent-cyan-10)',
+            border: '1px solid rgba(6, 182, 212, 0.25)',
+            borderRadius: 'var(--k-radius-pill)',
+            color: 'var(--k-accent-cyan)',
+          }}
           aria-label={t('learn.flashcards.ratingEasy')}
         >
           <span className="text-sm font-bold">4</span>
@@ -403,17 +507,41 @@ export default function FlashcardDeck({
       </div>
 
       {/* ── Keyboard shortcuts legend ────────────────────── */}
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-400">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs" style={{ color: 'var(--k-text-muted)' }}>
         <span className="hidden sm:inline-flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-300 font-mono text-[10px]">Space</kbd>
+          <kbd
+            className="px-1.5 py-0.5 font-mono text-[10px]"
+            style={{
+              background: 'var(--k-glass-thin)',
+              border: '1px solid var(--k-border-subtle)',
+              borderRadius: 'var(--k-radius-sm)',
+              color: 'var(--k-text-tertiary)',
+            }}
+          >Space</kbd>
           {t('learn.flashcards.shortcutFlip')}
         </span>
         <span className="hidden sm:inline-flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-300 font-mono text-[10px]">1-4</kbd>
+          <kbd
+            className="px-1.5 py-0.5 font-mono text-[10px]"
+            style={{
+              background: 'var(--k-glass-thin)',
+              border: '1px solid var(--k-border-subtle)',
+              borderRadius: 'var(--k-radius-sm)',
+              color: 'var(--k-text-tertiary)',
+            }}
+          >1-4</kbd>
           {t('learn.flashcards.shortcutRate')}
         </span>
         <span className="hidden sm:inline-flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-gray-100 border border-gray-300 font-mono text-[10px]">&larr; &rarr;</kbd>
+          <kbd
+            className="px-1.5 py-0.5 font-mono text-[10px]"
+            style={{
+              background: 'var(--k-glass-thin)',
+              border: '1px solid var(--k-border-subtle)',
+              borderRadius: 'var(--k-radius-sm)',
+              color: 'var(--k-text-tertiary)',
+            }}
+          >&larr; &rarr;</kbd>
           {t('learn.flashcards.shortcutNavigate')}
         </span>
       </div>

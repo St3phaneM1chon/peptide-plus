@@ -501,8 +501,14 @@ export default function VideoPlayer({
   return (
     <div
       ref={containerRef}
-      className="relative w-full bg-black select-none group"
-      style={{ aspectRatio: '16 / 9' }}
+      className="relative w-full select-none group overflow-hidden"
+      style={{
+        aspectRatio: '16 / 9',
+        background: 'var(--k-bg-inset)',
+        borderRadius: 'var(--k-radius-xl)',
+        border: '1px solid var(--k-border-subtle)',
+        boxShadow: 'var(--k-shadow-xl)',
+      }}
       onMouseMove={handleContainerMouseMove}
       onMouseLeave={handleContainerMouseLeave}
       onKeyDown={handleKeyDown}
@@ -530,9 +536,13 @@ export default function VideoPlayer({
 
       {/* Overlay gradient for controls visibility */}
       <div
-        className={`absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent pointer-events-none transition-opacity duration-300 ${
+        className={`absolute inset-x-0 bottom-0 pointer-events-none transition-opacity duration-300 ${
           showControls ? 'opacity-100' : 'opacity-0'
         }`}
+        style={{
+          height: '40%',
+          background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
+        }}
       />
 
       {/* Big centered play button (shown when paused and controls visible) */}
@@ -542,8 +552,17 @@ export default function VideoPlayer({
           className="absolute inset-0 flex items-center justify-center z-10"
           aria-label={t('lms.videoPlayer.play')}
         >
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
-            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+          <div
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all duration-200"
+            style={{
+              background: 'var(--k-glass-regular)',
+              backdropFilter: 'blur(var(--k-blur-lg))',
+              WebkitBackdropFilter: 'blur(var(--k-blur-lg))',
+              border: '1px solid var(--k-border-default)',
+              boxShadow: 'var(--k-glow-primary)',
+            }}
+          >
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 ml-1" fill="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--k-text-primary)' }}>
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
@@ -556,7 +575,16 @@ export default function VideoPlayer({
           <button
             onClick={handleMarkComplete}
             disabled={isMarkingComplete}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-60 transition-colors shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-60 transition-all duration-200"
+            style={{
+              background: 'var(--k-accent-emerald-10)',
+              color: 'var(--k-accent-emerald)',
+              borderRadius: 'var(--k-radius-md)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              backdropFilter: 'blur(var(--k-blur-md))',
+              WebkitBackdropFilter: 'blur(var(--k-blur-md))',
+              boxShadow: 'var(--k-glow-success)',
+            }}
             aria-label={t('lms.videoPlayer.markComplete')}
           >
             {isMarkingComplete ? (
@@ -580,7 +608,18 @@ export default function VideoPlayer({
 
       {/* Completed badge */}
       {isCompleted && (
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 px-4 py-2 bg-green-600/90 text-white text-sm font-medium rounded-lg shadow-lg">
+        <div
+          className="absolute top-4 right-4 z-20 flex items-center gap-2 px-4 py-2 text-sm font-medium"
+          style={{
+            background: 'var(--k-accent-emerald-10)',
+            color: 'var(--k-accent-emerald)',
+            borderRadius: 'var(--k-radius-md)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            backdropFilter: 'blur(var(--k-blur-md))',
+            WebkitBackdropFilter: 'blur(var(--k-blur-md))',
+            boxShadow: 'var(--k-glow-success)',
+          }}
+        >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
@@ -594,14 +633,15 @@ export default function VideoPlayer({
 
       {/* Controls bar */}
       <div
-        className={`absolute inset-x-0 bottom-0 z-20 px-3 pb-3 pt-6 transition-opacity duration-300 ${
+        className={`absolute inset-x-0 bottom-0 z-20 px-4 pb-3 pt-8 transition-opacity duration-300 ${
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
         {/* Progress bar */}
         <div
           ref={progressBarRef}
-          className="relative w-full h-1.5 bg-white/20 rounded-full cursor-pointer mb-3 group/progress hover:h-2.5 transition-all"
+          className="relative w-full h-1 cursor-pointer mb-3 group/progress hover:h-2 transition-all"
+          style={{ borderRadius: 'var(--k-radius-pill)' }}
           onMouseDown={handleProgressMouseDown}
           onTouchStart={handleProgressTouchStart}
           onTouchMove={handleProgressTouchMove}
@@ -614,20 +654,42 @@ export default function VideoPlayer({
           aria-valuetext={`${formatTime(currentTime)} / ${formatTime(duration)}`}
           tabIndex={0}
         >
+          {/* Track bg */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'var(--k-glass-thin)',
+              borderRadius: 'var(--k-radius-pill)',
+            }}
+          />
           {/* Buffered */}
           <div
-            className="absolute inset-y-0 left-0 bg-white/30 rounded-full pointer-events-none"
-            style={{ width: `${bufferedPercent}%` }}
+            className="absolute inset-y-0 left-0 pointer-events-none"
+            style={{
+              width: `${bufferedPercent}%`,
+              background: 'var(--k-glass-thick)',
+              borderRadius: 'var(--k-radius-pill)',
+            }}
           />
-          {/* Played */}
+          {/* Played - gradient fill with glow trail */}
           <div
-            className="absolute inset-y-0 left-0 bg-white rounded-full pointer-events-none"
-            style={{ width: `${percent}%` }}
+            className="absolute inset-y-0 left-0 pointer-events-none"
+            style={{
+              width: `${percent}%`,
+              background: 'var(--k-gradient-primary)',
+              borderRadius: 'var(--k-radius-pill)',
+              boxShadow: '0 0 12px rgba(99, 102, 241, 0.4), 0 0 4px rgba(6, 182, 212, 0.3)',
+            }}
           />
           {/* Thumb */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full shadow-md opacity-0 group-hover/progress:opacity-100 transition-opacity pointer-events-none"
-            style={{ left: `${percent}%`, transform: `translate(-50%, -50%)` }}
+            className="absolute top-1/2 w-3.5 h-3.5 rounded-full opacity-0 group-hover/progress:opacity-100 transition-opacity pointer-events-none"
+            style={{
+              left: `${percent}%`,
+              transform: 'translate(-50%, -50%)',
+              background: 'var(--k-text-primary)',
+              boxShadow: 'var(--k-glow-primary)',
+            }}
           />
         </div>
 
@@ -636,7 +698,14 @@ export default function VideoPlayer({
           {/* Play/Pause */}
           <button
             onClick={togglePlay}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-white hover:text-white/80 transition-colors"
+            className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150"
+            style={{
+              background: 'var(--k-glass-thin)',
+              border: '1px solid var(--k-border-subtle)',
+              color: 'var(--k-text-primary)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--k-glass-regular)'; e.currentTarget.style.boxShadow = 'var(--k-glow-primary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--k-glass-thin)'; e.currentTarget.style.boxShadow = 'none'; }}
             aria-label={isPlaying ? t('lms.videoPlayer.pause') : t('lms.videoPlayer.play')}
           >
             {isPlaying ? (
@@ -653,32 +722,41 @@ export default function VideoPlayer({
           {/* Skip backward */}
           <button
             onClick={skipBackward}
-            className="flex-shrink-0 w-8 h-8 hidden sm:flex items-center justify-center text-white hover:text-white/80 transition-colors"
+            className="flex-shrink-0 w-8 h-8 hidden sm:flex items-center justify-center transition-colors duration-150"
+            style={{ color: 'var(--k-text-secondary)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--k-text-primary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--k-text-secondary)'; }}
             aria-label={t('lms.videoPlayer.skipBackward')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" />
             </svg>
-            <span className="absolute text-[9px] font-bold text-white mt-4">10</span>
+            <span className="absolute text-[9px] font-bold mt-4" style={{ color: 'var(--k-text-primary)' }}>10</span>
           </button>
 
           {/* Skip forward */}
           <button
             onClick={skipForward}
-            className="flex-shrink-0 w-8 h-8 hidden sm:flex items-center justify-center text-white hover:text-white/80 transition-colors"
+            className="flex-shrink-0 w-8 h-8 hidden sm:flex items-center justify-center transition-colors duration-150"
+            style={{ color: 'var(--k-text-secondary)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--k-text-primary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--k-text-secondary)'; }}
             aria-label={t('lms.videoPlayer.skipForward')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" />
             </svg>
-            <span className="absolute text-[9px] font-bold text-white mt-4">10</span>
+            <span className="absolute text-[9px] font-bold mt-4" style={{ color: 'var(--k-text-primary)' }}>10</span>
           </button>
 
           {/* Volume control */}
           <div className="flex-shrink-0 flex items-center gap-1 group/volume">
             <button
               onClick={toggleMute}
-              className="w-8 h-8 flex items-center justify-center text-white hover:text-white/80 transition-colors"
+              className="w-8 h-8 flex items-center justify-center transition-colors duration-150"
+              style={{ color: 'var(--k-text-secondary)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--k-text-primary)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--k-text-secondary)'; }}
               aria-label={isMuted ? t('lms.videoPlayer.unmute') : t('lms.videoPlayer.mute')}
             >
               {volumeIcon === 'muted' && (
@@ -702,7 +780,8 @@ export default function VideoPlayer({
               className="w-0 group-hover/volume:w-20 overflow-hidden transition-all duration-200"
             >
               <div
-                className="relative w-20 h-1.5 bg-white/20 rounded-full cursor-pointer"
+                className="relative w-20 h-1 cursor-pointer"
+                style={{ borderRadius: 'var(--k-radius-pill)' }}
                 onMouseDown={handleVolumeMouseDown}
                 role="slider"
                 aria-label={t('lms.videoPlayer.volume')}
@@ -711,20 +790,43 @@ export default function VideoPlayer({
                 aria-valuenow={Math.round(isMuted ? 0 : volume * 100)}
                 tabIndex={0}
               >
+                {/* Volume track */}
                 <div
-                  className="absolute inset-y-0 left-0 bg-white rounded-full pointer-events-none"
-                  style={{ width: `${isMuted ? 0 : volume * 100}%` }}
+                  className="absolute inset-0"
+                  style={{
+                    background: 'var(--k-glass-thin)',
+                    borderRadius: 'var(--k-radius-pill)',
+                  }}
                 />
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow pointer-events-none"
-                  style={{ left: `${isMuted ? 0 : volume * 100}%`, transform: 'translate(-50%, -50%)' }}
+                  className="absolute inset-y-0 left-0 pointer-events-none"
+                  style={{
+                    width: `${isMuted ? 0 : volume * 100}%`,
+                    background: 'var(--k-gradient-primary)',
+                    borderRadius: 'var(--k-radius-pill)',
+                  }}
+                />
+                <div
+                  className="absolute top-1/2 w-3 h-3 rounded-full pointer-events-none"
+                  style={{
+                    left: `${isMuted ? 0 : volume * 100}%`,
+                    transform: 'translate(-50%, -50%)',
+                    background: 'var(--k-text-primary)',
+                    boxShadow: 'var(--k-shadow-sm)',
+                  }}
                 />
               </div>
             </div>
           </div>
 
           {/* Time display */}
-          <span className="text-white text-xs sm:text-sm font-mono tabular-nums whitespace-nowrap select-none">
+          <span
+            className="text-xs sm:text-sm tabular-nums whitespace-nowrap select-none"
+            style={{
+              color: 'var(--k-text-secondary)',
+              fontFamily: 'var(--k-font-mono)',
+            }}
+          >
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
 
@@ -738,7 +840,14 @@ export default function VideoPlayer({
                 e.stopPropagation();
                 setShowSpeedMenu((prev) => !prev);
               }}
-              className="h-8 px-2 flex items-center justify-center text-white text-xs sm:text-sm font-medium hover:text-white/80 transition-colors rounded"
+              className="h-8 px-2.5 flex items-center justify-center text-xs sm:text-sm font-medium rounded-full transition-all duration-150"
+              style={{
+                color: 'var(--k-text-secondary)',
+                background: 'var(--k-glass-ultra-thin)',
+                border: '1px solid var(--k-border-subtle)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--k-glass-regular)'; e.currentTarget.style.color = 'var(--k-text-primary)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--k-glass-ultra-thin)'; e.currentTarget.style.color = 'var(--k-text-secondary)'; }}
               aria-label={t('lms.videoPlayer.playbackSpeed')}
               aria-haspopup="listbox"
               aria-expanded={showSpeedMenu}
@@ -749,7 +858,15 @@ export default function VideoPlayer({
             {/* Speed menu */}
             {showSpeedMenu && (
               <div
-                className="absolute bottom-full right-0 mb-2 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-white/10 py-1 min-w-[80px]"
+                className="absolute bottom-full right-0 mb-2 py-1 min-w-[80px]"
+                style={{
+                  background: 'var(--k-glass-thick)',
+                  backdropFilter: 'blur(var(--k-blur-xl))',
+                  WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+                  borderRadius: 'var(--k-radius-md)',
+                  border: '1px solid var(--k-border-default)',
+                  boxShadow: 'var(--k-shadow-xl)',
+                }}
                 role="listbox"
                 aria-label={t('lms.videoPlayer.playbackSpeed')}
                 onClick={(e) => e.stopPropagation()}
@@ -760,11 +877,14 @@ export default function VideoPlayer({
                     onClick={() => changePlaybackRate(rate)}
                     role="option"
                     aria-selected={rate === playbackRate}
-                    className={`w-full px-3 py-1.5 text-sm text-left transition-colors ${
-                      rate === playbackRate
-                        ? 'text-white bg-white/15 font-medium'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`}
+                    className="w-full px-3 py-1.5 text-sm text-left transition-colors duration-150"
+                    style={{
+                      color: rate === playbackRate ? 'var(--k-text-primary)' : 'var(--k-text-tertiary)',
+                      background: rate === playbackRate ? 'var(--k-accent-indigo-10)' : 'transparent',
+                      fontWeight: rate === playbackRate ? 500 : 400,
+                    }}
+                    onMouseEnter={(e) => { if (rate !== playbackRate) { e.currentTarget.style.background = 'var(--k-glass-regular)'; e.currentTarget.style.color = 'var(--k-text-primary)'; } }}
+                    onMouseLeave={(e) => { if (rate !== playbackRate) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--k-text-tertiary)'; } }}
                   >
                     {rate === 1 ? t('lms.videoPlayer.normalSpeed') : `${rate}x`}
                   </button>
@@ -776,7 +896,14 @@ export default function VideoPlayer({
           {/* Fullscreen */}
           <button
             onClick={toggleFullscreen}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-white hover:text-white/80 transition-colors"
+            className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150"
+            style={{
+              background: 'var(--k-glass-thin)',
+              border: '1px solid var(--k-border-subtle)',
+              color: 'var(--k-text-primary)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--k-glass-regular)'; e.currentTarget.style.boxShadow = 'var(--k-glow-primary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--k-glass-thin)'; e.currentTarget.style.boxShadow = 'none'; }}
             aria-label={isFullscreen ? t('lms.videoPlayer.exitFullscreen') : t('lms.videoPlayer.enterFullscreen')}
           >
             {isFullscreen ? (
@@ -792,7 +919,10 @@ export default function VideoPlayer({
         </div>
 
         {/* Keyboard shortcuts hint (only on desktop, shown once on focus) */}
-        <div className="hidden sm:block absolute -top-8 right-3 text-[10px] text-white/40 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none">
+        <div
+          className="hidden sm:block absolute -top-8 right-3 text-[10px] opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"
+          style={{ color: 'var(--k-text-muted)' }}
+        >
           {t('lms.videoPlayer.keyboardHint')}
         </div>
       </div>

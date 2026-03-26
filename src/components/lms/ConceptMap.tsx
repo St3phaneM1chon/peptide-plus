@@ -40,26 +40,51 @@ const NODE_SPACING_X = 160;
 const NODE_SPACING_Y = 100;
 const PADDING = 60;
 
-// ── Color helpers ───────────────────────────────────────────
+// ── Color helpers (dark glass mastery palette) ───────────────
 
-function getMasteryColor(level: number): { fill: string; stroke: string; text: string; bg: string } {
-  if (level === 0) return { fill: '#e5e7eb', stroke: '#9ca3af', text: '#6b7280', bg: 'bg-gray-100' };
-  if (level < 30) return { fill: '#fef2f2', stroke: '#ef4444', text: '#dc2626', bg: 'bg-red-50' };
-  if (level < 60) return { fill: '#fffbeb', stroke: '#f59e0b', text: '#d97706', bg: 'bg-yellow-50' };
-  if (level < 85) return { fill: '#f0fdf4', stroke: '#22c55e', text: '#16a34a', bg: 'bg-green-50' };
-  return { fill: '#ecfdf5', stroke: '#059669', text: '#047857', bg: 'bg-emerald-50' };
+function getMasteryColor(level: number): { fill: string; stroke: string; glow: string; text: string } {
+  if (level === 0) return {
+    fill: 'rgba(255, 255, 255, 0.05)',
+    stroke: 'rgba(255, 255, 255, 0.15)',
+    glow: 'none',
+    text: 'rgba(255, 255, 255, 0.25)',
+  };
+  if (level < 30) return {
+    fill: 'rgba(244, 63, 94, 0.08)',
+    stroke: '#f43f5e',
+    glow: '0 0 12px rgba(244, 63, 94, 0.3)',
+    text: '#fb7185',
+  };
+  if (level < 60) return {
+    fill: 'rgba(245, 158, 11, 0.08)',
+    stroke: '#f59e0b',
+    glow: '0 0 12px rgba(245, 158, 11, 0.3)',
+    text: '#fbbf24',
+  };
+  if (level < 85) return {
+    fill: 'rgba(16, 185, 129, 0.08)',
+    stroke: '#10b981',
+    glow: '0 0 12px rgba(16, 185, 129, 0.3)',
+    text: '#34d399',
+  };
+  return {
+    fill: 'rgba(5, 150, 105, 0.12)',
+    stroke: '#059669',
+    glow: '0 0 16px rgba(5, 150, 105, 0.4)',
+    text: '#6ee7b7',
+  };
 }
 
 function getDomainColor(domain: string): string {
   const colors = [
-    'rgba(59,130,246,0.08)',  // blue
-    'rgba(168,85,247,0.08)',  // purple
-    'rgba(236,72,153,0.08)',  // pink
-    'rgba(245,158,11,0.08)', // amber
-    'rgba(34,197,94,0.08)',  // green
-    'rgba(20,184,166,0.08)', // teal
-    'rgba(239,68,68,0.08)',  // red
-    'rgba(99,102,241,0.08)', // indigo
+    'rgba(99, 102, 241, 0.06)',   // indigo
+    'rgba(168, 85, 247, 0.06)',   // purple
+    'rgba(236, 72, 153, 0.06)',   // pink
+    'rgba(245, 158, 11, 0.06)',   // amber
+    'rgba(16, 185, 129, 0.06)',   // emerald
+    'rgba(6, 182, 212, 0.06)',    // cyan
+    'rgba(244, 63, 94, 0.06)',    // rose
+    'rgba(99, 102, 241, 0.06)',   // indigo
   ];
   let hash = 0;
   for (let i = 0; i < domain.length; i++) {
@@ -70,14 +95,14 @@ function getDomainColor(domain: string): string {
 
 function getDomainBorderColor(domain: string): string {
   const colors = [
-    'rgba(59,130,246,0.2)',
-    'rgba(168,85,247,0.2)',
-    'rgba(236,72,153,0.2)',
-    'rgba(245,158,11,0.2)',
-    'rgba(34,197,94,0.2)',
-    'rgba(20,184,166,0.2)',
-    'rgba(239,68,68,0.2)',
-    'rgba(99,102,241,0.2)',
+    'rgba(99, 102, 241, 0.15)',
+    'rgba(168, 85, 247, 0.15)',
+    'rgba(236, 72, 153, 0.15)',
+    'rgba(245, 158, 11, 0.15)',
+    'rgba(16, 185, 129, 0.15)',
+    'rgba(6, 182, 212, 0.15)',
+    'rgba(244, 63, 94, 0.15)',
+    'rgba(99, 102, 241, 0.15)',
   ];
   let hash = 0;
   for (let i = 0; i < domain.length; i++) {
@@ -254,7 +279,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
 
   if (concepts.length === 0) {
     return (
-      <div className="flex items-center justify-center py-16 text-gray-400">
+      <div className="flex items-center justify-center py-16" style={{ color: 'var(--k-text-muted)' }}>
         {t('learn.conceptMap.noConcepts')}
       </div>
     );
@@ -264,21 +289,37 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
     <div className="w-full" ref={containerRef}>
       {/* Controls */}
       <div className="flex items-center justify-between mb-4 px-2">
-        <h3 className="text-sm font-semibold text-gray-700">{t('learn.conceptMap.title')}</h3>
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--k-text-secondary)' }}>
+          {t('learn.conceptMap.title')}
+        </h3>
         <div className="flex items-center gap-2">
           <button
             onClick={handleZoomOut}
-            className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center transition-all"
+            style={{
+              background: 'var(--k-glass-thin)',
+              border: '1px solid var(--k-border-subtle)',
+              borderRadius: 'var(--k-radius-md)',
+              color: 'var(--k-text-tertiary)',
+            }}
             aria-label={t('learn.conceptMap.zoomOut')}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
             </svg>
           </button>
-          <span className="text-xs font-mono text-gray-400 w-12 text-center">{Math.round(zoom * 100)}%</span>
+          <span className="text-xs w-12 text-center" style={{ fontFamily: 'var(--k-font-mono)', color: 'var(--k-text-muted)' }}>
+            {Math.round(zoom * 100)}%
+          </span>
           <button
             onClick={handleZoomIn}
-            className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center transition-all"
+            style={{
+              background: 'var(--k-glass-thin)',
+              border: '1px solid var(--k-border-subtle)',
+              borderRadius: 'var(--k-radius-md)',
+              color: 'var(--k-text-tertiary)',
+            }}
             aria-label={t('learn.conceptMap.zoomIn')}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -288,8 +329,16 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
         </div>
       </div>
 
-      {/* SVG Graph */}
-      <div className="overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm" style={{ maxHeight: '480px' }}>
+      {/* SVG Graph — transparent bg on dark page */}
+      <div
+        className="overflow-auto"
+        style={{
+          maxHeight: '480px',
+          background: 'transparent',
+          border: '1px solid var(--k-border-subtle)',
+          borderRadius: 'var(--k-radius-xl)',
+        }}
+      >
         <svg
           width={svgWidth * zoom}
           height={svgHeight * zoom}
@@ -307,7 +356,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
               refY="3"
               orient="auto"
             >
-              <polygon points="0 0, 8 3, 0 6" fill="#9ca3af" />
+              <polygon points="0 0, 8 3, 0 6" fill="rgba(255, 255, 255, 0.15)" />
             </marker>
             <marker
               id="arrowhead-active"
@@ -317,10 +366,10 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
               refY="3"
               orient="auto"
             >
-              <polygon points="0 0, 8 3, 0 6" fill="#3b82f6" />
+              <polygon points="0 0, 8 3, 0 6" fill="#6366f1" />
             </marker>
-            <filter id="node-shadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.08" />
+            <filter id="node-glow">
+              <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#6366f1" floodOpacity="0.3" />
             </filter>
           </defs>
 
@@ -341,7 +390,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
                 x={g.x + 8}
                 y={g.y + 14}
                 fontSize={10}
-                fill="#9ca3af"
+                fill="rgba(255, 255, 255, 0.25)"
                 fontWeight={500}
               >
                 {g.domain}
@@ -349,7 +398,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
             </g>
           ))}
 
-          {/* Edges */}
+          {/* Edges — subtle white lines */}
           {edges.map((edge, i) => {
             const isHighlighted = hoveredNode === edge.from.id || hoveredNode === edge.to.id;
             return (
@@ -357,7 +406,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
                 key={`edge-${i}`}
                 d={getArrowPath(edge.from, edge.to)}
                 fill="none"
-                stroke={isHighlighted ? '#3b82f6' : '#d1d5db'}
+                stroke={isHighlighted ? '#6366f1' : 'rgba(255, 255, 255, 0.15)'}
                 strokeWidth={isHighlighted ? 2.5 : 1.5}
                 strokeDasharray={isHighlighted ? undefined : '4 2'}
                 markerEnd={isHighlighted ? 'url(#arrowhead-active)' : 'url(#arrowhead)'}
@@ -366,7 +415,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
             );
           })}
 
-          {/* Nodes */}
+          {/* Nodes — glass circles with mastery-based glow */}
           {layoutedNodes.map(node => {
             const colors = getMasteryColor(node.concept.masteryLevel);
             const isHovered = hoveredNode === node.id;
@@ -392,7 +441,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
                   cy={node.y}
                   r={r + 3}
                   fill="none"
-                  stroke="#e5e7eb"
+                  stroke="rgba(255, 255, 255, 0.08)"
                   strokeWidth={3}
                 />
                 {/* Mastery ring (filled arc) */}
@@ -411,7 +460,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
                   />
                 )}
 
-                {/* Node circle */}
+                {/* Node circle — glass fill */}
                 <circle
                   cx={node.x}
                   cy={node.y}
@@ -419,7 +468,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
                   fill={colors.fill}
                   stroke={colors.stroke}
                   strokeWidth={isHovered ? 2.5 : 1.5}
-                  filter="url(#node-shadow)"
+                  filter={isHovered ? 'url(#node-glow)' : undefined}
                   className="transition-all duration-200"
                 />
 
@@ -433,7 +482,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
                   fontWeight={700}
                   fill={colors.text}
                 >
-                  {node.concept.masteryLevel > 0 ? `${node.concept.masteryLevel}%` : '—'}
+                  {node.concept.masteryLevel > 0 ? `${node.concept.masteryLevel}%` : '\u2014'}
                 </text>
 
                 {/* Label below */}
@@ -443,7 +492,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
                   textAnchor="middle"
                   fontSize={11}
                   fontWeight={500}
-                  fill="#374151"
+                  fill="rgba(255, 255, 255, 0.6)"
                   className="select-none"
                 >
                   {node.concept.name.length > 16
@@ -456,22 +505,29 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
         </svg>
       </div>
 
-      {/* Popup */}
+      {/* Popup — glass surface with backdrop-blur */}
       {popup && (
         <div
-          className="absolute z-20 w-72 bg-white rounded-xl shadow-xl border border-gray-200 p-4 animate-in fade-in slide-in-from-bottom-2 duration-200"
+          className="absolute z-20 w-72 p-4 animate-in fade-in slide-in-from-bottom-2 duration-200"
           style={{
             left: Math.min(popup.x * zoom + 40, (containerRef.current?.offsetWidth ?? 400) - 300),
             top: popup.y * zoom - 20,
+            background: 'var(--k-glass-thick)',
+            backdropFilter: 'blur(var(--k-blur-xl))',
+            WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+            border: '1px solid var(--k-border-default)',
+            borderRadius: 'var(--k-radius-xl)',
+            boxShadow: 'var(--k-shadow-xl)',
           }}
           role="dialog"
           aria-label={popup.concept.name}
         >
           <div className="flex items-start justify-between mb-2">
-            <h4 className="text-sm font-bold text-gray-900">{popup.concept.name}</h4>
+            <h4 className="text-sm font-bold" style={{ color: 'var(--k-text-primary)' }}>{popup.concept.name}</h4>
             <button
               onClick={() => setPopup(null)}
-              className="p-0.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+              className="p-0.5 rounded transition-all"
+              style={{ color: 'var(--k-text-muted)' }}
               aria-label={t('learn.conceptMap.close')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -480,28 +536,45 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
             </button>
           </div>
 
-          <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 mb-2">
+          <span
+            className="inline-block text-xs px-2 py-0.5 mb-2"
+            style={{
+              background: 'var(--k-glass-thin)',
+              border: '1px solid var(--k-border-subtle)',
+              borderRadius: 'var(--k-radius-pill)',
+              color: 'var(--k-text-secondary)',
+            }}
+          >
             {popup.concept.domain}
           </span>
 
           {popup.concept.description && (
-            <p className="text-xs text-gray-500 mb-3 leading-relaxed">{popup.concept.description}</p>
+            <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--k-text-secondary)' }}>
+              {popup.concept.description}
+            </p>
           )}
 
           {/* Mastery bar */}
           <div className="mb-3">
             <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-gray-500">{t('learn.conceptMap.mastery')}</span>
+              <span style={{ color: 'var(--k-text-tertiary)' }}>{t('learn.conceptMap.mastery')}</span>
               <span className="font-semibold" style={{ color: getMasteryColor(popup.concept.masteryLevel).text }}>
                 {popup.concept.masteryLevel}%
               </span>
             </div>
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="w-full h-2 overflow-hidden"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                borderRadius: 'var(--k-radius-pill)',
+              }}
+            >
               <div
-                className="h-full rounded-full transition-all duration-500"
+                className="h-full transition-all duration-500"
                 style={{
                   width: `${popup.concept.masteryLevel}%`,
                   backgroundColor: getMasteryColor(popup.concept.masteryLevel).stroke,
+                  borderRadius: 'var(--k-radius-pill)',
                 }}
               />
             </div>
@@ -509,7 +582,7 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
 
           {/* Prerequisites */}
           {popup.concept.prerequisites.length > 0 && (
-            <div className="text-xs text-gray-500">
+            <div className="text-xs" style={{ color: 'var(--k-text-tertiary)' }}>
               <span className="font-medium">{t('learn.conceptMap.prerequisites')}:</span>{' '}
               {popup.concept.prerequisites
                 .map(id => concepts.find(c => c.id === id)?.name ?? id)
@@ -518,34 +591,34 @@ export default function ConceptMap({ concepts, onConceptClick }: ConceptMapProps
           )}
 
           {popup.concept.lessonCount !== undefined && (
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs mt-1" style={{ color: 'var(--k-text-muted)' }}>
               {t('learn.conceptMap.lessons', { count: popup.concept.lessonCount })}
             </div>
           )}
         </div>
       )}
 
-      {/* Legend */}
+      {/* Legend — dark glass tokens */}
       <div className="mt-4 flex flex-wrap items-center gap-4 px-2">
-        <span className="text-xs font-medium text-gray-500">{t('learn.conceptMap.legend')}:</span>
-        <span className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-3 h-3 rounded-full bg-gray-200 border border-gray-400" />
+        <span className="text-xs font-medium" style={{ color: 'var(--k-text-tertiary)' }}>{t('learn.conceptMap.legend')}:</span>
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--k-text-tertiary)' }}>
+          <span className="w-3 h-3 rounded-full" style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)' }} />
           {t('learn.conceptMap.notStarted')}
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-3 h-3 rounded-full bg-red-100 border border-red-400" />
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--k-text-tertiary)' }}>
+          <span className="w-3 h-3 rounded-full" style={{ background: 'rgba(244, 63, 94, 0.08)', border: '1px solid #f43f5e' }} />
           {t('learn.conceptMap.weak')}
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-3 h-3 rounded-full bg-yellow-100 border border-yellow-400" />
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--k-text-tertiary)' }}>
+          <span className="w-3 h-3 rounded-full" style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid #f59e0b' }} />
           {t('learn.conceptMap.developing')}
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-3 h-3 rounded-full bg-green-100 border border-green-400" />
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--k-text-tertiary)' }}>
+          <span className="w-3 h-3 rounded-full" style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid #10b981' }} />
           {t('learn.conceptMap.strong')}
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-3 h-3 rounded-full bg-emerald-100 border border-emerald-500" />
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--k-text-tertiary)' }}>
+          <span className="w-3 h-3 rounded-full" style={{ background: 'rgba(5, 150, 105, 0.12)', border: '1px solid #059669' }} />
           {t('learn.conceptMap.mastered')}
         </span>
       </div>

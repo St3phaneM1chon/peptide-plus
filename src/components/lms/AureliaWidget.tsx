@@ -4,11 +4,11 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Mic, MicOff, Send, Sparkles, Volume2, VolumeX, Loader2 } from 'lucide-react';
 
 /**
- * AURELIA WIDGET — Omnipresente sur chaque page etudiant
+ * AURELIA WIDGET — Dark Glass Premium AI Companion
  *
- * Bouton flottant en bas a droite. Un clic ouvre la conversation.
- * Aurelia connait la page actuelle (cours, lecon, quiz) et adapte ses reponses.
- * Supporte texte ET voix (Deepgram STT + ElevenLabs TTS).
+ * Floating glass button with breathing animation. Opens glass chat window.
+ * Aurelia knows the current page context and adapts responses.
+ * Supports text AND voice (Deepgram STT + ElevenLabs TTS).
  */
 
 interface AureliaWidgetProps {
@@ -315,19 +315,53 @@ export default function AureliaWidget({ context, studentName, studentProvince }:
     }
   }
 
+  // Context label for badge
+  const contextLabel = context?.pageType === 'lesson' ? 'Leçon'
+    : context?.pageType === 'quiz' ? 'Quiz'
+    : context?.pageType === 'course' ? 'Cours'
+    : context?.pageType === 'dashboard' ? 'Dashboard'
+    : null;
+
   return (
     <>
-      {/* Widget flottant */}
+      {/* Inject breathing animation keyframes */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes aurelia-breathe {
+          0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(6, 182, 212, 0.2); }
+          50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(6, 182, 212, 0.35); }
+        }
+        @keyframes aurelia-glow-border {
+          0%, 100% { border-color: rgba(99, 102, 241, 0.3); }
+          50% { border-color: rgba(6, 182, 212, 0.5); }
+        }
+        @keyframes voice-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
+          50% { box-shadow: 0 0 0 8px rgba(244, 63, 94, 0); }
+        }
+      `}} />
+
+      {/* Floating glass button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-white shadow-lg hover:bg-blue-700 transition-all hover:scale-105"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 transition-all hover:scale-105"
+          style={{
+            background: 'linear-gradient(135deg, var(--k-accent-indigo), var(--k-accent-cyan))',
+            color: 'var(--k-text-primary)',
+            backdropFilter: 'blur(var(--k-blur-xl))',
+            WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(6, 182, 212, 0.2)',
+            animation: 'aurelia-breathe 3s ease-in-out infinite',
+          }}
           aria-label="Parler avec Aurélia"
         >
           {showPulse && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-yellow-400" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                style={{ background: 'var(--k-accent-emerald)' }} />
+              <span className="relative inline-flex rounded-full h-4 w-4"
+                style={{ background: 'var(--k-accent-emerald)' }} />
             </span>
           )}
           <Sparkles className="h-5 w-5" />
@@ -335,44 +369,118 @@ export default function AureliaWidget({ context, studentName, studentProvince }:
         </button>
       )}
 
-      {/* Fenetre de chat */}
+      {/* Glass chat window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-96 h-[32rem] flex flex-col rounded-2xl border bg-background shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-blue-600 text-white">
+        <div
+          className="fixed bottom-6 right-6 z-50 w-96 h-[32rem] flex flex-col overflow-hidden"
+          style={{
+            background: 'var(--k-glass-regular)',
+            backdropFilter: 'blur(var(--k-blur-xl))',
+            WebkitBackdropFilter: 'blur(var(--k-blur-xl))',
+            border: '1px solid var(--k-border-default)',
+            borderRadius: 'var(--k-radius-2xl)',
+            boxShadow: 'var(--k-shadow-xl), var(--k-glow-primary)',
+            animation: 'aurelia-glow-border 4s ease-in-out infinite',
+          }}
+        >
+          {/* Glass header */}
+          <div
+            className="flex items-center justify-between px-4 py-3"
+            style={{
+              background: 'var(--k-glass-thick)',
+              borderBottom: '1px solid var(--k-border-subtle)',
+            }}
+          >
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
+              {/* Avatar with gradient ring */}
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{
+                  background: 'var(--k-gradient-primary)',
+                  boxShadow: '0 0 12px rgba(99, 102, 241, 0.4)',
+                }}
+              >
+                <Sparkles className="h-4 w-4" style={{ color: 'var(--k-text-primary)' }} />
+              </div>
               <div>
-                <p className="font-semibold text-sm">Aurélia</p>
-                <p className="text-xs opacity-80">Tutrice personnelle</p>
+                <p className="font-semibold text-sm" style={{ color: 'var(--k-text-primary)' }}>Aurélia</p>
+                <div className="flex items-center gap-1.5">
+                  {/* GlowDot green */}
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: 'var(--k-accent-emerald)', boxShadow: '0 0 6px var(--k-accent-emerald)' }}
+                  />
+                  <p className="text-xs" style={{ color: 'var(--k-text-secondary)' }}>En ligne</p>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setAutoSpeak(prev => !prev)}
-                className={`p-1 rounded transition-colors ${autoSpeak ? 'bg-blue-500' : 'hover:bg-blue-700 opacity-60'}`}
+                className="p-1.5 rounded-lg transition-all"
+                style={{
+                  background: autoSpeak ? 'var(--k-accent-indigo-20)' : 'transparent',
+                  color: autoSpeak ? 'var(--k-accent-indigo)' : 'var(--k-text-muted)',
+                }}
                 aria-label={autoSpeak ? 'Désactiver la lecture automatique' : 'Activer la lecture automatique'}
                 title={autoSpeak ? 'Lecture auto activée' : 'Lecture auto désactivée'}
               >
                 {autoSpeak ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
               </button>
-              <button onClick={() => setIsOpen(false)} aria-label="Fermer" className="p-1 hover:bg-blue-700 rounded">
-                <X className="h-5 w-5" />
+              <button
+                onClick={() => setIsOpen(false)}
+                aria-label="Fermer"
+                className="p-1.5 rounded-lg transition-all"
+                style={{
+                  background: 'var(--k-glass-thin)',
+                  color: 'var(--k-text-secondary)',
+                  border: '1px solid var(--k-border-subtle)',
+                }}
+              >
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          {/* Context banner */}
+          {/* Context badge banner */}
           {context?.courseTitle && (
-            <div className="px-3 py-1.5 bg-blue-50 text-xs text-blue-700 border-b">
-              📖 {context.courseTitle} {context.lessonTitle ? `→ ${context.lessonTitle}` : ''}
+            <div
+              className="px-3 py-1.5 text-xs flex items-center gap-1.5"
+              style={{
+                background: 'var(--k-glass-chromatic)',
+                color: 'var(--k-accent-indigo)',
+                borderBottom: '1px solid var(--k-border-subtle)',
+              }}
+            >
+              {contextLabel && (
+                <span
+                  className="px-1.5 py-0.5 rounded-full text-[10px] font-medium"
+                  style={{
+                    background: 'var(--k-accent-indigo-20)',
+                    color: 'var(--k-accent-indigo)',
+                  }}
+                >
+                  {contextLabel}
+                </span>
+              )}
+              <span style={{ color: 'var(--k-text-secondary)' }}>
+                {context.courseTitle} {context.lessonTitle ? `→ ${context.lessonTitle}` : ''}
+              </span>
             </div>
           )}
 
           {/* Province selector (shown once if province not set) */}
           {showProvincePrompt && !selectedProvince && (
-            <div className="px-3 py-2 bg-amber-50 border-b border-amber-100">
-              <p className="text-xs text-amber-700 font-medium mb-2">Dans quelle province travailles-tu?</p>
+            <div
+              className="px-3 py-2"
+              style={{
+                background: 'var(--k-accent-amber-10)',
+                borderBottom: '1px solid var(--k-border-subtle)',
+              }}
+            >
+              <p className="text-xs font-medium mb-2" style={{ color: 'var(--k-accent-amber)' }}>
+                Dans quelle province travailles-tu?
+              </p>
               <select
                 value=""
                 onChange={async (e) => {
@@ -399,7 +507,12 @@ export default function AureliaWidget({ context, studentName, studentProvince }:
                     },
                   ]);
                 }}
-                className="w-full px-2 py-1.5 border border-amber-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 rounded-lg text-sm outline-none"
+                style={{
+                  background: 'var(--k-glass-thin)',
+                  border: '1px solid var(--k-border-default)',
+                  color: 'var(--k-text-primary)',
+                }}
                 aria-label="Province de travail"
               >
                 <option value="">Selectionner...</option>
@@ -415,11 +528,23 @@ export default function AureliaWidget({ context, studentName, studentProvince }:
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className="flex flex-col gap-1 max-w-[80%]">
-                  <div className={`rounded-2xl px-4 py-2 text-sm ${
-                    msg.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-md'
-                      : 'bg-muted rounded-bl-md'
-                  }`}>
+                  <div
+                    className="rounded-2xl px-4 py-2 text-sm"
+                    style={msg.role === 'user'
+                      ? {
+                          background: 'rgba(99, 102, 241, 0.15)',
+                          color: 'var(--k-text-primary)',
+                          borderBottomRightRadius: 'var(--k-radius-sm)',
+                          border: '1px solid rgba(99, 102, 241, 0.2)',
+                        }
+                      : {
+                          background: 'var(--k-glass-thin)',
+                          color: 'var(--k-text-primary)',
+                          borderBottomLeftRadius: 'var(--k-radius-sm)',
+                          border: '1px solid var(--k-border-subtle)',
+                        }
+                    }
+                  >
                     {msg.content}
                   </div>
                   {msg.role === 'assistant' && msg.id !== 'greeting' && (
@@ -427,9 +552,11 @@ export default function AureliaWidget({ context, studentName, studentProvince }:
                       <button
                         onClick={() => speakMessage(msg.id, msg.content)}
                         disabled={loadingTtsId === msg.id}
-                        className={`p-1 rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-50 disabled:opacity-50 ${
-                          speakingMessageId === msg.id ? 'text-blue-600 bg-blue-50' : ''
-                        }`}
+                        className="p-1 rounded-full transition-all disabled:opacity-50"
+                        style={{
+                          color: speakingMessageId === msg.id ? 'var(--k-accent-indigo)' : 'var(--k-text-muted)',
+                          background: speakingMessageId === msg.id ? 'var(--k-accent-indigo-10)' : 'transparent',
+                        }}
                         aria-label={
                           loadingTtsId === msg.id
                             ? 'Chargement audio...'
@@ -460,25 +587,46 @@ export default function AureliaWidget({ context, studentName, studentProvince }:
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2 text-sm">
-                  <span className="animate-pulse">Aurélia réfléchit...</span>
+                <div
+                  className="rounded-2xl px-4 py-2 text-sm"
+                  style={{
+                    background: 'var(--k-glass-thin)',
+                    border: '1px solid var(--k-border-subtle)',
+                    borderBottomLeftRadius: 'var(--k-radius-sm)',
+                  }}
+                >
+                  <span className="animate-pulse" style={{ color: 'var(--k-text-secondary)' }}>
+                    Aurélia réfléchit...
+                  </span>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="border-t px-3 py-2 flex items-center gap-2">
+          {/* Glass input area */}
+          <div
+            className="px-3 py-2 flex items-center gap-2"
+            style={{
+              borderTop: '1px solid var(--k-border-subtle)',
+              background: 'var(--k-glass-ultra-thin)',
+            }}
+          >
+            {/* Voice button */}
             <button
               onClick={toggleVoice}
-              className={`p-2 rounded-full transition-colors ${
-                isListening ? 'bg-red-100 text-red-600 animate-pulse' : 'hover:bg-muted text-muted-foreground'
-              }`}
+              className="p-2 rounded-full transition-all"
+              style={{
+                background: isListening ? 'var(--k-accent-rose-10)' : 'var(--k-glass-thin)',
+                color: isListening ? 'var(--k-accent-rose)' : 'var(--k-text-muted)',
+                border: `1px solid ${isListening ? 'rgba(244, 63, 94, 0.3)' : 'var(--k-border-subtle)'}`,
+                animation: isListening ? 'voice-pulse 1.5s ease-in-out infinite' : 'none',
+              }}
               aria-label={isListening ? 'Arrêter l\'écoute' : 'Parler'}
             >
               {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </button>
+            {/* Glass input */}
             <input
               ref={inputRef}
               type="text"
@@ -486,13 +634,25 @@ export default function AureliaWidget({ context, studentName, studentProvince }:
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage(input)}
               placeholder="Pose ta question..."
-              className="flex-1 text-sm bg-muted rounded-full px-4 py-2 outline-none focus-visible:outline-2 focus-visible:outline-blue-500"
+              className="flex-1 text-sm rounded-full px-4 py-2 outline-none"
+              style={{
+                background: 'var(--k-glass-thin)',
+                border: '1px solid var(--k-border-subtle)',
+                color: 'var(--k-text-primary)',
+              }}
               aria-label="Message pour Aurélia"
             />
+            {/* Gradient send button */}
             <button
               onClick={() => sendMessage(input)}
               disabled={!input.trim() || isLoading}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded-full disabled:opacity-30"
+              className="p-2 rounded-full disabled:opacity-30 transition-all"
+              style={{
+                background: input.trim() && !isLoading
+                  ? 'var(--k-gradient-primary)'
+                  : 'var(--k-glass-thin)',
+                color: 'var(--k-text-primary)',
+              }}
               aria-label="Envoyer"
             >
               <Send className="h-5 w-5" />
