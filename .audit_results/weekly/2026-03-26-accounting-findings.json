@@ -43,7 +43,7 @@
       "line": 138,
       "cweId": "CWE-400",
       "confidence": 0.85,
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "ACCT-F5",
