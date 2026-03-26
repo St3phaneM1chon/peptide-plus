@@ -74,7 +74,7 @@
       "line": 43,
       "cweId": "CWE-837",
       "confidence": 0.9,
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "PAY-F8",
