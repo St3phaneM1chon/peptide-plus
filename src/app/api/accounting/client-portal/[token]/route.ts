@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 import {
   validatePortalAccess,
   getClientOutstandingBalance,
@@ -21,6 +23,13 @@ export async function GET(
   context: { params: Promise<{ token: string }> }
 ) {
   try {
+    // ACCT-F2 FIX: Rate limit public portal endpoints (10/min per IP)
+    const ip = getClientIpFromRequest(_request);
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/client-portal');
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { token } = await context.params;
 
     if (!token || token.length < 10) {
