@@ -175,32 +175,31 @@ export async function createAccountingEntriesForOrder(orderId: string): Promise<
     throw new Error(`Order not found: ${orderId}`);
   }
 
-  // Idempotency check: verify no journal entries already exist for this order
-  const existingEntry = await prisma.journalEntry.findFirst({
-    where: { reference: { contains: order.orderNumber } },
-    select: { id: true },
-  });
-  if (existingEntry) {
-    // Entries already created for this order — return existing IDs to prevent duplicates
-    const existingFee = await prisma.journalEntry.findFirst({
-      where: { reference: { contains: order.orderNumber }, description: { contains: 'fee' } },
-      select: { id: true },
-    });
-    const existingInvoice = await prisma.customerInvoice.findFirst({
-      where: { orderId },
-      select: { id: true },
-    });
-    return {
-      saleEntryId: existingEntry.id,
-      feeEntryId: existingFee?.id || null,
-      invoiceId: existingInvoice?.id || '',
-    };
-  }
-
   // Ensure the accounting period for the order date is open
   await assertPeriodOpen(order.createdAt);
 
   return prisma.$transaction(async (tx) => {
+    // ACCT-F3 FIX: Idempotency check INSIDE transaction (was outside = TOCTOU race)
+    const existingEntry = await tx.journalEntry.findFirst({
+      where: { orderId },
+      select: { id: true },
+    });
+    if (existingEntry) {
+      const existingFee = await tx.journalEntry.findFirst({
+        where: { orderId, description: { contains: 'fee' } },
+        select: { id: true },
+      });
+      const existingInvoice = await tx.customerInvoice.findFirst({
+        where: { orderId },
+        select: { id: true },
+      });
+      return {
+        saleEntryId: existingEntry.id,
+        feeEntryId: existingFee?.id || null,
+        invoiceId: existingInvoice?.id || '',
+      };
+    }
+
     // 1. Generate sale journal entry
     const saleEntryId = await generateSaleEntry(order, tx);
 
