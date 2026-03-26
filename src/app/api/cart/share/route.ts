@@ -105,17 +105,31 @@ export async function POST(request: NextRequest) {
 
     const { items } = parsed.data;
 
-    // Encode cart items into a JWT token
-    // XSS FIX: Strip HTML tags from name field before storing in JWT
+    // ECOM-F1 FIX: Resolve prices from DB before signing JWT (was trusting client prices)
+    const productIds = [...new Set(items.map(i => i.productId))];
+    const optionIds = items.map(i => i.optionId).filter(Boolean) as string[];
+
+    const [products, options] = await Promise.all([
+      productIds.length > 0 ? prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, price: true, name: true } }) : [],
+      optionIds.length > 0 ? prisma.productOption.findMany({ where: { id: { in: optionIds } }, select: { id: true, price: true, productId: true } }) : [],
+    ]);
+    const productMap = new Map(products.map(p => [p.id, p]));
+    const optionMap = new Map(options.map(o => [o.id, o]));
+
     const payload: SharedCartPayload = {
-      items: items.map((item) => ({
-        productId: item.productId,
-        optionId: item.optionId ?? null,
-        name: stripHtml(item.name),
-        price: item.price,
-        quantity: item.quantity,
-        image: item.image ?? null,
-      })),
+      items: items.map((item) => {
+        const option = item.optionId ? optionMap.get(item.optionId) : null;
+        const product = productMap.get(item.productId);
+        const dbPrice = option ? Number(option.price) : product ? Number(product.price) : item.price;
+        return {
+          productId: item.productId,
+          optionId: item.optionId ?? null,
+          name: stripHtml(product?.name ?? item.name),
+          price: dbPrice, // Server-verified price
+          quantity: item.quantity,
+          image: item.image ?? null,
+        };
+      }),
     };
 
     const token = await new SignJWT({ cart: payload })
