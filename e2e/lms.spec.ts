@@ -215,22 +215,49 @@ publicTest.describe('LMS V2 API — Student endpoints (unauthenticated)', () => 
   });
 });
 
-test.describe('LMS V2 Admin — New endpoints load', () => {
-  test('admin badges page loads', async ({ adminPage }) => {
-    const response = await adminPage.goto('/admin/formation/badges');
-    expect(response?.status()).toBeLessThan(400);
-    await waitForPageReady(adminPage);
-  });
+test.describe('LMS V2 Admin — All formation pages load', () => {
+  const adminPages = [
+    '/admin/formation',
+    '/admin/formation/cours',
+    '/admin/formation/quiz',
+    '/admin/formation/badges',
+    '/admin/formation/certificats',
+    '/admin/formation/modeles-certificats',
+    '/admin/formation/conformite',
+    '/admin/formation/corporatif',
+    '/admin/formation/cohortes',
+    '/admin/formation/classement',
+    '/admin/formation/inscriptions',
+    '/admin/formation/instructeurs',
+    '/admin/formation/forfaits',
+    '/admin/formation/categories',
+    '/admin/formation/banques-questions',
+    '/admin/formation/sessions-direct',
+    '/admin/formation/carnet-notes',
+    '/admin/formation/diffusion-progressive',
+    '/admin/formation/evaluation-pairs',
+    '/admin/formation/grilles-evaluation',
+    '/admin/formation/parcours-roles',
+    '/admin/formation/medias',
+    '/admin/formation/parametres',
+    '/admin/formation/portail',
+    '/admin/formation/modeles-cours',
+    '/admin/formation/outils-lti',
+    '/admin/formation/avis',
+    '/admin/formation/analytics',
+    '/admin/formation/rapports',
+    '/admin/formation/xapi',
+    '/admin/formation/etudiants',
+    '/admin/formation/progression',
+  ];
 
-  test('admin conformite page loads', async ({ adminPage }) => {
-    const response = await adminPage.goto('/admin/formation/conformite');
-    expect(response?.status()).toBeLessThan(400);
-    await waitForPageReady(adminPage);
-  });
-
-  test('admin cohortes page loads', async ({ adminPage }) => {
-    const response = await adminPage.goto('/admin/formation/cohortes');
-    expect(response?.status()).toBeLessThan(400);
-    await waitForPageReady(adminPage);
-  });
+  for (const path of adminPages) {
+    test(`loads ${path}`, async ({ adminPage }) => {
+      const response = await adminPage.goto(path);
+      expect(response?.status()).toBeLessThan(400);
+      await waitForPageReady(adminPage);
+      const body = await adminPage.textContent('body');
+      expect(body?.length).toBeGreaterThan(0);
+    });
+  }
 });
