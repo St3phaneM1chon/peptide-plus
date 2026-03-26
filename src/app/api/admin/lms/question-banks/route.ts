@@ -101,3 +101,41 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
   return apiSuccess(bank, { request, status: 201 });
 });
+
+const updateBankSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional(),
+  domain: z.string().max(100).optional(),
+});
+
+export const PATCH = withAdminGuard(async (request: NextRequest, { session }) => {
+  const tenantId = session.user.tenantId;
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) return apiError('Bank ID required', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+
+  const body = await request.json();
+  const parsed = updateBankSchema.safeParse(body);
+  if (!parsed.success) return apiError('Invalid input', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+
+  const existing = await prisma.questionBank.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!existing) return apiError('Bank not found', ErrorCode.NOT_FOUND, { request, status: 404 });
+
+  const updated = await prisma.questionBank.update({ where: { id }, data: parsed.data });
+  return apiSuccess(updated, { request });
+});
+
+export const PUT = PATCH;
+
+export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
+  const tenantId = session.user.tenantId;
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) return apiError('Bank ID required', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+
+  const bank = await prisma.questionBank.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!bank) return apiError('Bank not found', ErrorCode.NOT_FOUND, { request, status: 404 });
+
+  await prisma.questionBank.update({ where: { id }, data: { isActive: false } });
+  return apiSuccess({ success: true }, { request });
+});
