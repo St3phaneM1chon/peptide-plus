@@ -129,7 +129,7 @@ export default function FidelitePage() {
     try {
       const [txnRes, statsRes] = await Promise.all([
         fetch('/api/admin/loyalty/transactions?limit=10'),
-        fetch('/api/admin/users?limit=1&loyaltyTier=BRONZE'),
+        fetch('/api/admin/users?limit=1&tier=BRONZE'),
       ]);
       if (txnRes.ok) {
         const data = await txnRes.json();
@@ -143,7 +143,7 @@ export default function FidelitePage() {
         // Fetch count for each tier
         for (const tierName of ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND']) {
           try {
-            const res = await fetch(`/api/admin/users?limit=1&loyaltyTier=${tierName}`);
+            const res = await fetch(`/api/admin/users?limit=1&tier=${tierName}`);
             if (res.ok) {
               const d = await res.json();
               const count = d.total || d.pagination?.total || 0;
@@ -316,7 +316,7 @@ export default function FidelitePage() {
     let userCount = 0;
     // Check server-side if users are in this tier
     try {
-      const res = await fetch(`/api/admin/users?loyaltyTier=${encodeURIComponent(tierName)}&limit=1`);
+      const res = await fetch(`/api/admin/users?tier=${encodeURIComponent(tierName)}&limit=1`);
       if (res.ok) {
         const data = await res.json();
         userCount = data.total || data.users?.length || 0;
@@ -588,7 +588,7 @@ export default function FidelitePage() {
                 <p className="text-xs font-semibold mb-1">{t('admin.loyalty.perks')}:</p>
                 <ul className="text-xs space-y-1">
                   {tier.perks.map((perk, i) => (
-                    <li key={i} className="flex items-start gap-1">
+                    <li key={`${i}-${perk}`} className="flex items-start gap-1">
                       <span>&#10003;</span>
                       <span>{perk}</span>
                     </li>
@@ -717,8 +717,8 @@ export default function FidelitePage() {
                 </tr>
               </thead>
               <tbody>
-                {recentTxns.map(txn => (
-                  <tr key={txn.id} className="border-b border-white/5 hover:bg-white/5">
+                {recentTxns.map((txn, txnIdx) => (
+                  <tr key={`${txnIdx}-${txn.id}`} className="border-b border-white/5 hover:bg-white/5">
                     <td className="py-2 px-3">
                       <p className="font-medium text-slate-800 truncate max-w-[120px]">{txn.userName}</p>
                     </td>
@@ -867,7 +867,7 @@ export default function FidelitePage() {
               <p className="text-[10px] text-[var(--k-text-secondary)]">{tier.minPoints.toLocaleString(locale)}+ {t('admin.loyalty.pts')}</p>
               <div className="mt-2 text-[10px] text-[var(--k-text-secondary)]">
                 {tier.perks.slice(0, 2).map((perk, i) => (
-                  <p key={i}>&#10003; {perk}</p>
+                  <p key={`${i}-${perk}`}>&#10003; {perk}</p>
                 ))}
                 {tier.perks.length > 2 && <p className="text-[var(--k-text-muted)]">+{tier.perks.length - 2} ...</p>}
               </div>
