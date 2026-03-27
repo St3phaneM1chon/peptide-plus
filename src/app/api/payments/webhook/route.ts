@@ -15,6 +15,7 @@ import { generateCOGSEntry } from '@/lib/inventory';
 import { qualifyReferral } from '@/lib/referral-qualify';
 import { logger } from '@/lib/logger';
 import { enrollUser, enrollUserInBundle } from '@/lib/lms/lms-service';
+import { logAudit } from '@/lib/lms/audit-trail';
 import { validateTransition } from '@/lib/order-status-machine';
 import { sendOrderNotificationSms, sendPaymentFailureAlertSms } from '@/lib/sms';
 import { sanitizeWebhookPayload } from '@/lib/sanitize';
@@ -1729,6 +1730,30 @@ async function handleLmsCheckoutComplete(
       },
     });
 
+    // Audit trail: TenantEvent + LMS audit log (non-blocking)
+    prisma.tenantEvent.create({
+      data: {
+        tenantId,
+        type: 'lms.course.purchased',
+        actor: userId,
+        details: {
+          courseId: itemId,
+          amount: (session.amount_total ?? 0) / 100,
+          stripeSessionId: session.id,
+          paymentType: corpAcctId ? 'corporate' : 'individual',
+        },
+      },
+    }).catch(err => logger.error('[LMS Webhook] TenantEvent creation failed', { error: err instanceof Error ? err.message : String(err) }));
+
+    logAudit({
+      tenantId,
+      userId,
+      action: 'enroll',
+      entity: 'course',
+      entityId: itemId,
+      details: { source: 'stripe_checkout', stripeSessionId: session.id, amount: (session.amount_total ?? 0) / 100 },
+    }).catch(err => logger.error('[LMS Webhook] Audit log failed', { error: err instanceof Error ? err.message : String(err) }));
+
     logger.info('[LMS Webhook] Course enrollment complete', { courseId: itemId, userId });
 
   } else if (type === 'bundle') {
@@ -1757,6 +1782,38 @@ async function handleLmsCheckoutComplete(
         enrollmentIds: result.enrollmentIds,
       },
     });
+
+    // Audit trail: TenantEvent + LMS audit log (non-blocking)
+    prisma.tenantEvent.create({
+      data: {
+        tenantId,
+        type: 'lms.bundle.purchased',
+        actor: userId,
+        details: {
+          bundleId: itemId,
+          amount: (session.amount_total ?? 0) / 100,
+          stripeSessionId: session.id,
+          enrolledCount: result.enrollmentIds.length,
+          skippedCount: result.skippedCourseIds.length,
+          paymentType: corpAcctId ? 'corporate' : 'individual',
+        },
+      },
+    }).catch(err => logger.error('[LMS Webhook] TenantEvent creation failed', { error: err instanceof Error ? err.message : String(err) }));
+
+    logAudit({
+      tenantId,
+      userId,
+      action: 'enroll',
+      entity: 'course_bundle',
+      entityId: itemId,
+      details: {
+        source: 'stripe_checkout',
+        stripeSessionId: session.id,
+        amount: (session.amount_total ?? 0) / 100,
+        enrolledCount: result.enrollmentIds.length,
+        skippedCount: result.skippedCourseIds.length,
+      },
+    }).catch(err => logger.error('[LMS Webhook] Audit log failed', { error: err instanceof Error ? err.message : String(err) }));
 
     logger.info('[LMS Webhook] Bundle enrollment complete', {
       bundleId: itemId, userId,
