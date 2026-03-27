@@ -145,15 +145,14 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/abonnements', labelKey: 'admin.nav.subscriptions', icon: RefreshCw },
           { href: '/admin/inventaire', labelKey: 'admin.nav.inventory', icon: Archive },
           { href: '/admin/fournisseurs', labelKey: 'admin.nav.suppliers', icon: Truck },
-          { href: '/admin/paiements/reconciliation', labelKey: 'admin.nav.paymentReconciliation', icon: Scale },
-          { href: '/admin/livraison', labelKey: 'admin.nav.shippingZones', icon: Truck },
+          { href: '/admin/livraison', labelKey: 'admin.nav.shippingZones', icon: Package },
         ],
         defaultOpen: true,
       },
       {
         labelKey: 'admin.nav.community',
         items: [
-          { href: '/admin/avis', labelKey: 'admin.nav.reviews', icon: Star },
+          { href: '/admin/avis', labelKey: 'admin.nav.customerReviews', icon: Star },
           { href: '/admin/questions', labelKey: 'admin.nav.questions', icon: HelpCircle },
         ],
         collapsible: true,
@@ -188,7 +187,6 @@ export const folderSections: Record<string, NavFolderSection> = {
         labelKey: 'admin.nav.contentAndSeo',
         items: [
           { href: '/admin/seo', labelKey: 'admin.nav.seo', icon: Search },
-          { href: '/admin/contenu', labelKey: 'admin.nav.contentPages', icon: FileText },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -370,6 +368,21 @@ export const folderSections: Record<string, NavFolderSection> = {
         defaultOpen: false,
       },
       {
+        labelKey: 'admin.nav.voipCallCenter',
+        items: [
+          { href: '/admin/crm/dialer', labelKey: 'admin.nav.crmDialer', icon: Phone },
+          { href: '/admin/crm/wallboard', labelKey: 'admin.nav.crmWallboard', icon: Monitor },
+          { href: '/admin/crm/agents/performance', labelKey: 'admin.nav.crmAgentPerf', icon: UserCheck },
+          { href: '/admin/crm/reps', labelKey: 'admin.nav.crmReps360', icon: Users },
+          { href: '/admin/crm/call-analytics', labelKey: 'admin.nav.crmCallAnalytics', icon: BarChart2 },
+          { href: '/admin/crm/call-center-kpis', labelKey: 'admin.nav.crmCallKpis', icon: Activity },
+          { href: '/admin/crm/scheduling', labelKey: 'admin.nav.crmScheduling', icon: Calendar },
+          { href: '/admin/crm/adherence', labelKey: 'admin.nav.crmAdherence', icon: ClipboardCheck },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
         labelKey: 'admin.nav.voipSettings',
         items: [
           { href: '/admin/telephonie/connexions', labelKey: 'admin.nav.voipConnections', icon: Wifi },
@@ -394,7 +407,6 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/crm/pipelines', labelKey: 'admin.nav.crmPipelines', icon: GitBranch },
           { href: '/admin/crm/leads', labelKey: 'admin.nav.crmLeads', icon: Target },
           { href: '/admin/crm/lists', labelKey: 'admin.nav.crmLists', icon: ListChecks },
-          { href: '/admin/scraper', labelKey: 'admin.nav.scraper', icon: Search },
           { href: '/admin/crm/deals', labelKey: 'admin.nav.crmDeals', icon: Briefcase },
         ],
         defaultOpen: true,
@@ -408,7 +420,6 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/crm/quotas', labelKey: 'admin.nav.crmQuotas', icon: Target },
           { href: '/admin/crm/approvals', labelKey: 'admin.nav.crmApprovals', icon: CheckSquare },
           { href: '/admin/crm/contracts', labelKey: 'admin.nav.crmContracts', icon: FileCheck },
-          { href: '/admin/crm/exchange-rates', labelKey: 'admin.nav.crmExchangeRates', icon: DollarSign },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -417,28 +428,12 @@ export const folderSections: Record<string, NavFolderSection> = {
         labelKey: 'admin.nav.crmComms',
         items: [
           { href: '/admin/crm/inbox', labelKey: 'admin.nav.crmInbox', icon: Inbox },
-          { href: '/admin/chat', labelKey: 'admin.nav.chatSupport', icon: MessageCircle, badge: 'unreadChats' },
           { href: '/admin/crm/campaigns', labelKey: 'admin.nav.crmCampaigns', icon: Megaphone },
           { href: '/admin/crm/sms-campaigns', labelKey: 'admin.nav.crmSmsCampaigns', icon: MessageSquare },
           { href: '/admin/crm/sms-templates', labelKey: 'admin.nav.crmSmsTemplates', icon: FileText },
           { href: '/admin/crm/snippets', labelKey: 'admin.nav.crmSnippets', icon: FileEdit },
           { href: '/admin/crm/knowledge-base', labelKey: 'admin.nav.crmKnowledgeBase', icon: BookOpen },
           { href: '/admin/crm/tickets', labelKey: 'admin.nav.crmTickets', icon: ClipboardList },
-        ],
-        collapsible: true,
-        defaultOpen: false,
-      },
-      {
-        labelKey: 'admin.nav.crmCallCenter',
-        items: [
-          { href: '/admin/crm/dialer', labelKey: 'admin.nav.crmDialer', icon: Phone },
-          { href: '/admin/crm/wallboard', labelKey: 'admin.nav.crmWallboard', icon: Monitor },
-          { href: '/admin/crm/agents/performance', labelKey: 'admin.nav.crmAgentPerf', icon: UserCheck },
-          { href: '/admin/crm/reps', labelKey: 'admin.nav.crmReps360', icon: Users },
-          { href: '/admin/crm/call-analytics', labelKey: 'admin.nav.crmCallAnalytics', icon: BarChart2 },
-          { href: '/admin/crm/call-center-kpis', labelKey: 'admin.nav.crmCallKpis', icon: Activity },
-          { href: '/admin/crm/scheduling', labelKey: 'admin.nav.crmScheduling', icon: Calendar },
-          { href: '/admin/crm/adherence', labelKey: 'admin.nav.crmAdherence', icon: ClipboardCheck },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -454,6 +449,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/crm/forms', labelKey: 'admin.nav.crmForms', icon: FileEdit },
           { href: '/admin/crm/playbooks', labelKey: 'admin.nav.crmPlaybooks', icon: BookOpen },
           { href: '/admin/crm/workflow-analytics', labelKey: 'admin.nav.crmWorkflowAnalytics', icon: BarChart2 },
+          { href: '/admin/scraper', labelKey: 'admin.nav.scraper', icon: Search },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -529,7 +525,9 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/comptabilite/import-bancaire', labelKey: 'admin.nav.bankImport', icon: Import },
           { href: '/admin/comptabilite/regles-bancaires', labelKey: 'admin.nav.bankRules', icon: Ruler },
           { href: '/admin/comptabilite/rapprochement', labelKey: 'admin.nav.reconciliation', icon: Scale },
+          { href: '/admin/paiements/reconciliation', labelKey: 'admin.nav.paymentReconciliation', icon: Scale },
           { href: '/admin/comptabilite/devises', labelKey: 'admin.nav.currencies', icon: DollarSign },
+          { href: '/admin/crm/exchange-rates', labelKey: 'admin.nav.crmExchangeRates', icon: DollarSign },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -562,8 +560,6 @@ export const folderSections: Record<string, NavFolderSection> = {
       {
         labelKey: 'admin.nav.accountingFiscalReports',
         items: [
-          { href: '/admin/comptabilite/declaration-tps-tvq', labelKey: 'admin.nav.fiscalTaxes', icon: Briefcase },
-          { href: '/admin/comptabilite/rapports', labelKey: 'admin.nav.reports', icon: BarChart2 },
           { href: '/admin/fiscal', labelKey: 'admin.nav.fiscalManagement', icon: Scale },
           { href: '/admin/fiscal/reports', labelKey: 'admin.nav.fiscalReports', icon: FileSpreadsheet },
           { href: '/admin/fiscal/tasks', labelKey: 'admin.nav.fiscalTasks', icon: ClipboardList },
@@ -572,19 +568,32 @@ export const folderSections: Record<string, NavFolderSection> = {
         defaultOpen: false,
       },
       {
-        // FIX A3-P2: Add missing advanced accounting pages
-        labelKey: 'admin.nav.accountingAdvanced',
+        labelKey: 'admin.nav.accountingPayrollHR',
         items: [
-          { href: '/admin/comptabilite/rsde', labelKey: 'admin.nav.rsDe', icon: FlaskConical },
           { href: '/admin/comptabilite/paie', labelKey: 'admin.nav.payroll', icon: DollarSign },
           { href: '/admin/comptabilite/projets-couts', labelKey: 'admin.nav.projectCosts', icon: Briefcase },
-          { href: '/admin/comptabilite/workflows', labelKey: 'admin.nav.accountingWorkflows', icon: Workflow },
-          { href: '/admin/comptabilite/bons-commande', labelKey: 'admin.nav.purchaseOrders', icon: FileText },
-          { href: '/admin/comptabilite/operations-lot', labelKey: 'admin.nav.batchOperations', icon: Zap },
-          { href: '/admin/comptabilite/ai-assistant', labelKey: 'admin.nav.aiAssistant', icon: Bot },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        labelKey: 'admin.nav.accountingIntegrations',
+        items: [
           { href: '/admin/comptabilite/api-publique', labelKey: 'admin.nav.publicApi', icon: Globe },
           { href: '/admin/comptabilite/multi-entite', labelKey: 'admin.nav.multiEntity', icon: Building2 },
           { href: '/admin/comptabilite/portail-client', labelKey: 'admin.nav.clientPortal', icon: Users },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        labelKey: 'admin.nav.accountingAdvancedTools',
+        items: [
+          { href: '/admin/comptabilite/rsde', labelKey: 'admin.nav.rsDe', icon: FlaskConical },
+          { href: '/admin/comptabilite/bons-commande', labelKey: 'admin.nav.purchaseOrders', icon: FileText },
+          { href: '/admin/comptabilite/operations-lot', labelKey: 'admin.nav.batchOperations', icon: Zap },
+          { href: '/admin/comptabilite/workflows', labelKey: 'admin.nav.accountingWorkflows', icon: Workflow },
+          { href: '/admin/comptabilite/ai-assistant', labelKey: 'admin.nav.aiAssistant', icon: Bot },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -597,52 +606,62 @@ export const folderSections: Record<string, NavFolderSection> = {
     title: 'admin.nav.formation',
     groups: [
       {
+        // Group 1: Tableau de bord
         items: [
           { href: '/admin/formation', labelKey: 'admin.nav.formationDashboard', icon: LayoutDashboard },
         ],
         defaultOpen: true,
       },
       {
-        labelKey: 'admin.nav.formationContent',
+        // Group 2: Contenu des cours
+        labelKey: 'admin.nav.formationCourseContent',
         items: [
           { href: '/admin/formation/cours', labelKey: 'admin.nav.formationCourses', icon: BookOpen },
           { href: '/admin/formation/forfaits', labelKey: 'admin.nav.formationBundles', icon: Package },
           { href: '/admin/formation/categories', labelKey: 'admin.nav.formationCategories', icon: FolderOpen },
           { href: '/admin/formation/quiz', labelKey: 'admin.nav.formationQuiz', icon: ClipboardList },
           { href: '/admin/formation/banques-questions', labelKey: 'admin.nav.formationQuestionBanks', icon: Database },
-          { href: '/admin/formation/modeles-cours', labelKey: 'admin.nav.formationTemplates', icon: Layout },
-          { href: '/admin/formation/medias', labelKey: 'admin.nav.formationMedia', icon: Video },
-          { href: '/admin/formation/instructeurs', labelKey: 'admin.nav.formationInstructors', icon: UserCheck },
-        ],
-        collapsible: true,
-        defaultOpen: true,
-      },
-      {
-        labelKey: 'admin.nav.formationCorporate',
-        items: [
-          { href: '/admin/formation/corporatif', labelKey: 'admin.nav.formationCorporateAccounts', icon: Building2 },
-          { href: '/admin/formation/cohortes', labelKey: 'admin.nav.formationCohorts', icon: Users },
-          { href: '/admin/formation/parcours-roles', labelKey: 'admin.nav.formationRolePaths', icon: GitBranch },
           { href: '/admin/formation/sessions-direct', labelKey: 'admin.nav.formationLiveSessions', icon: Video },
         ],
         collapsible: true,
         defaultOpen: true,
       },
       {
-        labelKey: 'admin.nav.formationStudents',
+        // Group 3: Equipe pedagogique
+        labelKey: 'admin.nav.formationTeaching',
+        items: [
+          { href: '/admin/formation/instructeurs', labelKey: 'admin.nav.formationInstructors', icon: UserCheck },
+          { href: '/admin/formation/cohortes', labelKey: 'admin.nav.formationCohorts', icon: Users },
+        ],
+        collapsible: true,
+        defaultOpen: true,
+      },
+      {
+        // Group 4: Entreprises (renamed from Corporatif)
+        labelKey: 'admin.nav.formationEnterprise',
+        items: [
+          { href: '/admin/formation/corporatif', labelKey: 'admin.nav.formationCorporateAccounts', icon: Building2 },
+          { href: '/admin/formation/parcours-roles', labelKey: 'admin.nav.formationRolePaths', icon: GitBranch },
+        ],
+        collapsible: true,
+        defaultOpen: true,
+      },
+      {
+        // Group 5: Apprenants (renamed from Etudiants)
+        labelKey: 'admin.nav.formationLearners',
         items: [
           { href: '/admin/formation/inscriptions', labelKey: 'admin.nav.formationEnrollments', icon: UserPlus },
           { href: '/admin/formation/etudiants', labelKey: 'admin.nav.formationStudentsList', icon: Users },
           { href: '/admin/formation/progression', labelKey: 'admin.nav.formationProgress', icon: TrendingUp },
           { href: '/admin/formation/classement', labelKey: 'admin.nav.formationLeaderboard', icon: Trophy },
           { href: '/admin/formation/badges', labelKey: 'admin.nav.formationBadges', icon: Medal },
-          { href: '/admin/formation/avis', labelKey: 'admin.nav.formationReviews', icon: Star },
         ],
         collapsible: true,
         defaultOpen: true,
       },
       {
-        labelKey: 'admin.nav.formationCertification',
+        // Group 6: Certification & Conformite
+        labelKey: 'admin.nav.formationCertCompliance',
         items: [
           { href: '/admin/formation/certificats', labelKey: 'admin.nav.formationCertificates', icon: Award },
           { href: '/admin/formation/modeles-certificats', labelKey: 'admin.nav.formationCertTemplates', icon: FileText },
@@ -652,15 +671,35 @@ export const folderSections: Record<string, NavFolderSection> = {
         defaultOpen: false,
       },
       {
-        labelKey: 'admin.nav.formationAdmin',
+        // Group 7: Evaluation
+        labelKey: 'admin.nav.formationEvaluation',
         items: [
-          { href: '/admin/formation/analytics', labelKey: 'admin.nav.formationAnalytics', icon: BarChart3 },
           { href: '/admin/formation/carnet-notes', labelKey: 'admin.nav.formationGradebook', icon: BookOpen },
-          { href: '/admin/formation/xapi', labelKey: 'admin.nav.formationXapi', icon: Activity },
           { href: '/admin/formation/grilles-evaluation', labelKey: 'admin.nav.formationRubrics', icon: ClipboardList },
           { href: '/admin/formation/evaluation-pairs', labelKey: 'admin.nav.formationPeerReview', icon: UserCheck },
-          { href: '/admin/formation/diffusion-progressive', labelKey: 'admin.nav.formationDrip', icon: Clock },
+          { href: '/admin/formation/avis', labelKey: 'admin.nav.formationReviews', icon: Star },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        // Group 8: Outils & Integrations
+        labelKey: 'admin.nav.formationToolsIntegrations',
+        items: [
+          { href: '/admin/formation/xapi', labelKey: 'admin.nav.formationXapi', icon: Activity },
           { href: '/admin/formation/outils-lti', labelKey: 'admin.nav.formationLti', icon: ExternalLink },
+          { href: '/admin/formation/diffusion-progressive', labelKey: 'admin.nav.formationDrip', icon: Clock },
+          { href: '/admin/formation/modeles-cours', labelKey: 'admin.nav.formationTemplates', icon: Layout },
+          { href: '/admin/formation/medias', labelKey: 'admin.nav.formationCourseMedia', icon: Video },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        // Group 9: Configuration
+        labelKey: 'admin.nav.formationConfig',
+        items: [
+          { href: '/admin/formation/analytics', labelKey: 'admin.nav.formationAnalytics', icon: BarChart3 },
           { href: '/admin/formation/rapports', labelKey: 'admin.nav.formationReports', icon: FileBarChart },
           { href: '/admin/formation/parametres', labelKey: 'admin.nav.formationSettings', icon: Settings },
           { href: '/admin/formation/portail', labelKey: 'admin.nav.formationPortal', icon: ExternalLink },
@@ -691,6 +730,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/traductions', labelKey: 'admin.nav.translations', icon: Languages },
           { href: '/admin/webhooks', labelKey: 'admin.nav.webhooks', icon: ArrowRightLeft },
           { href: '/admin/securite', labelKey: 'admin.nav.security', icon: Shield },
+          { href: '/admin/contenu', labelKey: 'admin.nav.contentPages', icon: FileText },
         ],
         collapsible: true,
         defaultOpen: true,
@@ -752,16 +792,17 @@ export const folderSections: Record<string, NavFolderSection> = {
 export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/platform')) return 'clients';
   if (pathname.startsWith('/admin/formation')) return 'formation';
-  if (pathname.startsWith('/admin/comptabilite')) return 'accounting';
+  if (pathname.startsWith('/admin/comptabilite') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/paiements')) return 'accounting';
   if (pathname.startsWith('/admin/emails') || pathname.startsWith('/admin/newsletter')) return 'emails';
-  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/paiements') || pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles') || pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/livraison')) return 'commerce';
-  if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell') || pathname.startsWith('/admin/ambassadeurs') || pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/contenu')) return 'marketing';
+  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles') || pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/livraison')) return 'commerce';
+  if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell') || pathname.startsWith('/admin/ambassadeurs') || pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/seo')) return 'marketing';
   if (pathname.startsWith('/admin/media') || pathname.startsWith('/admin/webinaires') || pathname.startsWith('/admin/blog')) return 'media';
   if (pathname.startsWith('/admin/rapports') || pathname.startsWith('/admin/analytics')) return 'dashboard';
   if (pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/diagnostics') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/monitoring') || pathname.startsWith('/admin/system/crons')) return 'dev';
   if (pathname.startsWith('/admin/telephonie')) return 'telephony';
+  // CRM call center routes are in telephony folder pane but keep CRM rail active (paths start with /admin/crm/)
   if (pathname.startsWith('/admin/crm') || pathname.startsWith('/admin/scraper') || pathname.startsWith('/admin/chat')) return 'crm';
-  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/webhooks') || pathname.startsWith('/admin/securite') || pathname.startsWith('/admin/tutoriels')) return 'system';
+  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/webhooks') || pathname.startsWith('/admin/securite') || pathname.startsWith('/admin/tutoriels') || pathname.startsWith('/admin/contenu')) return 'system';
   return 'dashboard';
 }
 

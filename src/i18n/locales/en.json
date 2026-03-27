@@ -6679,7 +6679,21 @@
       "formationRubrics": "Grading Rubrics",
       "formationPeerReview": "Peer Review",
       "formationDrip": "Drip Content",
-      "formationLti": "LTI Tools"
+      "formationLti": "LTI Tools",
+      "formationCourseContent": "Course Content",
+      "formationTeaching": "Teaching Team",
+      "formationEnterprise": "Enterprise",
+      "formationLearners": "Learners",
+      "formationCertCompliance": "Certification & Compliance",
+      "formationEvaluation": "Assessment",
+      "formationToolsIntegrations": "Tools & Integrations",
+      "formationCourseMedia": "Course Media",
+      "formationConfig": "Configuration",
+      "customerReviews": "Customer Reviews",
+      "voipCallCenter": "Call Center",
+      "accountingPayrollHR": "Payroll & HR",
+      "accountingIntegrations": "Integrations",
+      "accountingAdvancedTools": "Advanced Tools"
     },
     "tutorials": {
       "title": "Tutorials",

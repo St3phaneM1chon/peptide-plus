@@ -6679,7 +6679,21 @@
       "formationRubrics": "Grilles evaluation",
       "formationPeerReview": "Evaluation pairs",
       "formationDrip": "Diffusion progressive",
-      "formationLti": "Outils LTI"
+      "formationLti": "Outils LTI",
+      "formationCourseContent": "Contenu des cours",
+      "formationTeaching": "Équipe pédagogique",
+      "formationEnterprise": "Entreprises",
+      "formationLearners": "Apprenants",
+      "formationCertCompliance": "Certification & Conformité",
+      "formationEvaluation": "Évaluation",
+      "formationToolsIntegrations": "Outils & Intégrations",
+      "formationCourseMedia": "Médias de cours",
+      "formationConfig": "Configuration",
+      "customerReviews": "Avis clients",
+      "voipCallCenter": "Centre d'appels",
+      "accountingPayrollHR": "Paie & RH",
+      "accountingIntegrations": "Intégrations",
+      "accountingAdvancedTools": "Outils avancés"
     },
     "tutorials": {
       "title": "Tutoriels",
