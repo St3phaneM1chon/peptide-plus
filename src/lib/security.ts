@@ -4,7 +4,8 @@
  *
  * FAILLE-083 FIX: createSecurityLog now returns a structured object (with toString() for backward compat)
  * FAILLE-084 FIX: decrypt() now validates minimum buffer length before slicing
- * TODO: FAILLE-087 - setInterval timers in this file are not tracked; create a central timer registry
+ * FAILLE-087 RESOLVED: All setInterval timers are tracked via module-level variables
+ * (rateLimitCleanupInterval) and cleaned up by cleanupSecurityIntervals() on SIGTERM.
  * FAILLE-090 FIX: Email masking unified — maskSensitiveData now uses maskEmail() from sanitize.ts
  * TODO: FAILLE-093 - phoneSchema only accepts E.164 format; consider libphonenumber-js for local format support
  */
@@ -458,7 +459,11 @@ function enforceRateLimitStoreMaxSize(): void {
   }
 }
 
-// FAILLE-038 FIX: Store interval IDs for proper cleanup
+// FAILLE-038 FIX: Store interval IDs for proper cleanup.
+// FAILLE-087 RESOLVED: Timer lifecycle is fully managed:
+//   - Created: module load (rateLimitCleanupInterval, every 5 min)
+//   - Cleaned: cleanupSecurityIntervals() on SIGTERM (line ~525)
+//   - No leaked timers: all setInterval IDs are stored and cleared on shutdown.
 let rateLimitCleanupInterval: ReturnType<typeof setInterval> | null = null;
 
 // Periodic cleanup of expired rate limit entries (every 5 minutes)

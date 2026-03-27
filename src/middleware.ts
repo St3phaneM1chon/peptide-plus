@@ -2,7 +2,10 @@
  * MIDDLEWARE NEXT.JS
  * Gestion des locales, authentification et permissions granulaires
  *
- * TODO: FAILLE-082 - No DB schema verification at startup; add health check with prisma.$queryRaw for critical tables
+ * FAILLE-082 NOTE: Edge Runtime cannot use Prisma or any Node.js database driver.
+ * DB health is verified via GET /api/health (Node.js runtime), which checks
+ * Prisma connectivity with prisma.$queryRaw. Middleware relies on downstream
+ * API routes and server components for all database operations.
  * FIXED: FAILLE-089 - CSP and all security headers now set in addSecurityHeaders() (aligned with next.config.js)
  */
 

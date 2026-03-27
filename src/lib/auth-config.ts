@@ -34,7 +34,7 @@ import { encryptToken } from './token-encryption';
 
 // FAILLE-085 FIX: Replace 'any' with proper Provider type from next-auth
 // FAILLE-086 RESOLVED: Railway supports HTTPS natively — default __Secure- cookie prefix restored
-// TODO: FAILLE-091 - encryptedAdapter cast as any; type correctly or use 'satisfies' for partial verification
+// FAILLE-091 FIX: Cast encryptedAdapter as typeof baseAdapter instead of 'any' for type safety
 // FAILLE-092 FIX: signOut event now logs IP/user-agent for suspicious logout tracing
 import type { Provider } from 'next-auth/providers';
 type AuthProvider = Provider;
@@ -272,8 +272,12 @@ const encryptedAdapter = {
 };
 
 export const authConfig: NextAuthConfig = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  adapter: encryptedAdapter as any,
+  // FAILLE-091 FIX: Use NextAuthConfig['adapter'] instead of 'any'.
+  // Double-cast via unknown is needed because module augmentation (below) adds
+  // role/mfaEnabled to User/AdapterUser, making PrismaAdapter structurally
+  // incompatible with the augmented Adapter type. This cast is narrower than
+  // 'any' -- it constrains to exactly the type NextAuthConfig expects.
+  adapter: encryptedAdapter as unknown as NextAuthConfig['adapter'],
   providers,
 
   // Trust proxy headers so Auth.js generates https:// callback URLs
