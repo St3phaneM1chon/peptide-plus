@@ -12,6 +12,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { storage } from '@/lib/storage';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { scanFileForMalware } from '@/lib/malware-scanner';
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB
@@ -98,6 +99,15 @@ export const POST = withAdminGuard(async (request, context) => {
     if (!matchedMagic || !matchedMagic.mimes.includes(file.type)) {
       return NextResponse.json(
         { error: 'File content does not match declared MIME type' },
+        { status: 400 }
+      );
+    }
+
+    // IMP-003: Malware scan (non-blocking if VIRUSTOTAL_API_KEY not configured)
+    const scanResult = await scanFileForMalware(buffer, file.name);
+    if (!scanResult.safe) {
+      return NextResponse.json(
+        { error: `File rejected: ${scanResult.threat || 'Malware detected'}` },
         { status: 400 }
       );
     }

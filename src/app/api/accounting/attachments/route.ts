@@ -17,6 +17,7 @@ import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { scanFileForMalware } from '@/lib/malware-scanner';
 // FIX: F59 - Use shared formatFileSize utility instead of local duplicate
 import { formatFileSize } from '@/lib/format-utils';
 import { getClientIpFromRequest } from '@/lib/admin-audit';
@@ -223,6 +224,15 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
           { status: 400 }
         );
       }
+    }
+
+    // IMP-003: Malware scan (non-blocking if VIRUSTOTAL_API_KEY not configured)
+    const scanResult = await scanFileForMalware(buffer, file.name);
+    if (!scanResult.safe) {
+      return NextResponse.json(
+        { error: `File rejected: ${scanResult.threat || 'Malware detected'}` },
+        { status: 400 }
+      );
     }
 
     // ------ Upload via StorageService (FIX F11: persists on Azure) ------

@@ -12,6 +12,7 @@ import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
 import { getClientIpFromRequest } from '@/lib/admin-audit';
+import { scanFileForMalware } from '@/lib/malware-scanner';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_IMAGES = 3;
@@ -112,6 +113,15 @@ export async function POST(request: NextRequest) {
       if (!isJpeg && !isPng && !isWebp) {
         return NextResponse.json(
           { error: 'File content does not match an allowed image format' },
+          { status: 400 }
+        );
+      }
+
+      // IMP-003: Malware scan (non-blocking if VIRUSTOTAL_API_KEY not configured)
+      const scanResult = await scanFileForMalware(buffer, file.name);
+      if (!scanResult.safe) {
+        return NextResponse.json(
+          { error: `File rejected: ${scanResult.threat || 'Malware detected'}` },
           { status: 400 }
         );
       }

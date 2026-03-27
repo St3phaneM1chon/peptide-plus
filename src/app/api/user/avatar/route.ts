@@ -15,6 +15,7 @@ import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { getClientIpFromRequest } from '@/lib/admin-audit';
+import { scanFileForMalware } from '@/lib/malware-scanner';
 
 // POST - Upload avatar
 export async function POST(request: NextRequest) {
@@ -72,6 +73,12 @@ export async function POST(request: NextRequest) {
 
     if (!isJpeg && !isPng && !isWebp && !isGif) {
       return NextResponse.json({ error: 'Invalid image file' }, { status: 400 });
+    }
+
+    // IMP-003: Malware scan (non-blocking if VIRUSTOTAL_API_KEY not configured)
+    const scanResult = await scanFileForMalware(buffer, file.name);
+    if (!scanResult.safe) {
+      return NextResponse.json({ error: `File rejected: ${scanResult.threat || 'Malware detected'}` }, { status: 400 });
     }
 
     // SECURITY: Derive extension from magic bytes, not user-supplied filename.

@@ -66,6 +66,7 @@ const serverSchema = z.object({
   // ---- Security ----
   ENCRYPTION_KEY: z.string().optional(),
   CSRF_SECRET: z.string().optional(),
+  VIRUSTOTAL_API_KEY: z.string().optional(),
 
   // ---- Business information ----
   BUSINESS_NAME: z.string().optional(),

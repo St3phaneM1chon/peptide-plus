@@ -16,6 +16,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getClientIpFromRequest } from '@/lib/admin-audit';
+import { scanFileForMalware } from '@/lib/malware-scanner';
 
 export async function POST(request: NextRequest) {
   try {
@@ -103,6 +104,12 @@ export async function POST(request: NextRequest) {
 
     if (!isJpeg && !isPng && !isWebp && !isGif) {
       return NextResponse.json({ error: 'Invalid image file' }, { status: 400 });
+    }
+
+    // IMP-003: Malware scan (non-blocking if VIRUSTOTAL_API_KEY not configured)
+    const scanResult = await scanFileForMalware(buffer, file.name);
+    if (!scanResult.safe) {
+      return NextResponse.json({ error: `File rejected: ${scanResult.threat || 'Malware detected'}` }, { status: 400 });
     }
 
     // FIX F-028: Derive extension from magic bytes, not client-supplied filename

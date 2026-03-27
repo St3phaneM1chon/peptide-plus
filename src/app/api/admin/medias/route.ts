@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
  * GET  - List media files with folder filter and pagination
  * POST - Upload media (handle file upload via FormData)
  *
- * IMP-003: TODO: Add antivirus scan (ClamAV or Azure Defender for Storage) on uploaded files
+ * IMP-003: DONE: VirusTotal malware scanning (graceful degradation if API key not configured)
  * IMP-009: DONE: CSRF protection is handled via withAdminGuard + validateCsrf on mutation endpoints
  * IMP-011: TODO: Add automated tests (Jest/Vitest) for upload endpoints (path traversal, MIME bypass, size limits)
  * IMP-012: TODO: Implement video compression/transcoding (FFmpeg or Azure Media Services) for uploaded videos
@@ -20,6 +20,7 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { scanFileForMalware } from '@/lib/malware-scanner';
 import { isProcessableImage, optimizeForDisplay, DISPLAY_SIZE_TARGETS } from '@/lib/media/image-pipeline';
 
 /**
@@ -271,6 +272,13 @@ export const POST = withAdminGuard(async (request, { session }) => {
       if (!validateMagicBytes(buffer, file.type)) {
         errors.push({ file: file.name, error: `Content does not match declared type (${file.type}). Only JPEG, PNG, GIF, WebP, and PDF are allowed.` });
         continue; // FIX: F80 - Skip invalid file, process remaining
+      }
+
+      // IMP-003: Malware scan (non-blocking if VIRUSTOTAL_API_KEY not configured)
+      const scanResult = await scanFileForMalware(buffer, file.name);
+      if (!scanResult.safe) {
+        errors.push({ file: file.name, error: `File rejected: ${scanResult.threat || 'Malware detected'}` });
+        continue;
       }
 
       // Generate unique filename
