@@ -4062,7 +4062,8 @@
       "briefingPrompt": "Click \"Get Briefing\" to see your AI-powered daily priorities",
       "overdueDeals": "Overdue Deals",
       "uncontactedLeads": "New Leads",
-      "overdueTasks": "Overdue Tasks"
+      "overdueTasks": "Overdue Tasks",
+      "configureWidgets": "Configure Widgets"
     },
     "dataTable": {
       "noData": "No data",
@@ -6642,6 +6643,8 @@
       "timeTracking": "Time Tracking",
       "help": "Help",
       "tutorials": "Tutorials",
+      "reportsAndAnalytics": "Reports & Analytics",
+      "development": "Development",
       "formation": "Training",
       "formationDashboard": "Dashboard",
       "formationContent": "Content",
@@ -9672,6 +9675,12 @@
       "slugHint": "Lowercase letters, numbers, and hyphens only",
       "courseDescription": "Description",
       "courseLevel": "Level",
+      "level": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced",
+        "expert": "Expert"
+      },
       "courseCategory": "Category",
       "courseInstructor": "Instructor",
       "courseFree": "Free course",

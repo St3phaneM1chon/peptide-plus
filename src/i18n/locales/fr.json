@@ -4062,7 +4062,8 @@
       "briefingPrompt": "Cliquez sur \"Obtenir le Briefing\" pour voir vos priorités du jour",
       "overdueDeals": "Deals en retard",
       "uncontactedLeads": "Nouveaux leads",
-      "overdueTasks": "Tâches en retard"
+      "overdueTasks": "Tâches en retard",
+      "configureWidgets": "Configurer les widgets"
     },
     "dataTable": {
       "noData": "Aucune donnée",
@@ -6642,6 +6643,8 @@
       "timeTracking": "Suivi du temps",
       "help": "Aide",
       "tutorials": "Tutoriels",
+      "reportsAndAnalytics": "Rapports et analytique",
+      "development": "Développement",
       "formation": "Formation",
       "formationDashboard": "Tableau de bord",
       "formationContent": "Contenu",
@@ -9670,6 +9673,12 @@
       "slugHint": "Minuscules, chiffres et tirets uniquement",
       "courseDescription": "Description",
       "courseLevel": "Niveau",
+      "level": {
+        "beginner": "Débutant",
+        "intermediate": "Intermédiaire",
+        "advanced": "Avancé",
+        "expert": "Expert"
+      },
       "courseCategory": "Categorie",
       "courseInstructor": "Instructeur",
       "courseFree": "Cours gratuit",
