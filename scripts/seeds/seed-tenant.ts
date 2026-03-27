@@ -64,7 +64,7 @@ async function main() {
       domainKoraline: 'attitudes.koraline.app',
       plan: 'enterprise',
       status: 'ACTIVE',
-      logoUrl: '/images/attitudes-logo.png',
+      logoUrl: '/images/suite-koraline.png',
       primaryColor: '#0066CC',
       secondaryColor: '#003366',
       locale: 'fr',

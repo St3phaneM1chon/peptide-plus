@@ -27,7 +27,7 @@ const DEFAULT_BRANDING: TenantBranding = {
   slug: 'biocycle',
   name: 'Attitudes VIP',
   branding: {
-    logoUrl: '/images/logo.png',
+    logoUrl: '/images/suite-koraline.png',
     primaryColor: '#16a34a',
     secondaryColor: '#15803d',
     font: 'Inter',
