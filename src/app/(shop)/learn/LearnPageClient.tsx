@@ -1,7 +1,22 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
+
+interface LmsCourse {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  thumbnailUrl: string | null;
+  level: string;
+  isFree: boolean;
+  price: string;
+  currency: string;
+  estimatedHours: number | null;
+  _count?: { enrollments: number };
+}
 
 // Article data
 const articles = [
@@ -92,6 +107,23 @@ const categories = [
 export default function LearnPage() {
   const { t } = useI18n();
   const featuredArticles = articles.filter(a => a.featured);
+  const [courses, setCourses] = useState<LmsCourse[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/lms/courses?limit=12')
+      .then(r => r.ok ? r.json() : { courses: [] })
+      .then(data => setCourses(data.courses || []))
+      .catch(() => {})
+      .finally(() => setCoursesLoading(false));
+  }, []);
+
+  const levelLabels: Record<string, string> = {
+    BEGINNER: t('admin.lms.level.beginner') || 'Débutant',
+    INTERMEDIATE: t('admin.lms.level.intermediate') || 'Intermédiaire',
+    ADVANCED: t('admin.lms.level.advanced') || 'Avancé',
+    EXPERT: t('admin.lms.level.expert') || 'Expert',
+  };
 
   return (
     <div className="min-h-screen bg-[var(--k-bg-base)]">
@@ -99,15 +131,72 @@ export default function LearnPage() {
       <section className="bg-[var(--k-bg-surface)] text-white py-16 border-b border-[var(--k-border-subtle)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-[var(--k-text-primary)]">
-            {t('learn.title') || 'Learning Center'}
+            {t('learn.title') || 'Centre de formation'}
           </h1>
           <p className="text-xl text-[var(--k-text-secondary)] max-w-2xl mx-auto">
-            {t('learn.subtitle') || 'Your comprehensive resource for peptide research knowledge, guides, and scientific insights.'}
+            {t('learn.subtitle') || 'Formations professionnelles, guides pratiques et ressources pour développer vos compétences.'}
           </p>
         </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* LMS Courses Section */}
+        {!coursesLoading && courses.length > 0 && (
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-[var(--k-text-primary)] flex items-center gap-3">
+                <span className="text-[var(--k-accent-indigo)]">🎓</span>
+                Nos formations
+              </h2>
+              <Link href="/learn/dashboard" className="text-[var(--k-accent-indigo)] hover:underline text-sm font-medium">
+                Mon tableau de bord →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {courses.map(course => (
+                <Link
+                  key={course.id}
+                  href={`/learn/${course.slug}`}
+                  className="group bg-[var(--k-glass-regular)] backdrop-blur-xl rounded-xl border border-[var(--k-border-subtle)] shadow-[var(--k-shadow-md)] overflow-hidden hover:shadow-[var(--k-shadow-xl)] hover:border-[var(--k-accent-indigo)]/30 transition-all duration-300"
+                >
+                  <div className="aspect-video bg-gradient-to-br from-[var(--k-accent-indigo)]/20 to-[var(--k-accent-violet)]/20 relative flex items-center justify-center">
+                    {course.thumbnailUrl ? (
+                      <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-5xl opacity-40">🎓</span>
+                    )}
+                    <div className="absolute top-3 right-3">
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--k-glass-thick)] backdrop-blur-md text-[var(--k-accent-indigo)] border border-[var(--k-border-subtle)]">
+                        {levelLabels[course.level] || course.level}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-semibold text-[var(--k-text-primary)] group-hover:text-[var(--k-accent-indigo)] transition-colors mb-2">
+                      {course.title}
+                    </h3>
+                    {course.description && (
+                      <p className="text-sm text-[var(--k-text-secondary)] line-clamp-2 mb-3">
+                        {course.description}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-[var(--k-accent-indigo)]">
+                        {course.isFree ? 'Gratuit' : `${Number(course.price).toFixed(0)} $ ${course.currency}`}
+                      </span>
+                      {course.estimatedHours && (
+                        <span className="text-xs text-[var(--k-text-tertiary)]">
+                          {course.estimatedHours}h
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Featured Articles */}
         <section className="mb-16">
           <h2 className="text-2xl font-bold text-[var(--k-text-primary)] mb-8 flex items-center gap-3">
