@@ -51,8 +51,41 @@ import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 const BATCH_SIZE = 10;
 const MIN_ABANDONMENT_MINUTES = 60; // 1 hour minimum
-const MAX_ABANDONMENT_HOURS = 48; // Don't email after 48 hours (too late)
-const DEDUP_HOURS = 24; // Don't re-send within 24 hours
+const MAX_ABANDONMENT_HOURS = 96; // Extended to 96h for 3-email sequence
+const DEDUP_HOURS = 24; // Don't re-send same stage within 24 hours
+
+/**
+ * 3-Email Recovery Sequence:
+ *   Stage 1 (0h after threshold): Friendly reminder
+ *   Stage 2 (24h after stage 1): Urgency + social proof
+ *   Stage 3 (72h after stage 1): Discount incentive
+ *
+ * Each stage uses a distinct templateId for dedup:
+ *   - 'abandoned-cart' (stage 1, existing)
+ *   - 'abandoned-cart-urgency' (stage 2)
+ *   - 'abandoned-cart-discount' (stage 3)
+ */
+const RECOVERY_STAGES = [
+  { templateId: 'abandoned-cart', delayHours: 0, stage: 1 },
+  { templateId: 'abandoned-cart-urgency', delayHours: 24, stage: 2 },
+  { templateId: 'abandoned-cart-discount', delayHours: 72, stage: 3 },
+] as const;
+
+/**
+ * Determine which recovery stage to send for a given user.
+ * Returns the next unsent stage or null if all stages are complete.
+ */
+function getNextRecoveryStage(
+  sentTemplateIds: Set<string>,
+  abandonmentHoursAgo: number
+): typeof RECOVERY_STAGES[number] | null {
+  for (const stage of RECOVERY_STAGES) {
+    if (!sentTemplateIds.has(stage.templateId) && abandonmentHoursAgo >= stage.delayHours) {
+      return stage;
+    }
+  }
+  return null;
+}
 
 // Item 79: Configurable recovery channels (read from env or SiteSetting in future)
 const ENABLE_SMS_RECOVERY = process.env.ABANDONED_CART_SMS_ENABLED === 'true';
@@ -122,18 +155,30 @@ export async function GET(request: NextRequest) {
     // and users who already received an abandoned cart email recently
     const twentyFourHoursAgo = new Date(now.getTime() - DEDUP_HOURS * 60 * 60 * 1000);
 
-    // Get recent abandoned cart email recipients
+    // Get all recovery emails sent to users in the abandonment window (for multi-stage dedup)
+    const allRecoveryTemplateIds = RECOVERY_STAGES.map((s) => s.templateId);
     const recentEmails = await db.emailLog.findMany({
       where: {
-        templateId: 'abandoned-cart',
+        templateId: { in: [...allRecoveryTemplateIds] },
         status: 'sent',
-        sentAt: { gte: twentyFourHoursAgo },
+        sentAt: { gte: fortyEightHoursAgo },
       },
-      select: { to: true },
+      select: { to: true, templateId: true, sentAt: true },
     });
-    const recentlyEmailed = new Set(recentEmails.map((e) => e.to));
 
-    // Build list of eligible carts
+    // Build a map of email -> Set of sent templateIds (for multi-stage tracking)
+    const emailSentStages = new Map<string, Set<string>>();
+    for (const e of recentEmails) {
+      if (!emailSentStages.has(e.to)) emailSentStages.set(e.to, new Set());
+      if (e.templateId) emailSentStages.get(e.to)!.add(e.templateId);
+    }
+
+    // For dedup within 24h on same stage
+    const recentlyEmailed = new Set(
+      recentEmails.filter((e) => e.sentAt >= twentyFourHoursAgo).map((e) => `${e.to}:${e.templateId}`)
+    );
+
+    // Build list of eligible carts with their recovery stage
     const eligibleCarts: Array<{
       cart: (typeof abandonedCarts)[0];
       user: {
@@ -142,6 +187,7 @@ export async function GET(request: NextRequest) {
         email: string;
         locale: string;
       };
+      recoveryStage: typeof RECOVERY_STAGES[number];
     }> = [];
 
     // PERF 87: Batch fetch all users in a single query instead of N+1 per-cart lookups
@@ -193,8 +239,13 @@ export async function GET(request: NextRequest) {
       const user = userMap.get(cart.userId);
       if (!user) continue;
 
-      // Skip if already emailed recently
-      if (recentlyEmailed.has(user.email)) {
+      // Determine which recovery stage to send
+      const sentStages = emailSentStages.get(user.email) || new Set<string>();
+      const hoursAbandonedAgo = (now.getTime() - cart.updatedAt.getTime()) / (60 * 60 * 1000);
+      const nextStage = getNextRecoveryStage(sentStages, hoursAbandonedAgo);
+
+      // Skip if no stage to send or recently emailed for this stage
+      if (!nextStage || recentlyEmailed.has(`${user.email}:${nextStage.templateId}`)) {
         continue;
       }
 
@@ -205,7 +256,7 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      eligibleCarts.push({ cart, user });
+      eligibleCarts.push({ cart, user, recoveryStage: nextStage });
     }
 
     logger.info('Abandoned cart cron: eligible carts after filtering', {
@@ -234,7 +285,7 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < eligibleCarts.length; i += BATCH_SIZE) {
       const batch = eligibleCarts.slice(i, i + BATCH_SIZE);
 
-      const batchPromises = batch.map(async ({ cart, user }) => {
+      const batchPromises = batch.map(async ({ cart, user, recoveryStage: nextStage }) => {
         try {
           // FLAW-064 FIX: Check bounce suppression before sending
           const { suppressed } = await shouldSuppressEmail(user.email);
@@ -276,10 +327,10 @@ export async function GET(request: NextRequest) {
             unsubscribeUrl,
           });
 
-          // Log to EmailLog
+          // Log to EmailLog with stage-specific templateId
           await db.emailLog.create({
             data: {
-              templateId: 'abandoned-cart',
+              templateId: nextStage.templateId,
               to: user.email,
               subject: emailContent.subject,
               status: result.success ? 'sent' : 'failed',
@@ -293,6 +344,8 @@ export async function GET(request: NextRequest) {
           logger.info('Abandoned cart cron: email sent', {
             tenantSlug: tenant.slug,
             email: user.email,
+            stage: nextStage.stage,
+            templateId: nextStage.templateId,
             itemCount: cart.items.length,
             cartTotal: cartTotal.toFixed(2),
             success: result.success,
@@ -306,7 +359,7 @@ export async function GET(request: NextRequest) {
 
           await db.emailLog.create({
             data: {
-              templateId: 'abandoned-cart',
+              templateId: nextStage.templateId,
               to: user.email,
               subject: 'Abandoned cart',
               status: 'failed',

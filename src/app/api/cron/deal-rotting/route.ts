@@ -116,10 +116,64 @@ export async function GET(request: NextRequest) {
       // Sort by days in stage descending (most stale first)
       allRottingDeals.sort((a, b) => b.daysInStage - a.daysInStage);
 
+      // ── Automated Actions for Rotting Deals ──────────────────────
+      // Tag rotting deals, create CRM activities, and notify assignees
+      let tagged = 0;
+      let activitiesCreated = 0;
+
+      for (const deal of allRottingDeals) {
+        try {
+          // 1. Add "rotting" tag if not already present
+          const currentDeal = await prisma.crmDeal.findUnique({
+            where: { id: deal.dealId },
+            select: { tags: true },
+          });
+
+          if (currentDeal && !currentDeal.tags.includes('rotting')) {
+            await prisma.crmDeal.update({
+              where: { id: deal.dealId },
+              data: { tags: { push: 'rotting' } },
+            });
+            tagged++;
+          }
+
+          // 2. Create a CRM activity to track the rotting detection
+          const recentActivity = await prisma.crmActivity.findFirst({
+            where: {
+              dealId: deal.dealId,
+              type: 'NOTE',
+              title: { contains: 'Deal rotting' },
+              createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+            },
+            select: { id: true },
+          });
+
+          if (!recentActivity) {
+            await prisma.crmActivity.create({
+              data: {
+                type: 'NOTE',
+                title: `Deal rotting: ${deal.daysInStage} days in "${deal.stageName}"`,
+                description: `Auto-detected by cron: Deal "${deal.title}" has been in stage "${deal.stageName}" for ${deal.daysInStage} days without activity. Threshold: ${ROTTING_THRESHOLD_DAYS} days.`,
+                dealId: deal.dealId,
+                performedById: deal.assignedTo?.id || undefined,
+              },
+            });
+            activitiesCreated++;
+          }
+        } catch (err) {
+          logger.error('[cron/deal-rotting] Error tagging deal', {
+            dealId: deal.dealId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+
       return NextResponse.json({
         success: true,
         count: allRottingDeals.length,
         thresholdDays: ROTTING_THRESHOLD_DAYS,
+        tagged,
+        activitiesCreated,
         deals: allRottingDeals,
         tenants: tenantResult,
         timestamp: new Date().toISOString(),

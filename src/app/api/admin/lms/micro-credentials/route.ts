@@ -15,6 +15,8 @@ async function handler(request: NextRequest) {
     const courseId = url.searchParams.get('courseId');
     const userId = url.searchParams.get('userId');
 
+    const awardBadges = url.searchParams.get('awardBadges') === 'true';
+
     if (!courseId) {
       return NextResponse.json(
         { error: 'courseId query parameter is required' },
@@ -101,9 +103,90 @@ async function handler(request: NextRequest) {
         totalLessons,
         isPublished: chapter.isPublished,
         credentialEarnedCount: earnedBy.length,
-        earnedBy: userId ? earnedBy : undefined, // Only include details if filtering by user
+        earnedBy: (userId || awardBadges) ? earnedBy : undefined, // Include when filtering by user or awarding badges
       };
     });
+
+    // Award chapter badges for newly completed chapters
+    let badgesAwarded = 0;
+
+    if (awardBadges) {
+      for (const chapter of microCredentials) {
+        if (chapter.totalLessons === 0 || !chapter.earnedBy) continue;
+
+        // Badge name convention: "Chapter: {title}"
+        const badgeName = `Chapter: ${chapter.chapterTitle}`;
+
+        for (const earner of chapter.earnedBy) {
+          try {
+            // Check if badge exists, create if not
+            let badge = await prisma.lmsBadge.findFirst({
+              where: {
+                name: badgeName,
+              },
+              select: { id: true, tenantId: true },
+            });
+
+            const tenantId = badge?.tenantId || 'default';
+
+            if (!badge) {
+              badge = await prisma.lmsBadge.create({
+                data: {
+                  tenantId,
+                  name: badgeName,
+                  description: `Completed all ${chapter.totalLessons} lessons in "${chapter.chapterTitle}"`,
+                  criteria: {
+                    type: 'chapter_complete',
+                    chapterId: chapter.chapterId,
+                    courseId,
+                  },
+                  isActive: true,
+                },
+              });
+            }
+
+            // Award badge if not already awarded (upsert-like with unique constraint)
+            const existing = await prisma.lmsBadgeAward.findFirst({
+              where: {
+                badgeId: badge.id,
+                userId: earner.userId,
+              },
+              select: { id: true },
+            });
+
+            if (!existing) {
+              await prisma.lmsBadgeAward.create({
+                data: {
+                  tenantId,
+                  badgeId: badge.id,
+                  userId: earner.userId,
+                },
+              });
+              badgesAwarded++;
+
+              // Also award XP for chapter completion
+              try {
+                await prisma.lmsXpTransaction.create({
+                  data: {
+                    tenantId,
+                    userId: earner.userId,
+                    amount: 50, // 50 XP per chapter
+                    reason: 'chapter_complete',
+                    sourceId: chapter.chapterId,
+                    balance: 0, // Will be recalculated
+                  },
+                });
+              } catch {
+                // Unique constraint means XP already awarded — skip
+              }
+            }
+          } catch (err) {
+            // Log but don't fail the whole request
+            console.error(`[micro-credentials] Badge award error for chapter ${chapter.chapterId}:`, err);
+          }
+        }
+      }
+    }
 
     return NextResponse.json({
       data: {
@@ -111,6 +194,7 @@ async function handler(request: NextRequest) {
         chapters: microCredentials,
         totalChapters: chapters.length,
         totalEnrollments: enrollments.length,
+        ...(awardBadges ? { badgesAwarded } : {}),
       },
     });
   } catch (error) {

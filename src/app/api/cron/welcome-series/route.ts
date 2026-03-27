@@ -61,6 +61,14 @@ interface DripStep {
 
 const DRIP_STEPS: DripStep[] = [
   {
+    id: 'welcome-series-day0',
+    daysSinceSignup: 0,
+    subjectFr: 'Bienvenue {{name}}! Votre compte est pret.',
+    subjectEn: 'Welcome {{name}}! Your account is ready.',
+    tags: ['welcome-series', 'day0', 'automated'],
+    skipIfOrdered: false,
+  },
+  {
     id: 'welcome-series-followup',
     daysSinceSignup: 3,
     subjectFr: 'Comment se passe votre experience, {{name}}? Decouvrez nos produits!',
@@ -92,6 +100,14 @@ const DRIP_STEPS: DripStep[] = [
     tags: ['welcome-series', 'incentive', 'automated'],
     skipIfOrdered: true, // Only send to users who haven't ordered yet
     promoDiscountPercent: 10,
+  },
+  {
+    id: 'welcome-series-day30',
+    daysSinceSignup: 30,
+    subjectFr: '{{name}}, un mois deja! Voici ce que vous avez manque.',
+    subjectEn: '{{name}}, one month already! Here is what you missed.',
+    tags: ['welcome-series', 'day30', 'automated'],
+    skipIfOrdered: false,
   },
 ];
 
