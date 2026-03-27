@@ -41,29 +41,60 @@ export async function GET(request: NextRequest) {
     }),
   };
 
+  // When fetching a single course by slug, include chapters/lessons for the landing page
+  // (needed for "Commencer le cours" link and course outline display)
+  const includeChapters = !!slug;
+
+  const baseSelect = {
+    id: true,
+    slug: true,
+    title: true,
+    subtitle: true,
+    description: true,
+    thumbnailUrl: true,
+    level: true,
+    isFree: true,
+    price: true,
+    currency: true,
+    estimatedHours: true,
+    enrollmentCount: true,
+    averageRating: true,
+    reviewCount: true,
+    tags: true,
+    category: { select: { name: true, slug: true } },
+    instructor: { select: { title: true, avatarUrl: true } },
+    _count: { select: { chapters: true } },
+  };
+
+  const selectWithChapters = {
+    ...baseSelect,
+    chapters: {
+      where: { isPublished: true },
+      orderBy: { sortOrder: 'asc' as const },
+      select: {
+        id: true,
+        title: true,
+        sortOrder: true,
+        lessons: {
+          where: { isPublished: true },
+          orderBy: { sortOrder: 'asc' as const },
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            sortOrder: true,
+            estimatedMinutes: true,
+            isFree: true,
+          },
+        },
+      },
+    },
+  };
+
   const [courses, total] = await Promise.all([
     prisma.course.findMany({
       where,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        subtitle: true,
-        description: true,
-        thumbnailUrl: true,
-        level: true,
-        isFree: true,
-        price: true,
-        currency: true,
-        estimatedHours: true,
-        enrollmentCount: true,
-        averageRating: true,
-        reviewCount: true,
-        tags: true,
-        category: { select: { name: true, slug: true } },
-        instructor: { select: { title: true, avatarUrl: true } },
-        _count: { select: { chapters: true } },
-      },
+      select: includeChapters ? selectWithChapters : baseSelect,
       orderBy: { publishedAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,

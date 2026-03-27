@@ -277,6 +277,14 @@ export default function EmailsPage() {
     fetchEmailAccounts();
   }, [fetchEmailAccounts]);
 
+  // Sync activeTab from URL ?tab= parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab') as TabKey | null;
+    if (tabParam && ['inbox', 'templates', 'campaigns', 'flows', 'analytics', 'segments', 'settings'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
   // When folder param changes, switch to inbox tab and fetch appropriate data
   useEffect(() => {
     if (folderParam) {

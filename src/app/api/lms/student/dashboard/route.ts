@@ -38,7 +38,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
       select: { currentStreak: true, longestStreak: true, lastActivityDate: true },
     }),
 
-    // All enrollments for stats + course cards
+    // All enrollments for stats + course cards (include chapters/lessons for resume link)
     prisma.enrollment.findMany({
       where: { tenantId, userId },
       select: {
@@ -52,12 +52,28 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
         enrolledAt: true,
         complianceDeadline: true,
         complianceStatus: true,
+        lessonProgress: {
+          where: { isCompleted: true },
+          select: { lessonId: true },
+        },
         course: {
           select: {
             title: true,
             slug: true,
             estimatedHours: true,
             thumbnailUrl: true,
+            chapters: {
+              where: { isPublished: true },
+              orderBy: { sortOrder: 'asc' },
+              select: {
+                id: true,
+                lessons: {
+                  where: { isPublished: true },
+                  orderBy: { sortOrder: 'asc' },
+                  select: { id: true, title: true },
+                },
+              },
+            },
           },
         },
       },
@@ -113,24 +129,51 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
       status: d.complianceStatus ?? 'IN_PROGRESS',
     }));
 
-  // Format enrollments for frontend course cards
-  const formattedEnrollments = enrollments.map(e => ({
-    id: e.id,
-    courseId: e.courseId,
-    courseSlug: e.course.slug,
-    courseTitle: e.course.title,
-    courseThumbnail: e.course.thumbnailUrl ?? null,
-    progress: Number(e.progress),
-    lessonsCompleted: e.lessonsCompleted,
-    totalLessons: e.totalLessons,
-    lastAccessedAt: null,
-    nextLessonId: null,
-    nextLessonTitle: null,
-    nextChapterId: null,
-    status: e.status,
-    enrolledAt: e.enrolledAt.toISOString(),
-    completedAt: e.completedAt?.toISOString() ?? null,
-  }));
+  // Format enrollments for frontend course cards (with resume link)
+  const formattedEnrollments = enrollments.map(e => {
+    // Compute next incomplete lesson for resume functionality
+    const completedIds = new Set(e.lessonProgress.map(lp => lp.lessonId));
+    let nextLessonId: string | null = null;
+    let nextLessonTitle: string | null = null;
+    let nextChapterId: string | null = null;
+
+    for (const ch of e.course.chapters) {
+      for (const lesson of ch.lessons) {
+        if (!completedIds.has(lesson.id)) {
+          nextLessonId = lesson.id;
+          nextLessonTitle = lesson.title;
+          nextChapterId = ch.id;
+          break;
+        }
+      }
+      if (nextLessonId) break;
+    }
+
+    // If all lessons completed, point to the first lesson (review mode)
+    if (!nextLessonId && e.course.chapters[0]?.lessons[0]) {
+      nextLessonId = e.course.chapters[0].lessons[0].id;
+      nextLessonTitle = e.course.chapters[0].lessons[0].title;
+      nextChapterId = e.course.chapters[0].id;
+    }
+
+    return {
+      id: e.id,
+      courseId: e.courseId,
+      courseSlug: e.course.slug,
+      courseTitle: e.course.title,
+      courseThumbnail: e.course.thumbnailUrl ?? null,
+      progress: Number(e.progress),
+      lessonsCompleted: e.lessonsCompleted,
+      totalLessons: e.totalLessons,
+      lastAccessedAt: null,
+      nextLessonId,
+      nextLessonTitle,
+      nextChapterId,
+      status: e.status,
+      enrolledAt: e.enrolledAt.toISOString(),
+      completedAt: e.completedAt?.toISOString() ?? null,
+    };
+  });
 
   return NextResponse.json({
     badges,
