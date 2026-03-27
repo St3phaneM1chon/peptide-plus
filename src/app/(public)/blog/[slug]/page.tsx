@@ -176,7 +176,7 @@ function blogPostSchema(post: {
       name: 'Koraline',
       logo: {
         '@type': 'ImageObject',
-        url: `${siteUrl}/images/logo.png`,
+        url: `${siteUrl}/images/suite-koraline.png`,
       },
     },
     mainEntityOfPage: {
