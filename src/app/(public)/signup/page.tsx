@@ -2,22 +2,85 @@
 
 /**
  * Page d'inscription Koraline — Choisir un plan et créer un compte
- * URL: /signup
+ * URL: /signup?plan=essential|pro|enterprise
  *
- * Flow: Choisir plan → Remplir infos → Stripe Checkout → Onboarding
+ * Flow: Choisir plan -> Remplir infos -> Stripe Checkout -> Onboarding
+ *
+ * Supports:
+ * - ?plan=essential|pro|enterprise -> pre-select plan, skip to info step
+ * - ?cancelled=true -> show cancellation message from Stripe
  */
 
-import { useState } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { KORALINE_PLANS, type KoralinePlan } from '@/lib/stripe-attitudes';
 
-export default function SignupPage() {
-  const [selectedPlan, setSelectedPlan] = useState<KoralinePlan>('pro');
-  const [step, setStep] = useState<'plan' | 'info'>('plan');
+function isValidPlan(plan: string | null): plan is KoralinePlan {
+  return plan !== null && plan in KORALINE_PLANS;
+}
+
+function SignupContent() {
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get('plan');
+  const cancelled = searchParams.get('cancelled') === 'true';
+
+  const initialPlan = isValidPlan(planParam) ? planParam : 'pro';
+  // If plan is provided in the URL, skip directly to the info form
+  const initialStep = isValidPlan(planParam) ? 'info' : 'plan';
+
+  const [selectedPlan, setSelectedPlan] = useState<KoralinePlan>(initialPlan);
+  const [step, setStep] = useState<'plan' | 'info'>(initialStep);
   const [form, setForm] = useState({ slug: '', name: '', email: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [checkingSlug, setCheckingSlug] = useState(false);
 
-  const plans = Object.entries(KORALINE_PLANS) as [KoralinePlan, typeof KORALINE_PLANS[KoralinePlan]][];
+  // Show cancellation banner if redirected from Stripe
+  const [showCancelBanner, setShowCancelBanner] = useState(cancelled);
+
+  // Auto-generate slug from company name
+  const generateSlug = useCallback((name: string) => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove accents
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 30);
+  }, []);
+
+  // Check slug availability with debounce
+  useEffect(() => {
+    if (!form.slug || form.slug.length < 3) {
+      setSlugAvailable(null);
+      return;
+    }
+
+    setCheckingSlug(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/platform/check-slug?slug=${encodeURIComponent(form.slug)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSlugAvailable(data.available);
+        } else {
+          setSlugAvailable(null);
+        }
+      } catch {
+        setSlugAvailable(null);
+      } finally {
+        setCheckingSlug(false);
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+      setCheckingSlug(false);
+    };
+  }, [form.slug]);
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,18 +117,48 @@ export default function SignupPage() {
     }
   };
 
+  const plans = Object.entries(KORALINE_PLANS) as [KoralinePlan, typeof KORALINE_PLANS[KoralinePlan]][];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
       <header className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">K</div>
-          <span className="text-xl font-bold text-gray-900">Kor@line</span>
-          <span className="text-sm text-gray-400 ml-2">by Attitudes VIP</span>
+        <div className="flex items-center justify-between">
+          <Link href="/platform" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">K</div>
+            <span className="text-xl font-bold text-gray-900">Kor@line</span>
+            <span className="text-sm text-gray-400 ml-2">by Attitudes VIP</span>
+          </Link>
+          <Link
+            href="/auth/signin"
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            Vous avez un compte? Connexion
+          </Link>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 pb-16">
+        {/* Stripe cancel banner */}
+        {showCancelBanner && (
+          <div className="max-w-2xl mx-auto mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+            <span className="text-amber-500 text-lg mt-0.5">&#9888;</span>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800">Paiement annule</p>
+              <p className="text-sm text-amber-700 mt-0.5">
+                Votre paiement a ete annule. Vous pouvez reessayer quand vous le souhaitez.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCancelBanner(false)}
+              className="text-amber-400 hover:text-amber-600"
+              aria-label="Fermer"
+            >
+              &#10005;
+            </button>
+          </div>
+        )}
+
         {step === 'plan' ? (
           <>
             {/* Titre */}
@@ -74,7 +167,7 @@ export default function SignupPage() {
                 Lancez votre boutique en ligne
               </h1>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Tout ce dont vous avez besoin pour vendre en ligne. Commerce, CRM, comptabilité, marketing — tout inclus dans une seule plateforme.
+                Tout ce dont vous avez besoin pour vendre en ligne. Commerce, CRM, comptabilite, marketing — tout inclus dans une seule plateforme.
               </p>
             </div>
 
@@ -132,7 +225,7 @@ export default function SignupPage() {
                 Continuer avec {KORALINE_PLANS[selectedPlan].name}
               </button>
               <p className="text-sm text-gray-400 mt-3">
-                Modules optionnels disponibles après l&apos;inscription
+                Modules optionnels disponibles apres l&apos;inscription
               </p>
             </div>
           </>
@@ -149,33 +242,56 @@ export default function SignupPage() {
 
               <div className="bg-white rounded-2xl border p-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">Créez votre compte</h2>
+                  <h2 className="text-xl font-bold text-gray-900">Creez votre compte</h2>
                   <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
                     {KORALINE_PLANS[selectedPlan].name}
                   </span>
                 </div>
 
+                {/* Plan summary */}
+                <div className="mb-5 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">{KORALINE_PLANS[selectedPlan].description}</span>
+                    <span className="text-sm font-bold text-gray-900 whitespace-nowrap ml-3">
+                      {(KORALINE_PLANS[selectedPlan].monthlyPrice / 100).toFixed(0)}$/mois
+                    </span>
+                  </div>
+                </div>
+
                 <form onSubmit={handleCheckout} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="signup-name" className="block text-sm font-medium text-gray-700 mb-1">
                       Nom de votre entreprise
                     </label>
                     <input
+                      id="signup-name"
                       type="text"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        setForm(prev => ({
+                          ...prev,
+                          name,
+                          // Auto-generate slug only if user hasn't manually edited it
+                          slug: prev.slug === generateSlug(prev.name) || prev.slug === ''
+                            ? generateSlug(name)
+                            : prev.slug,
+                        }));
+                      }}
                       placeholder="Mon Entreprise Inc."
                       className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
+                      autoFocus
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="signup-slug" className="block text-sm font-medium text-gray-700 mb-1">
                       Identifiant unique (slug)
                     </label>
                     <div className="flex items-center">
                       <input
+                        id="signup-slug"
                         type="text"
                         value={form.slug}
                         onChange={(e) => setForm({
@@ -183,7 +299,9 @@ export default function SignupPage() {
                           slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''),
                         })}
                         placeholder="mon-entreprise"
-                        className="w-full px-4 py-2.5 border rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className={`w-full px-4 py-2.5 border rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          slugAvailable === false ? 'border-red-300' : slugAvailable === true ? 'border-green-300' : ''
+                        }`}
                         required
                         minLength={3}
                         maxLength={30}
@@ -192,13 +310,23 @@ export default function SignupPage() {
                         .koraline.app
                       </span>
                     </div>
+                    {checkingSlug && form.slug.length >= 3 && (
+                      <p className="mt-1 text-xs text-gray-400">Verification...</p>
+                    )}
+                    {!checkingSlug && slugAvailable === true && (
+                      <p className="mt-1 text-xs text-green-600">&#10003; Disponible</p>
+                    )}
+                    {!checkingSlug && slugAvailable === false && (
+                      <p className="mt-1 text-xs text-red-500">Ce slug est deja pris</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-1">
                       Votre courriel
                     </label>
                     <input
+                      id="signup-email"
                       type="email"
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -206,6 +334,9 @@ export default function SignupPage() {
                       className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     />
+                    <p className="mt-1 text-xs text-gray-400">
+                      Ce courriel sera le login administrateur de votre boutique.
+                    </p>
                   </div>
 
                   {error && (
@@ -216,21 +347,62 @@ export default function SignupPage() {
 
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || slugAvailable === false}
                     className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
                     {loading ? 'Redirection vers le paiement...' : `Passer au paiement — ${(KORALINE_PLANS[selectedPlan].monthlyPrice / 100).toFixed(0)}$/mois`}
                   </button>
 
                   <p className="text-xs text-gray-400 text-center">
-                    Paiement sécurisé par Stripe. Annulable à tout moment.
+                    Paiement securise par Stripe. Annulable a tout moment.
                   </p>
                 </form>
+              </div>
+
+              {/* Trust signals */}
+              <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                  </svg>
+                  SSL securise
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                  </svg>
+                  Paiement Stripe
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v9.75" />
+                  </svg>
+                  Sans engagement
+                </span>
               </div>
             </div>
           </>
         )}
       </main>
     </div>
+  );
+}
+
+function SignupLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto" />
+        <p className="mt-4 text-gray-500 text-sm">Chargement...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<SignupLoading />}>
+      <SignupContent />
+    </Suspense>
   );
 }
