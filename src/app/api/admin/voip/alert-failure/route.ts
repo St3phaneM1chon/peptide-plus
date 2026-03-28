@@ -7,12 +7,16 @@ export const dynamic = 'force-dynamic';
  * When a softphone line fails to auto-initialize on session start,
  * this endpoint sends an email alert to all OWNER users.
  * Rate-limited to 1 alert per user per 30 minutes to prevent spam.
+ *
+ * Uses soft auth: returns graceful "not sent" response when the user is
+ * not authenticated, instead of 401 errors. The SoftphoneProvider calls
+ * this in a fire-and-forget pattern so errors would just pollute the console.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { withAdminGuard } from '@/lib/admin-api-guard';
+import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
 
 const alertSchema = z.object({
@@ -27,30 +31,42 @@ const alertSchema = z.object({
 const alertCooldown = new Map<string, number>();
 const COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
 
-export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
-  // Rate limit check
-  const lastAlert = alertCooldown.get(session.user.id);
-  if (lastAlert && Date.now() - lastAlert < COOLDOWN_MS) {
-    const remainingMin = Math.ceil((COOLDOWN_MS - (Date.now() - lastAlert)) / 60000);
-    return NextResponse.json({
-      sent: false,
-      reason: `Alert cooldown active. Next alert allowed in ${remainingMin} min.`,
-    });
-  }
-
-  let body: unknown;
+export async function POST(request: NextRequest) {
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
+    // Soft auth — return graceful response if not authenticated
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ sent: false, reason: 'Not authenticated', alerts: [] });
+    }
 
-  const parsed = alertSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
-  }
+    // Check admin role
+    const role = (session.user as Record<string, unknown>).role as string;
+    if (!['EMPLOYEE', 'OWNER'].includes(role)) {
+      return NextResponse.json({ sent: false, reason: 'Insufficient permissions', alerts: [] });
+    }
 
-  try {
+    // Rate limit check
+    const lastAlert = alertCooldown.get(session.user.id);
+    if (lastAlert && Date.now() - lastAlert < COOLDOWN_MS) {
+      const remainingMin = Math.ceil((COOLDOWN_MS - (Date.now() - lastAlert)) / 60000);
+      return NextResponse.json({
+        sent: false,
+        reason: `Alert cooldown active. Next alert allowed in ${remainingMin} min.`,
+      });
+    }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
+
+    const parsed = alertSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+
     // Get all OWNER users
     const owners = await prisma.user.findMany({
       where: { role: 'OWNER' },
@@ -142,9 +158,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     });
   } catch (error) {
     logger.error('[VoIP Alert] Error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to send alert' },
-      { status: 500 }
-    );
+    // Return graceful response instead of 500 to avoid console noise from polling
+    return NextResponse.json({ sent: false, reason: 'Alert service unavailable', alerts: [] });
   }
-}, { skipCsrf: true });
+}
