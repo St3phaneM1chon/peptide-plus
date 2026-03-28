@@ -21,9 +21,41 @@ const nextConfig = {
   // Sécurité: Désactiver x-powered-by
   poweredByHeader: false,
   
-  // Sécurité: Headers HTTP stricts
+  // Sécurité: Headers HTTP stricts + Performance: Cache headers
   async headers() {
     return [
+      // PERF: Long-term cache for Next.js static assets (JS/CSS bundles)
+      // These files are content-hashed, so they can be cached indefinitely.
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // PERF: Cache marketing/platform pages at the CDN layer
+      // s-maxage=3600 (1h CDN cache), stale-while-revalidate=86400 (serve stale for 24h while revalidating)
+      {
+        source: '/platform/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      // PERF: Cache public fonts/images served from /fonts or /images
+      {
+        source: '/fonts/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
       // FIX: F22 - Security headers for uploaded files to prevent inline execution
       {
         // Allow images to be displayed inline; force attachment only for non-image uploads
