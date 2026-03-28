@@ -1,0 +1,165 @@
+{
+  "platform": "Network Solutions",
+  "scrapedDate": "2026-03-28",
+  "sources": [
+    "https://www.networksolutions.com/websites",
+    "https://www.networksolutions.com/hosting"
+  ],
+  "pricing": {
+    "websiteBuilderPlans": [
+      {
+        "planName": "Basic",
+        "monthlyPrice": "$9.95/mo",
+        "annualPrice": "$8.95/mo",
+        "storage": "10 GB",
+        "bandwidth": "Unmetered",
+        "customDomain": true,
+        "ecommerce": false,
+        "features": [
+          "Drag-and-drop editor",
+          "Mobile responsive templates",
+          "SEO tools",
+          "1 website"
+        ],
+        "limitations": [
+          "Limited to 1 website"
+        ]
+      },
+      {
+        "planName": "Pro",
+        "monthlyPrice": "$14.95/mo",
+        "annualPrice": "$12.95/mo",
+        "storage": "15 GB",
+        "bandwidth": "Unmetered",
+        "customDomain": true,
+        "ecommerce": true,
+        "features": [
+          "All Basic features",
+          "E-commerce functionality",
+          "Social media integration",
+          "Email marketing tools",
+          "2 websites"
+        ],
+        "limitations": [
+          "Limited to 2 websites"
+        ]
+      },
+      {
+        "planName": "Business",
+        "monthlyPrice": "$22.95/mo",
+        "annualPrice": "$19.95/mo",
+        "storage": "20 GB",
+        "bandwidth": "Unmetered",
+        "customDomain": true,
+        "ecommerce": true,
+        "features": [
+          "All Pro features",
+          "Advanced SEO tools",
+          "Analytics dashboard",
+          "Unlimited websites"
+        ],
+        "limitations": []
+      }
+    ],
+    "webHostingPlans": [
+      {
+        "planName": "Starter (Hosting)",
+        "introPrice": "$2.99/mo",
+        "renewalPrice": "$8.83/mo",
+        "websites": 1,
+        "storage": "10 GB",
+        "visitors": "15K",
+        "bandwidth": "Unmetered",
+        "ftpAccounts": 25,
+        "emailBoxes": 5,
+        "features": [
+          "Drag and Drop Website Builder",
+          "Unmetered Bandwidth"
+        ]
+      },
+      {
+        "planName": "Essential (Hosting)",
+        "introPrice": "$4.99/mo",
+        "renewalPrice": "$15.42/mo",
+        "websites": 3,
+        "storage": "20 GB",
+        "visitors": "50K",
+        "bandwidth": "Unmetered",
+        "ftpAccounts": 50,
+        "emailBoxes": 1000,
+        "features": [
+          "Drag and Drop Website Builder",
+          "Unmetered Bandwidth",
+          "1 Year Free Domain",
+          "1 Year Free SSL Certificate"
+        ]
+      },
+      {
+        "planName": "Premium (Hosting)",
+        "introPrice": "$6.99/mo",
+        "renewalPrice": "$18.75/mo",
+        "websites": 10,
+        "storage": "40 GB",
+        "visitors": "200K",
+        "bandwidth": "Unmetered",
+        "ftpAccounts": "Unlimited",
+        "emailBoxes": "Unlimited",
+        "features": [
+          "Drag and Drop Website Builder",
+          "Unmetered Bandwidth",
+          "1 Year Free Domain",
+          "1 Year Free SSL Certificate",
+          "Unlimited FTP Accounts",
+          "Unlimited Email Boxes"
+        ]
+      }
+    ],
+    "freePlan": false,
+    "moneyBackGuarantee": "Not specified"
+  },
+  "features": {
+    "websiteBuilder": [
+      "Drag-and-drop editor",
+      "Mobile responsive templates",
+      "SEO tools",
+      "Analytics dashboard",
+      "Social media integration",
+      "Email marketing tools"
+    ],
+    "ai": [],
+    "ecommerce": [
+      "Online storefront",
+      "Payment processing",
+      "Product catalog management",
+      "Shopping cart integration"
+    ],
+    "hosting": [
+      "99.9% uptime SLA",
+      "Fast load times with cloud storage",
+      "Daily malware scans",
+      "24/7 expert support",
+      "Free domain (hosting plans)",
+      "Free SSL (hosting plans)"
+    ]
+  },
+  "templates": {
+    "count": "50+",
+    "categories": ["Business", "Personal", "Portfolio"]
+  },
+  "support": {
+    "phone": "24/7",
+    "customDesign": "Available as paid service"
+  },
+  "limitations": [
+    "No free plan",
+    "No AI features",
+    "Expensive website builder ($9.95/mo base)",
+    "Very limited storage (10-20 GB website builder)",
+    "Only 50+ templates (smallest selection)",
+    "Dated interface compared to competitors",
+    "Limited e-commerce features",
+    "No advanced customization (no CSS/JS)",
+    "Significant renewal price increases on hosting",
+    "Legacy brand with older technology"
+  ]
+}

@@ -1,0 +1,440 @@
+{
+  "platform": "Shopify",
+  "scrapedAt": "2026-03-28",
+  "sources": [
+    "https://www.shopify.com/pricing",
+    "https://www.shopify.com/online",
+    "https://www.shopify.com/pos",
+    "https://www.shopify.com/features",
+    "https://apps.shopify.com/",
+    "https://www.shopify.com/editions",
+    "https://ecommerce-platforms.com/shopify/shopify-editions-winter-2026"
+  ],
+  "pricing": [
+    {
+      "planName": "Starter",
+      "monthlyPrice": "$5",
+      "annualPrice": "N/A",
+      "targetAudience": "Casual selling",
+      "features": [
+        "One-page online store",
+        "Card rates from 5% + 30c USD online"
+      ]
+    },
+    {
+      "planName": "Basic",
+      "monthlyPrice": "$29",
+      "annualPrice": "~$22/mo (save up to 25%)",
+      "targetAudience": "Solo entrepreneurs",
+      "features": [
+        "Sell online and in person",
+        "Card rates from 2.9% + 30c USD",
+        "World's best checkout",
+        "Built-in AI tools",
+        "Earn up to $5,000 in credits"
+      ]
+    },
+    {
+      "planName": "Grow",
+      "monthlyPrice": "$79",
+      "annualPrice": "~$59/mo (save up to 25%)",
+      "targetAudience": "Small teams",
+      "features": [
+        "Everything in Basic",
+        "Card rates from 2.7% + 30c USD",
+        "Up to 87% off shipping",
+        "Up to 5 staff accounts",
+        "Earn up to $7,500 in credits"
+      ]
+    },
+    {
+      "planName": "Advanced",
+      "monthlyPrice": "$299",
+      "annualPrice": "~$224/mo (save up to 25%)",
+      "targetAudience": "Global reach",
+      "features": [
+        "Everything in Grow",
+        "Card rates from 2.5% + 30c USD",
+        "Live 3rd-party shipping rates",
+        "Up to 15 staff accounts",
+        "Tailor your store by region",
+        "Earn up to $10,000 in credits"
+      ]
+    },
+    {
+      "planName": "Plus",
+      "monthlyPrice": "from $2,300",
+      "annualPrice": "Custom",
+      "targetAudience": "Complex businesses / Enterprise",
+      "features": [
+        "Everything in Advanced",
+        "Card rates from 2.25% + 30c USD",
+        "Fully customizable checkout",
+        "Unlimited staff accounts",
+        "Up to 200 POS Pro locations",
+        "Unlimited B2B catalogs",
+        "Priority 24/7 phone support"
+      ]
+    },
+    {
+      "planName": "POS Pro (add-on)",
+      "monthlyPrice": "+$89/location",
+      "annualPrice": "N/A",
+      "targetAudience": "Physical storefronts",
+      "features": [
+        "Unlimited staff roles & permissions",
+        "In-store inventory management",
+        "In-store pickup & flexible delivery",
+        "Advanced reporting",
+        "Purchase orders & demand forecasting"
+      ]
+    }
+  ],
+  "appMarketplace": {
+    "totalApps": "16,000+",
+    "categories": [
+      {
+        "name": "Sales channels",
+        "description": "Sell on social media, marketplaces, and more"
+      },
+      {
+        "name": "Finding products",
+        "description": "Dropshipping, print on demand, sourcing"
+      },
+      {
+        "name": "Selling products",
+        "description": "Upselling, cross-selling, subscriptions, bundles"
+      },
+      {
+        "name": "Orders and shipping",
+        "description": "Fulfillment, shipping, returns management"
+      },
+      {
+        "name": "Store design",
+        "description": "Themes, page builders, visual customization"
+      },
+      {
+        "name": "Marketing and conversion",
+        "description": "SEO, email, ads, reviews, popups"
+      },
+      {
+        "name": "Store management",
+        "description": "Inventory, analytics, accounting, HR"
+      }
+    ]
+  },
+  "onlineStoreFeatures": [
+    {
+      "name": "99.9% uptime infrastructure",
+      "description": "300 points of presence worldwide for reliable performance.",
+      "category": "Performance"
+    },
+    {
+      "name": "Best-in-class checkout",
+      "description": "Converts 15% better on average than other commerce platforms.",
+      "category": "Checkout"
+    },
+    {
+      "name": "Built-in AI tools",
+      "description": "AI for launching, managing, and scaling every part of your business.",
+      "category": "AI"
+    },
+    {
+      "name": "800+ themes",
+      "description": "AI-generated store design or pick from 800+ proven themes.",
+      "category": "Design"
+    },
+    {
+      "name": "Headless commerce (Hydrogen)",
+      "description": "Build custom with Hydrogen or any stack using Shopify APIs.",
+      "category": "Customization"
+    },
+    {
+      "name": "Metaobjects & metafields",
+      "description": "Add custom pages, structured content, and specialized product info.",
+      "category": "Content Management"
+    },
+    {
+      "name": "Drag-and-drop editor",
+      "description": "Effortlessly add pages and switch up layout.",
+      "category": "Ease of Use"
+    },
+    {
+      "name": "Search and filtering",
+      "description": "Help customers find exactly what they're looking for.",
+      "category": "User Experience"
+    },
+    {
+      "name": "Multi-language & currency",
+      "description": "Let customers select country and currency for shopping.",
+      "category": "Localization"
+    },
+    {
+      "name": "Product recommendations",
+      "description": "Encourage customers to fill their carts with AI recommendations.",
+      "category": "Sales"
+    },
+    {
+      "name": "Mobile-ready responsive",
+      "description": "Everything designed responsively for any device.",
+      "category": "Design"
+    },
+    {
+      "name": "Audience targeting",
+      "description": "Show different products/pricing to international and B2B customers.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Loyalty programs",
+      "description": "Points, rewards, and referrals to retain customers.",
+      "category": "Customer Engagement"
+    },
+    {
+      "name": "Subscription management",
+      "description": "Maximize revenue with subscriptions, bundles & memberships.",
+      "category": "Sales"
+    },
+    {
+      "name": "24/7 chat support",
+      "description": "Live chat support for all merchant inquiries.",
+      "category": "Support"
+    }
+  ],
+  "posFeatures": {
+    "sales": [
+      "Omnichannel selling",
+      "Pickup in store (Pro)",
+      "Buy in store and ship (Pro)",
+      "Buy online, exchange/return in store (Pro)",
+      "Local delivery (Pro)",
+      "Product QR codes",
+      "Send cart to buy online (Pro)",
+      "Ship from store (Pro)",
+      "Manage orders in POS",
+      "Returns and exchanges (Pro)",
+      "Draft orders (Pro)",
+      "Custom printed receipts (Pro)",
+      "Checkout validations (Pro)",
+      "Customizable smart grid",
+      "Discounts",
+      "Taxes",
+      "Custom email/SMS receipts",
+      "Tips"
+    ],
+    "inventoryManagement": [
+      "Advanced inventory management",
+      "Purchase orders (Pro)",
+      "Demand forecasting (Pro)",
+      "Transfers (Pro)",
+      "Low stock reports (Pro)",
+      "Sale item suggestions (Pro)",
+      "Inventory analysis (Pro)",
+      "Stock adjustments (Pro)",
+      "Inventory counts (Pro)",
+      "Inventory receiving (Pro)",
+      "Detailed inventory reports (Pro)",
+      "Inventory tracking"
+    ],
+    "staffManagement": [
+      "Staff management",
+      "Manager approvals (Pro)",
+      "Unlimited POS staff (Pro)",
+      "Staff roles & permissions (Pro)",
+      "Sales commissions (Pro)",
+      "Staff POS PINs"
+    ],
+    "products": [
+      "Unlimited products",
+      "Product collections",
+      "Product variants",
+      "Inventory states",
+      "Multi-location management",
+      "Barcode labels"
+    ],
+    "customers": [
+      "Email capture at checkout",
+      "Customer profiles",
+      "Order history",
+      "Customer metafields",
+      "Customer information",
+      "Marketing opt-ins"
+    ],
+    "analytics": [
+      "Daily sales reports (Pro)",
+      "Dashboard overview",
+      "Retail sales reports",
+      "Cash tracking",
+      "Cash flow reports",
+      "Product reports",
+      "Discount reports",
+      "Inventory reports",
+      "Finance reports"
+    ],
+    "hardware": [
+      "POS Terminal Countertop Kit",
+      "Tap & Chip Card Reader",
+      "Tap to Pay (smartphone)",
+      "1-2 year warranty",
+      "PCI compliant & EMV standard",
+      "Compatible accessories (scanners, printers)"
+    ],
+    "payments": [
+      "Shopify Payments (built-in)",
+      "All major card brands + digital wallets",
+      "Shop Pay Installments (4 payments or up to 12 months)",
+      "Shop Pay integration (150M+ buyers)",
+      "Transparent payment rates",
+      "Quick payouts (1-3 business days)",
+      "Chargebacks management",
+      "Gift cards",
+      "Split payments",
+      "Partial payments",
+      "Custom payment types"
+    ],
+    "marketing": [
+      "Customer segmentation",
+      "Email marketing",
+      "Social media integration",
+      "Google Merchant Center"
+    ]
+  },
+  "editionsWinter2026": {
+    "totalNewFeatures": "150+",
+    "codename": "The Renaissance Edition",
+    "keyFeatures": [
+      {
+        "name": "AI-Powered Sidekick Pulse",
+        "description": "Real-time proactive business suggestions based on store performance and market trends. Builds apps, creates workflows, generates reports.",
+        "category": "AI & Automation"
+      },
+      {
+        "name": "Agentic Storefronts",
+        "description": "Products discoverable and purchasable inside ChatGPT, Copilot, and Perplexity. AI as a direct sales channel.",
+        "category": "AI Commerce"
+      },
+      {
+        "name": "SimGym App",
+        "description": "AI tool trained on billions of data points that simulates user behavior before store goes live.",
+        "category": "AI Optimization"
+      },
+      {
+        "name": "Theme A/B Testing",
+        "description": "Native A/B testing and scheduling directly in admin. Test different themes in real-time.",
+        "category": "Customization"
+      },
+      {
+        "name": "Voice Chat & Wide-Mode Interface",
+        "description": "Natural voice interaction with Sidekick on desktop and mobile.",
+        "category": "User Experience"
+      },
+      {
+        "name": "Workflow Automation via Sidekick",
+        "description": "Describe what you want and Sidekick generates the logic inside Shopify Flow.",
+        "category": "Automation"
+      },
+      {
+        "name": "POS Hub",
+        "description": "New central hardware system with stronger processing, stability. Uber Direct same-day delivery.",
+        "category": "Retail"
+      },
+      {
+        "name": "In-store Subscriptions",
+        "description": "POS customers can now purchase subscriptions at physical locations.",
+        "category": "Retail"
+      },
+      {
+        "name": "B2B Global Expansion",
+        "description": "Shopify Collective in 35+ countries, store credit, ACH payments, custom B2B terms.",
+        "category": "B2B"
+      },
+      {
+        "name": "Shop Campaigns Multi-Channel",
+        "description": "Campaigns now on X (Twitter), Snapchat, Bing with conversion-based pricing.",
+        "category": "Marketing"
+      },
+      {
+        "name": "SMS Marketing (Shopify Messaging)",
+        "description": "Native SMS campaign creation, scheduling, and tracking.",
+        "category": "Marketing"
+      },
+      {
+        "name": "Shopify Functions (replace Scripts June 2026)",
+        "description": "Faster execution, more control, lower risk. Complete platform migration.",
+        "category": "Development"
+      },
+      {
+        "name": "New Theme Code Editor",
+        "description": "Autocomplete, multi-file view, diff tracking for developers.",
+        "category": "Development"
+      },
+      {
+        "name": "Catalog API & Checkout Kit",
+        "description": "Build and test agents that operate inside AI conversations.",
+        "category": "Development"
+      },
+      {
+        "name": "Dynamic Bundles",
+        "description": "More flexible bundle logic for upselling combos and value packs.",
+        "category": "Merchandising"
+      },
+      {
+        "name": "Custom Checkout Per Market",
+        "description": "Personalized checkout for B2B and international customers.",
+        "category": "Checkout"
+      },
+      {
+        "name": "Auto-Personalized Storefronts",
+        "description": "Dynamic recommendations and homepages adapting in real-time.",
+        "category": "User Experience"
+      },
+      {
+        "name": "Social Sign-In",
+        "description": "Customers can sign in with Google or Facebook accounts.",
+        "category": "Authentication"
+      },
+      {
+        "name": "Sell on WordPress",
+        "description": "New sales channel for selling on WordPress sites.",
+        "category": "Sales Channels"
+      },
+      {
+        "name": "Payment Requests Based on Fulfillment",
+        "description": "Collect payments per shipment for multi-shipment orders.",
+        "category": "Payments"
+      },
+      {
+        "name": "Same-Day ACH Transfers",
+        "description": "Faster access to funds (US only).",
+        "category": "Finance"
+      },
+      {
+        "name": "FedEx Pay-on-Scan Return Labels",
+        "description": "Available directly in admin panel.",
+        "category": "Shipping"
+      },
+      {
+        "name": "Heatmaps & Multi-Store Dashboards",
+        "description": "Advanced analytics for better decision-making.",
+        "category": "Analytics"
+      },
+      {
+        "name": "Unlimited Inventory History",
+        "description": "Complete inventory tracking over time.",
+        "category": "Inventory"
+      },
+      {
+        "name": "Reusable Sidekick Skills",
+        "description": "Save effective prompts as reusable skills, share with team.",
+        "category": "AI & Automation"
+      },
+      {
+        "name": "2048 Product Variants",
+        "description": "Expanded from previous limit for complex product configurations.",
+        "category": "Products"
+      }
+    ]
+  },
+  "totalPosFeatureCount": 92,
+  "totalOnlineFeatureCount": 15,
+  "totalEditionsFeatureCount": 26
+}

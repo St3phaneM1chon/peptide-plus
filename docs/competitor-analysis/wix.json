@@ -1,0 +1,1612 @@
+{
+  "platform": "Wix",
+  "scrapedAt": "2026-03-28",
+  "sources": [
+    "https://www.wix.com/features/main",
+    "https://www.wix.com/upgrade/website",
+    "https://www.wix.com/app-market",
+    "https://www.wix.com/ecommerce/website",
+    "https://www.wix.com/studio/features"
+  ],
+  "pricing": [
+    {
+      "planName": "Light",
+      "monthlyPrice": "$17",
+      "annualPrice": "Discounted (pay yearly)",
+      "features": [
+        "Free domain for 1 year",
+        "2 GB storage space",
+        "Multi-cloud hosting",
+        "Light marketing suite",
+        "2 site collaborators"
+      ]
+    },
+    {
+      "planName": "Core",
+      "monthlyPrice": "$29",
+      "annualPrice": "Discounted (pay yearly)",
+      "features": [
+        "Free domain for 1 year",
+        "50 GB storage space",
+        "Multi-cloud hosting",
+        "Basic marketing suite",
+        "Accept payments",
+        "Basic eCommerce",
+        "Scheduling and services",
+        "5 site collaborators"
+      ]
+    },
+    {
+      "planName": "Business",
+      "monthlyPrice": "$39",
+      "annualPrice": "Discounted (pay yearly)",
+      "features": [
+        "Free domain for 1 year",
+        "100 GB storage space",
+        "Multi-cloud hosting",
+        "Standard marketing suite",
+        "Accept payments",
+        "Standard eCommerce",
+        "Scheduling and services",
+        "10 site collaborators"
+      ]
+    },
+    {
+      "planName": "Business Elite",
+      "monthlyPrice": "$159",
+      "annualPrice": "Discounted (pay yearly)",
+      "features": [
+        "Free domain for 1 year",
+        "Unlimited storage space",
+        "Multi-cloud hosting",
+        "Advanced marketing suite",
+        "Accept payments",
+        "Advanced eCommerce",
+        "Scheduling and services",
+        "Advanced developer platform",
+        "100 site collaborators"
+      ]
+    }
+  ],
+  "appMarketplace": {
+    "totalApps": "500+",
+    "categories": [
+      {
+        "name": "Marketing",
+        "description": "Grow your customer base with these powerful marketing tools.",
+        "appCount": "27+"
+      },
+      {
+        "name": "Sell Online",
+        "description": "Create an online store and manage your inventory, shipping and accounting.",
+        "appCount": "21+"
+      },
+      {
+        "name": "Services & Events",
+        "description": "Get booked for your services, create events and manage your business calendar.",
+        "appCount": "21+"
+      },
+      {
+        "name": "Communication",
+        "description": "Connect with your site visitors using chat, forms, testimonials and more.",
+        "appCount": "27+"
+      },
+      {
+        "name": "Design Elements",
+        "description": "Get creative with tools to customize the look and layout of your site.",
+        "appCount": "21+"
+      },
+      {
+        "name": "Media & Content",
+        "description": "Add music, videos, and articles to your site to engage your audience.",
+        "appCount": "21+"
+      }
+    ]
+  },
+  "ecommerceFeatures": [
+    {
+      "name": "Unmatched storefront design",
+      "description": "Build high-converting storefronts and product pages customized for your brand. Leverage built-in AI features and exceptional no-code creation.",
+      "category": "Design"
+    },
+    {
+      "name": "eCommerce website templates",
+      "description": "100s of fully customizable and free eCommerce website templates for high-converting mobile and web stores.",
+      "category": "Templates"
+    },
+    {
+      "name": "Product catalog (up to 1,000 variants)",
+      "description": "Expand your catalog with up to 1,000 variants each. Import/export CSV files or migrate with Cart2Cart.",
+      "category": "Product Management"
+    },
+    {
+      "name": "Dropshipping",
+      "description": "Create a dropshipping store with ready-to-sell products and let suppliers handle fulfillment.",
+      "category": "Product Management"
+    },
+    {
+      "name": "Print on demand",
+      "description": "Add designs to hundreds of high-quality products and let suppliers ship directly to customers.",
+      "category": "Product Management"
+    },
+    {
+      "name": "Digital products",
+      "description": "Sell music files, ebooks, online courses, images or gift cards.",
+      "category": "Product Management"
+    },
+    {
+      "name": "Subscriptions",
+      "description": "Create and manage recurring products and sell subscriptions for steady revenue.",
+      "category": "Product Management"
+    },
+    {
+      "name": "AI image editor",
+      "description": "Remove unwanted objects and backgrounds from product images.",
+      "category": "AI Features"
+    },
+    {
+      "name": "AI product descriptions",
+      "description": "Generate unique AI product descriptions for conversions and SEO.",
+      "category": "AI Features"
+    },
+    {
+      "name": "AI product recommendations",
+      "description": "Increase average order value with related products at checkout.",
+      "category": "AI Features"
+    },
+    {
+      "name": "Multi-channel selling",
+      "description": "Sell in store, on the go, on your website and on marketplaces, all synced to one dashboard.",
+      "category": "Sales Channels"
+    },
+    {
+      "name": "SEO tools",
+      "description": "Optimize your store for search engines and see standings on LLMs like ChatGPT.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Email Marketing",
+      "description": "Templates and AI-generated emails for returning customers.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Gift Cards",
+      "description": "Digital gift cards to improve sales and bring in new shoppers.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Social Media Marketing",
+      "description": "Social media templates with AI-powered captions and hashtags.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Order management at scale",
+      "description": "Accept payments and manage fulfillment logistics for all sales channels.",
+      "category": "Order Management"
+    },
+    {
+      "name": "Shipping labels",
+      "description": "Buy and print discounted shipping labels from various carriers.",
+      "category": "Shipping"
+    },
+    {
+      "name": "Business automation",
+      "description": "Sync inventory, monitor stock, track products, set up abandoned cart emails.",
+      "category": "Automation"
+    },
+    {
+      "name": "PCI DSS Level 1 security",
+      "description": "Fully managed security with threat prevention and real-time detection.",
+      "category": "Security"
+    },
+    {
+      "name": "Industry-leading speed",
+      "description": "Performance-first infrastructure for fast page loading.",
+      "category": "Performance"
+    }
+  ],
+  "studioFeatures": {
+    "design": [
+      "Custom breakpoints",
+      "Pixel-based design (auto-converted to responsive)",
+      "Figma to Studio plugin",
+      "Responsive AI (one-click)",
+      "Visual sitemap and wireframe generator",
+      "Pixel-perfect positioning",
+      "Packaged responsiveness behaviors",
+      "Triggers & animations",
+      "Mouse Parallax Effects"
+    ],
+    "development": [
+      "Full-stack dev platform",
+      "100s of APIs",
+      "Build apps with Blocks",
+      "Built-in IDE (VS Code-based)",
+      "Database collections (native CMS or external)",
+      "AI code assistant",
+      "Headless (composable APIs)",
+      "GitHub integration",
+      "Site monitoring",
+      "Server-side rendering"
+    ],
+    "marketingSeo": [
+      "SSR for crawlers",
+      "Structured data markup",
+      "Auto sitemaps",
+      "Auto robots.txt",
+      "Instant Google indexing",
+      "301 redirects",
+      "Site inspection (Google API)",
+      "Metadata at scale",
+      "SEO Assistant"
+    ],
+    "ai": [
+      "Responsive AI",
+      "AI code assistant",
+      "AI image creator",
+      "AI image editor",
+      "Object eraser",
+      "Upscale resolution",
+      "Image enhancer",
+      "Auto background removal",
+      "AI text creator"
+    ],
+    "agencyManagement": [
+      "Unified workspace",
+      "Studio Mobile App",
+      "On-canvas collaboration",
+      "Custom roles & permissions",
+      "Live comments",
+      "Reusable assets",
+      "Design libraries",
+      "Team accounts",
+      "Client kit"
+    ],
+    "businessSolutions": [
+      "eCommerce",
+      "Events",
+      "Bookings",
+      "Blog",
+      "CMS",
+      "Multilingual (180 languages)",
+      "Restaurants",
+      "Members Area",
+      "Chat"
+    ],
+    "enterprise": [
+      "Centralized dashboard",
+      "Account-level media",
+      "Shared collections",
+      "Account-level analytics",
+      "Custom creation funnel",
+      "Team management",
+      "Activity Log",
+      "Account-level monitoring",
+      "IP Allowlisting"
+    ],
+    "infrastructure": [
+      "Multi-cloud hosting (99.98% uptime)",
+      "Limitless scalability (4.5B daily requests)",
+      "Automatic disaster recovery",
+      "Worldwide CDN (200 nodes)",
+      "Enhanced media delivery (WebP, fetch priority)",
+      "Platform optimization (code splitting)",
+      "Site speed dashboard",
+      "No maintenance windows",
+      "Privacy & compliance (PCI DSS L1, SOC 2/3, GDPR, CCPA, LGPD)"
+    ]
+  },
+  "allFeatures": [
+    {
+      "name": "Mobile site editor",
+      "description": "Customize the design and layout of your site for a seamless mobile experience.",
+      "category": "Design features"
+    },
+    {
+      "name": "Entrance animations",
+      "description": "Draw attention to where you want it most by adding dozens of animation effects to your site.",
+      "category": "Design features"
+    },
+    {
+      "name": "Image shape crop",
+      "description": "Crop your images however you want, whether it's manually, by shape, or by ratio.",
+      "category": "Design features"
+    },
+    {
+      "name": "Image filters",
+      "description": "Edit and enhance your images with a large selection of filter options.",
+      "category": "Design features"
+    },
+    {
+      "name": "VideoBox",
+      "description": "Showcase videos in a unique way. Edit the design of the box and 'play' button, add overlays and more, to make your videos really pop.",
+      "category": "Design features"
+    },
+    {
+      "name": "Custom fonts",
+      "description": "Upload and use your own fonts so that your site fully matches the vibe of your brand.",
+      "category": "Design features"
+    },
+    {
+      "name": "Gradients",
+      "description": "Create eye-catching backgrounds for elements on your site using gradients.",
+      "category": "Design features"
+    },
+    {
+      "name": "Transparent videos",
+      "description": "Add videos with a transparent background made by leading designers or upload your own.",
+      "category": "Design features"
+    },
+    {
+      "name": "Website templates",
+      "description": "Choose from 900+ pro-designed templates and customize one to make it your own.",
+      "category": "Design features"
+    },
+    {
+      "name": "Text Mask",
+      "description": "Fill your text with a unique video, image or gradient to create an extraordinary visual.",
+      "category": "Design features"
+    },
+    {
+      "name": "Shape Dividers",
+      "description": "Add Shape Dividers to your strips and sections, and customize them to split the layout of your site in a more interesting way.",
+      "category": "Design features"
+    },
+    {
+      "name": "Sections",
+      "description": "Add and customize sections on your site to begin structuring your pages and their content.",
+      "category": "Design features"
+    },
+    {
+      "name": "Custom interactions",
+      "description": "Make your site interactive by triggering animations when visitors perform specific actions, like hovering, scrolling or clicking.",
+      "category": "Design features"
+    },
+    {
+      "name": "Vector Art",
+      "description": "Add Vector Art to bring life to your site. Choose from 100s of free options or upload your own.",
+      "category": "Design features"
+    },
+    {
+      "name": "Slideshows",
+      "description": "Customize slideshows to display images and content on your site in a unique way.",
+      "category": "Design features"
+    },
+    {
+      "name": "Background scroll effects",
+      "description": "Grab people's attention and add some fun to your site with a scrolling background effect.",
+      "category": "Design features"
+    },
+    {
+      "name": "Color & text themes",
+      "description": "Customize your color and text themes to easily change your entire site's look, feel, and aesthetic.",
+      "category": "Design features"
+    },
+    {
+      "name": "My Designs",
+      "description": "Save an element or group of elements to My Designs to reuse on any site in your account.",
+      "category": "Design features"
+    },
+    {
+      "name": "Mobile welcome screen",
+      "description": "Create a mobile site welcome screen to introduce your brand, while allowing the site to fully load in the background.",
+      "category": "Design features"
+    },
+    {
+      "name": "Pro Gallery",
+      "description": "Showcase your photos and videos in the highest quality with a customizable gallery.",
+      "category": "Design features"
+    },
+    {
+      "name": "Drag & drop editor",
+      "description": "Customize every aspect of your site's design to match your vision with an intuitive editor.",
+      "category": "Design features"
+    },
+    {
+      "name": "Video Mask",
+      "description": "Shape VideoBoxes in a unique way—choose from shapes and vector art, or upload your own.",
+      "category": "Design features"
+    },
+    {
+      "name": "App Market",
+      "description": "Gain access to hundreds of third-party apps to help you enhance your site and grow your business.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Code development platform",
+      "description": "Add code to your site for advanced design control and functionality.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Multiple site collaborators",
+      "description": "Invite people to collaborate on your site and manage their roles and permissions.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Multilingual website",
+      "description": "Translate your site into multiple languages to communicate with visitors around the world and expand to new markets.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Page duplication",
+      "description": "Duplicate pages on your site, or copy a page into a different site for increased efficiency and convenience.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Customizable 404 error pages",
+      "description": "Customize the 404 page that visitors see when trying to access a page that doesn’t exist on your site.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Landing page builder",
+      "description": "Create all different types of landing pages to generate leads and drive traffic to your site.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Site menu design",
+      "description": "Customize your site menu to improve navigation and promote specific pages with mega menus and submenus.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Image upload",
+      "description": "Populate your site with images of your choice to make it look more professional and truly make it your own.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Video upload",
+      "description": "Upload your own content to your site, or add videos from YouTube, Facebook and more to engage your visitors.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Social bar",
+      "description": "Add a social bar to your site to display icons that link directly to your social media platforms.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Free media from Wix",
+      "description": "Choose from thousands of free high-quality images, videos, icons, and more to make your site stand out.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Affiliate links",
+      "description": "Add affiliate links to text, images or buttons to direct your site visitors to websites you're affiliated with to earn money.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Text & icon buttons",
+      "description": "Customize buttons to encourage your site visitors to click and perform the action you want.",
+      "category": "Essentials"
+    },
+    {
+      "name": "AI generated text",
+      "description": "Enter a few keywords and let AI help you generate unique text for your site's pages.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Photo Studio",
+      "description": "Add filters, edit and enhance your images straight from the Editor.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Site search",
+      "description": "Add a site search to help your visitors find the most relevant content, products and services on your website.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Anchor links",
+      "description": "Link to specific sections of a page to help improve your site navigation.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Google Maps",
+      "description": "Add Google Maps to showcase your location and make it easy for visitors to get directions to you in one click.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Audio player",
+      "description": "Feature music or podcasts on your site to engage visitors.",
+      "category": "Essentials"
+    },
+    {
+      "name": "YouTube feed",
+      "description": "Add a YouTube feed to your site and enable each new video you add to automatically sync to your site.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Accessibility Wizard",
+      "description": "Make your website accessible to people with disabilities.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Lightbox pop-ups",
+      "description": "Add a pop-up to draw your visitors' attention and showcase important info, discounts and more.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Content Management System",
+      "description": "Store and manage all of your site content in one place, plus create CMS collections and dynamic pages without writing a line of code.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Site backups",
+      "description": "Access your site history to see when a change was made, who performed the change or to restore a previous version.",
+      "category": "Essentials"
+    },
+    {
+      "name": "Domain registration",
+      "description": "Search, buy and register a domain name for your website—all in one place.",
+      "category": "Infrastructure"
+    },
+    {
+      "name": "Web hosting",
+      "description": "Get reliable, scalable and free web hosting to build your online presence.",
+      "category": "Infrastructure"
+    },
+    {
+      "name": "High performance",
+      "description": "Get industry-leading performance at the core of every site you build.",
+      "category": "Infrastructure"
+    },
+    {
+      "name": "Accessibility",
+      "description": "Use our built-in accessibility features to create a website that is accessible to everyone, regardless of ability.",
+      "category": "Infrastructure"
+    },
+    {
+      "name": "Website security",
+      "description": "Get enterprise-grade security with every site all the way from threat prevention to real-time detection and rapid response.",
+      "category": "Infrastructure"
+    },
+    {
+      "name": "SSL certificate validation",
+      "description": "All Wix sites include the HTTPS and SSL protocols to ensure secure communication between your site and its visitors.",
+      "category": "Infrastructure"
+    },
+    {
+      "name": "99.98% uptime",
+      "description": "Reliable infrastructure ensures your site stays up and running 99.98% of the time so site visitors can enjoy a seamless online experience.",
+      "category": "Infrastructure"
+    },
+    {
+      "name": "Domain transfer",
+      "description": "Seamlessly transfer a domain purchased elsewhere to your Wix site.",
+      "category": "Infrastructure"
+    },
+    {
+      "name": "AI website builder",
+      "description": "Feed the generator with key info to get a beautifully designed, business-ready and high-quality website in no time.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "AI generated text",
+      "description": "Enter a few keywords and let AI help you generate unique text for your site's pages.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "AI product descriptions",
+      "description": "Speedily create product descriptions at scale. Answer a few questions about the product and instantly get options to choose from.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "Layout generator",
+      "description": "Browse personalized layout suggestions, and see how they’d look with your content before making a final decision.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "Auto-generated trailers",
+      "description": "Create 30-second trailers of your videos instantly, then use them for marketing or share them on your social media platforms.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "Image enhancer",
+      "description": "Use the built-in image enhancer to edit and beautify your photos in seconds.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "Image background remover",
+      "description": "Refine and edit the background of any image, be it a person or product shot, by automatically removing the background.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "AI SEO metatags",
+      "description": "Instantly generate optimized meta titles and descriptions for each of your pages. Fine-tune with prompts and customize straight from your SEO Panel.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "AI email generator",
+      "description": "Choose the type of email campaign you want to send out and let AI do the rest, all the way from the layout to content creation.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "Benchmarks",
+      "description": "Gain insights into your website's performance, compare traffic and sales metrics with similar sites, and get actionable tips for improvement.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "Upscale image resolution",
+      "description": "Enhance the quality of your photos in a click. Sharpen previously blurred images to make them look more professional.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "AI image creator",
+      "description": "Generate a high-quality image in a click by simply describing the image you want, and then seamlessly adding it to your website.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "AI social captions",
+      "description": "Generate three content choices for your social media captions, plus get trending hashtags, all powered by AI.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "AI Google ads",
+      "description": "Generate titles, descriptions and keywords for your Google ads using AI and then publish them directly from the Wix editor.",
+      "category": "Generate with AI"
+    },
+    {
+      "name": "Scheduling system",
+      "description": "Manage your bookings, payments, staff, appointment reminders, and more–from one place.",
+      "category": "Business management"
+    },
+    {
+      "name": "Custom forms",
+      "description": "Create custom payment, registration, and contact forms to collect and track all the info you need for your business.",
+      "category": "Business management"
+    },
+    {
+      "name": "Automations",
+      "description": "Streamline your work processes and save time on manual tasks with automated emails, chat messages, reminders and more.",
+      "category": "Business management"
+    },
+    {
+      "name": "Analytics",
+      "description": "See how visitors interact with your site and get valuable insights to make informed business decisions.",
+      "category": "Business management"
+    },
+    {
+      "name": "Payment solutions",
+      "description": "Accept major debit/credit cards, Apple Pay, Google Pay, Tap to Pay on mobile and more for a seamless checkout experience.",
+      "category": "Business management"
+    },
+    {
+      "name": "CRM",
+      "description": "Use a built-in CRM system to capture leads, convert them into customers and keep them engaged.",
+      "category": "Business management"
+    },
+    {
+      "name": "Wix Owner App",
+      "description": "Manage and grow your business or community from your mobile. Chat with clients, take bookings, get paid and much more.",
+      "category": "Business management"
+    },
+    {
+      "name": "Invoices",
+      "description": "Create and send invoices, track their statuses and receive payments from your customers.",
+      "category": "Business management"
+    },
+    {
+      "name": "Pricing plans & memberships",
+      "description": "Create packages and memberships to sell services and content on your site.",
+      "category": "Business management"
+    },
+    {
+      "name": "Free business tools",
+      "description": "Use a range of marketing, design, financial and business and branding tools for every stage of your business journey.",
+      "category": "Business management"
+    },
+    {
+      "name": "Branded app builder",
+      "description": "Create your own fully branded native mobile app. No code needed.",
+      "category": "Business management"
+    },
+    {
+      "name": "Coupons & discounts",
+      "description": "Attract more customers, foster brand loyalty, and drive sales with discounted offerings on products, services, event tickets, and more.",
+      "category": "Business management"
+    },
+    {
+      "name": "Google Workspace integration",
+      "description": "Buy a custom business email from Wix and manage multiple Google Workspace applications under your domain name.",
+      "category": "Business management"
+    },
+    {
+      "name": "Currency converter",
+      "description": "Make it easy for customers to view prices in a familiar currency by adding a currency converter to your site.",
+      "category": "Business management"
+    },
+    {
+      "name": "Sell & rent video content",
+      "description": "Distribute and monetize your video content on your site, plus encourage customers to subscribe to your channel.",
+      "category": "Business management"
+    },
+    {
+      "name": "Loyalty program",
+      "description": "Create a loyalty program for your business to build a strong community of repeat customers.",
+      "category": "Business management"
+    },
+    {
+      "name": "Price quotes",
+      "description": "Send your clients professional price quotes for your products and services.",
+      "category": "Business management"
+    },
+    {
+      "name": "Live chat",
+      "description": "Let your visitors and customers easily contact you by adding a live chat option to your site.",
+      "category": "Business management"
+    },
+    {
+      "name": "Mobile POS",
+      "description": "Take payments anywhere with your phone or portable reader.",
+      "category": "Business management"
+    },
+    {
+      "name": "Members area",
+      "description": "Boost user engagement by letting visitors sign up for an account on your site. Grant access to exclusive content and award members with badges.",
+      "category": "Business management"
+    },
+    {
+      "name": "Wix File Share",
+      "description": "Create a file library where you and your visitors can securely upload and share documents to exchange ideas and collaborate on projects.",
+      "category": "Business management"
+    },
+    {
+      "name": "Forum",
+      "description": "Keep your visitors engaged and active on your site with a fully customizable forum.",
+      "category": "Business management"
+    },
+    {
+      "name": "SEO tools",
+      "description": "Use a complete suite of advanced SEO tools to optimize your site for search and increase your organic traffic.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Google Ads with Wix",
+      "description": "Launch a Google Ads campaign to reach your site's target audience and appear high up in Google search results.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Email marketing",
+      "description": "Create and customize strong email marketing campaigns to engage your audience, send promotions and increase traffic.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Analytics",
+      "description": "Get reports with actionable insights and data about your site and marketing activities.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Google Business Profile",
+      "description": "Attract the right customers and boost credibility by managing your business’s presence on Google Maps, Search and more.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Logo Maker",
+      "description": "Create a custom logo for your brand in minutes with our AI logo generator.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Facebook & Instagram Ads",
+      "description": "Launch targeted ad campaigns on Facebook and Instagram to generate leads and drive traffic.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Marketing integrations",
+      "description": "Connect tools such as Google Analytics and Facebook Pixel and CAPI to get insights on site traffic, visitor behavior and more.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Social media marketing",
+      "description": "Design, schedule, and easily share your content across multiple platforms to boost engagement.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Instagram Feed",
+      "description": "Feature your Instagram feed on your site to show off your visual content and attract new followers.",
+      "category": "Marketing"
+    },
+    {
+      "name": "Optimized robots.txt file",
+      "description": "Your site's robots.txt file is already optimized to tell search engines which pages to crawl.",
+      "category": "SEO"
+    },
+    {
+      "name": "Structured data markup",
+      "description": "Markup allows site content to be eligible for rich results. It's preset for some pages, like products and blog posts.",
+      "category": "SEO"
+    },
+    {
+      "name": "Server side rendering (SSR)",
+      "description": "Wix’s infrastructure is based on SSR, allowing search engines to fully read your site content.",
+      "category": "SEO"
+    },
+    {
+      "name": "URL customization",
+      "description": "Edit the URL slugs for site pages. Create consistency with variables and structure with site hierarchy.",
+      "category": "SEO"
+    },
+    {
+      "name": "SEO Meta Tags",
+      "description": "Meta tags are automatically added to all pages so that search engines can display them properly.",
+      "category": "SEO"
+    },
+    {
+      "name": "Canonical tags",
+      "description": "Wix automatically sets default canonical tags. Edit them to tell search engines which pages are primary versions for indexing.",
+      "category": "SEO"
+    },
+    {
+      "name": "Social sharing optimization",
+      "description": "Customize your pages for social networks like Facebook and Pinterest by adding your own images, titles, and descriptions.",
+      "category": "SEO"
+    },
+    {
+      "name": "SEO settings",
+      "description": "Customize the default page settings and meta tags across all page types at once with defaults, or edit them individually.",
+      "category": "SEO"
+    },
+    {
+      "name": "XML sitemaps",
+      "description": "Wix automates your indexing with built-in individual sitemaps and IndexNow to help improve discoverability.",
+      "category": "SEO"
+    },
+    {
+      "name": "URL Redirect Manager",
+      "description": "Create 301 redirects for individual pages and groups of pages on your site, and send traffic to new locations.",
+      "category": "SEO"
+    },
+    {
+      "name": "Bot log reports",
+      "description": "Review your log data to get a better understanding of how search engine bots crawl your site.",
+      "category": "SEO"
+    },
+    {
+      "name": "CDN and caching",
+      "description": "Wix integrates with external CDN providers allowing automatic caching, which enables faster site loading.",
+      "category": "SEO"
+    },
+    {
+      "name": "Image optimization",
+      "description": "Wix automatically optimizes site images for quality, search, and faster downloads.",
+      "category": "SEO"
+    },
+    {
+      "name": "AMP for Wix blog",
+      "description": "Get faster loading times on mobile devices for blog posts with AMP versions.",
+      "category": "SEO"
+    },
+    {
+      "name": "SEO APIs for developers",
+      "description": "Customize your SEO tags from client-side code with Velo APIs.",
+      "category": "SEO"
+    },
+    {
+      "name": "Fast homepage indexing",
+      "description": "Submit your sitemap and homepage for fast indexing by connecting to Google through the SEO Setup Checklist.",
+      "category": "SEO"
+    },
+    {
+      "name": "Google Business Profile",
+      "description": "Bring in local traffic from search results with a Google Business Profile. Set up with Wix or import an existing one.",
+      "category": "SEO"
+    },
+    {
+      "name": "Site verification",
+      "description": "Verify your site, confirm ownership, and track site performance in search results on Google, Bing, Yandex, Naver and Pinterest.",
+      "category": "SEO"
+    },
+    {
+      "name": "SEO setup checklist",
+      "description": "Follow a personalized checklist of SEO setup tasks to help your site become more visible in online searches.",
+      "category": "SEO"
+    },
+    {
+      "name": "Tracking events",
+      "description": "Automatically send events and track visitor behavior by connecting third-party marketing tools, like Google Analytics and more.",
+      "category": "SEO"
+    },
+    {
+      "name": "Wix Analytics",
+      "description": "Get actionable insights to help you better understand and improve your site's SEO.",
+      "category": "SEO"
+    },
+    {
+      "name": "Site inspection tool",
+      "description": "Learn how Google views your site and troubleshoot pages not appearing in search results.",
+      "category": "SEO"
+    },
+    {
+      "name": "Lumar (DeepCrawl) integration",
+      "description": "Identify opportunities to improve your SEO by running technical audits on your site.",
+      "category": "SEO"
+    },
+    {
+      "name": "Semrush keyword research tool",
+      "description": "Use this tool to find high-performing keywords to help boost your site's traffic.",
+      "category": "SEO"
+    },
+    {
+      "name": "SEO Assistant",
+      "description": "Fix current issues and follow recommendations to improve your site’s performance in search results.",
+      "category": "SEO"
+    },
+    {
+      "name": "Customize default SEO settings",
+      "description": "Customize the default page settings and meta tags across all page types to create structure and save time.",
+      "category": "SEO"
+    },
+    {
+      "name": "SEO Dashboard with GSC insights",
+      "description": "Get access to site performance data on Google, SEO tools, and more directly from your SEO Dashboard.",
+      "category": "SEO"
+    },
+    {
+      "name": "eCommerce website templates",
+      "description": "Choose from a variety of free designed templates or build your own custom online store using professional eComm elements.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Custom checkout experience",
+      "description": "Add your brand logo and custom checkout fields to create a customized experience for your customers.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Displaying products & categories",
+      "description": "Showcase your products using fully customizable category pages, product pages and galleries.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Shipping and delivery solutions",
+      "description": "Offer streamlined shipping, delivery and pickup options for your customers.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Customer loyalty programs",
+      "description": "Reward return customers and increase retention with tailored loyalty programs.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Multichannel sales",
+      "description": "Leverage unified multichannel selling online, in person and on leading sales channels.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Google Merchant Center",
+      "description": "Generate additional revenue by putting your products on the top of Google search result pages.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Coupons & discounts",
+      "description": "Attract customers and increase sales with custom coupons and automatic discounts.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "AI product descriptions",
+      "description": "Create unique and tailor-made product descriptions with an eCommerce-focused AI text generator.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Wix Owner app",
+      "description": "Manage orders and inventory on your mobile device wherever you are with the Wix Owner app.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Currency converter",
+      "description": "Add the currency converter to your store to make it easy for customers to view product prices in their preferred currency.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Abandoned cart alerts",
+      "description": "Recapture abandoned carts and increase conversions with automated email reminders.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Custom shipping rates & rules",
+      "description": "Set your shipping rates by region, category, weight, price and more.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Payment solutions",
+      "description": "Accept major debit/credit cards, Apple Pay, Google Pay, Tap to Pay on mobile and more for a seamless checkout experience.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Automated sales tax",
+      "description": "Automatically calculate and display the correct sales tax for your customers.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Print-on-demand",
+      "description": "Sell a wide array of print-on-demand products without having to invest in inventory, warehousing or shipping.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Dropshipping",
+      "description": "Source ready-to-ship products from thousands of hand-picked dropshipping suppliers.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "eGift cards",
+      "description": "Maximize sales with digital gift cards your customers can buy for themselves or send to friends and family.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Pricing plans & subscriptions",
+      "description": "Secure recurring revenue and improve inventory predictability by selling product subscriptions.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Point of Sale (POS)",
+      "description": "Use Wix POS to accept in-person payments for your business anywhere you want to sell.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Mobile POS",
+      "description": "Accept in person payments from anywhere with just your phone or portable card reader.",
+      "category": "eCommerce"
+    },
+    {
+      "name": "Scheduling System",
+      "description": "Manage your bookings, payments, staff, appointment reminders, and more–from one place.",
+      "category": "Service business"
+    },
+    {
+      "name": "Calendar management",
+      "description": "Schedule and manage appointments, classes and courses through your calendar, plus view staff calendars and much more.",
+      "category": "Service business"
+    },
+    {
+      "name": "Google & iCal sync",
+      "description": "Sync your personal and Wix Bookings calendars to view all events in one place, plus block time slots to prevent double bookings.",
+      "category": "Service business"
+    },
+    {
+      "name": "Class bookings",
+      "description": "Create recurring classes for clients to book and set all of the details, including when they take place, how long they last and more.",
+      "category": "Service business"
+    },
+    {
+      "name": "SMS & email booking reminders",
+      "description": "Send automated booking reminders to your clients via SMS and email.",
+      "category": "Service business"
+    },
+    {
+      "name": "Custom booking forms",
+      "description": "Create custom booking pages to personalize or streamline the experience for your clients.",
+      "category": "Service business"
+    },
+    {
+      "name": "Zoom & video conferencing",
+      "description": "Host your appointments, classes or courses on Zoom or other video conferencing platforms.",
+      "category": "Service business"
+    },
+    {
+      "name": "Staff & availability management",
+      "description": "Add your staff and set their work hours so that clients can book based on their availability.",
+      "category": "Service business"
+    },
+    {
+      "name": "Membership plans",
+      "description": "Offer your clients memberships and packages using pricing plans to increase customer loyalty.",
+      "category": "Service business"
+    },
+    {
+      "name": "Customizable bookings cart",
+      "description": "Add a cart to your site so that clients can book and pay for multiple services and products at once.",
+      "category": "Service business"
+    },
+    {
+      "name": "Wix Owner app",
+      "description": "Manage your bookings and business from anywhere using the Wix Owner app on your phone.",
+      "category": "Service business"
+    },
+    {
+      "name": "Spaces by Wix - customer app",
+      "description": "Allow your clients to book services, shop products, chat, and more, all from their phones.",
+      "category": "Service business"
+    },
+    {
+      "name": "Mobile POS",
+      "description": "Take payments anywhere with your phone or portable reader.",
+      "category": "Service business"
+    },
+    {
+      "name": "Course booking",
+      "description": "Build and sell courses to create a steady revenue stream for your business.",
+      "category": "Service business"
+    },
+    {
+      "name": "Coupons & discounts",
+      "description": "Offer coupons or discounts to retain and attract customers, and increase your bottom line.",
+      "category": "Service business"
+    },
+    {
+      "name": "Charge credit cards manually",
+      "description": "Accept manual credit card payments over the phone, via email or by written request.",
+      "category": "Service business"
+    },
+    {
+      "name": "Charge saved credit cards",
+      "description": "Save your clients' credit cards (with permission) and authorize credit card charges anytime, even for future orders.",
+      "category": "Service business"
+    },
+    {
+      "name": "Customizable website templates",
+      "description": "Choose from a variety of pro-designed templates and customize one to make it your own.",
+      "category": "Service business"
+    },
+    {
+      "name": "Automatic time zone adjustments",
+      "description": "Choose how you want clients to see the time zone when booking to avoid missed sessions.",
+      "category": "Service business"
+    },
+    {
+      "name": "Gift cards",
+      "description": "Sell digital gift cards to gain new customers and increase sales from existing ones.",
+      "category": "Service business"
+    },
+    {
+      "name": "Loyalty program",
+      "description": "Create a loyalty program for your business to build a strong community of repeat customers.",
+      "category": "Service business"
+    },
+    {
+      "name": "Automated invoices",
+      "description": "Send automatic payment requests to clients when a session starts or ends.",
+      "category": "Service business"
+    },
+    {
+      "name": "Customizable blog templates",
+      "description": "Choose from professionally designed templates to customize and make your own.",
+      "category": "Blog"
+    },
+    {
+      "name": "Advanced SEO tools",
+      "description": "Use SEO tools to optimize your posts for search engines, increase traffic and get found.",
+      "category": "Blog"
+    },
+    {
+      "name": "Blog monetization",
+      "description": "Monetize your blog with ads, subscriptions, and more.",
+      "category": "Blog"
+    },
+    {
+      "name": "Content subscription plans",
+      "description": "Create exclusive content subscriptions plans to offer to your readers.",
+      "category": "Blog"
+    },
+    {
+      "name": "Blog analytics",
+      "description": "Get reports with insights to see how visitors interact with your blog.",
+      "category": "Blog"
+    },
+    {
+      "name": "Social media marketing",
+      "description": "Use social media to promote your blog and share new content with your readers.",
+      "category": "Blog"
+    },
+    {
+      "name": "Comment management",
+      "description": "Allow readers to add comments to posts and increase engagement.",
+      "category": "Blog"
+    },
+    {
+      "name": "Multiple writers",
+      "description": "Add writers to your blog or allow a one-time contributor for a specific post.",
+      "category": "Blog"
+    },
+    {
+      "name": "Scheduled blog posts",
+      "description": "Schedule posts and target the best time to reach your readers.",
+      "category": "Blog"
+    },
+    {
+      "name": "Portfolio website templates",
+      "description": "Choose a unique portfolio layout and customize it to perfection.",
+      "category": "Portfolio"
+    },
+    {
+      "name": "Customizable portfolio pages",
+      "description": "Design every aspect of your portfolio, from your project pages to collections.",
+      "category": "Portfolio"
+    },
+    {
+      "name": "Advanced design features",
+      "description": "Make your portfolio stand out with the most advanced design capabilities and layout controls.",
+      "category": "Portfolio"
+    },
+    {
+      "name": "Website integrations",
+      "description": "Sync your portfolio with Instagaram, Google Photos, Dribble and other apps to showcase all your work in one place.",
+      "category": "Portfolio"
+    },
+    {
+      "name": "Wix Owner app",
+      "description": "Manage your portfolio on the go, directly from the Wix Owner app on your phone.",
+      "category": "Portfolio"
+    },
+    {
+      "name": "Marketing & promotion tools",
+      "description": "Promote yourself online with a suite of marketing tools.",
+      "category": "Portfolio"
+    },
+    {
+      "name": "Events website templates",
+      "description": "Choose from a variety of customizable templates designed to showcase any type of event.",
+      "category": "Events"
+    },
+    {
+      "name": "RSVP & ticketed events",
+      "description": "Manage free RSVP or ticketed events. Track the guestlist, set ticket prices, scan tickets upon arrival and more.",
+      "category": "Events"
+    },
+    {
+      "name": "Host physical & online events",
+      "description": "Promote and manage physical events, or host online events directly from your Wix website.",
+      "category": "Events"
+    },
+    {
+      "name": "Ticket types & tiers",
+      "description": "Create one or more ticket types for your event and set prices for each one.",
+      "category": "Events"
+    },
+    {
+      "name": "Table charts & seating maps",
+      "description": "Build and publish a seating map so guests can pick seats for your event.",
+      "category": "Events"
+    },
+    {
+      "name": "Event registration forms",
+      "description": "Create a form for visitor to fill out when registering for your event.",
+      "category": "Events"
+    },
+    {
+      "name": "Marketing & event promotion",
+      "description": "Promote your event with a variety of marketing tools, including social media, email marketing, and more.",
+      "category": "Events"
+    },
+    {
+      "name": "Invitations",
+      "description": "Create and send custom event invitations to your guests.",
+      "category": "Events"
+    },
+    {
+      "name": "Events display",
+      "description": "Showcase your events with a variety of layouts including a calendar, a grid and others.",
+      "category": "Events"
+    },
+    {
+      "name": "Instant email confirmations",
+      "description": "Automatically email guests when they RSVP or purchase a ticket.",
+      "category": "Events"
+    },
+    {
+      "name": "Guest list management",
+      "description": "Add or remove guests, edit guest information, and manage your waitlist.",
+      "category": "Events"
+    },
+    {
+      "name": "Event analytics",
+      "description": "Get essential data about your event including RSVPs, ticket sales, profits and more.",
+      "category": "Events"
+    },
+    {
+      "name": "Restaurant website templates",
+      "description": "Choose from a variety of pro-designed restaurant templates and customize one to make it your own.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Commission-free online ordering",
+      "description": "Take orders directly from your site without paying any commission.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Table reservations",
+      "description": "Let customers book tables online through your restaurant website.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Digital menu management",
+      "description": "Showcase your restaurant's items with an online menu that you can update and edit whenever you like.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "POS integration",
+      "description": "Connect a Point of Sale (POS) to your restaurant site so you can manage all your payments from one place.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Sell catering services",
+      "description": "Offer catering services to your customers through your site.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Loyalty program",
+      "description": "Build a strong community of repeat customers with a loyalty program for your restaurant.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Marketing automations",
+      "description": "Streamline your work processes and save time on manual tasks with automated emails, invoice reminders and more.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Restaurant analytics",
+      "description": "Get insights about your restaurant like your most popular dishes, busiest times, info about your customers and more.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Dine App Marketplace",
+      "description": "Get listed on the app that makes it easy for customers to find your restaurant, place orders and make reservations - commission free!",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Future orders",
+      "description": "Give customers the option of scheduling orders in the future.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Payment solutions",
+      "description": "Accept major debit/credit cards, Apple Pay, Google Pay, Tap to Pay on mobile and more for a seamless checkout experience.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Email confirmations",
+      "description": "Send automatic order confirmation emails to your customers.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Experiences",
+      "description": "Create and manage special events like chef’s tables, cooking classes and music nights all right from your dashboard.",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Photography portfolio",
+      "description": "Showcase your best work with a professional online portfolio.",
+      "category": "Photography"
+    },
+    {
+      "name": "Storage space",
+      "description": "Get free storage for all your images and videos. In case you need more space, upgrade with a plan that’s right for you.",
+      "category": "Photography"
+    },
+    {
+      "name": "Photography website templates",
+      "description": "Choose from a variety of pro-designed templates and customize one to make it your own.",
+      "category": "Photography"
+    },
+    {
+      "name": "Customizable gallery settings",
+      "description": "Design every aspect of your gallery, from layouts and animations to visitors interactions.",
+      "category": "Photography"
+    },
+    {
+      "name": "Lightroom plugin",
+      "description": "Upload photos from Lightroom directly to your photo albums and galleries to streamline your workflow.",
+      "category": "Photography"
+    },
+    {
+      "name": "Watermark & editing tools",
+      "description": "Personalize albums with your branding and customize them to perfection.",
+      "category": "Photography"
+    },
+    {
+      "name": "Services & bookings",
+      "description": "Manage your bookings, session reminders and accept payments all in one place.",
+      "category": "Photography"
+    },
+    {
+      "name": "Marketing & promotion tools",
+      "description": "Grow your photography business with a suite of marketing tools to attract new clients.",
+      "category": "Photography"
+    },
+    {
+      "name": "Digital photo albums",
+      "description": "Offer clients tailor-made digital photo albums catered to their needs.",
+      "category": "Photography"
+    },
+    {
+      "name": "Online programs",
+      "description": "Build and sell plans and courses to create a steady revenue stream for your business.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Scheduling system",
+      "description": "Manage your bookings, payments, staff and client appointment reminders—all from one dashboard.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Membership plans",
+      "description": "Offer your clients memberships and packages using pricing plans.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Fitness website templates",
+      "description": "Choose from a variety of pro-designed templates, or build a fitness site from scratch.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Custom booking forms",
+      "description": "Create custom forms for your clients to fill out when booking your services.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Digital health waivers",
+      "description": "Create a health waiver to send your clients so you can check for things like injuries or allergies before starting a session.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Google & iCal sync",
+      "description": "Sync your personal and Wix Bookings calendars to view all events in one place, plus block time slots to prevent double bookings.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Wix Fit app for clients",
+      "description": "Let your clients book classes, make payments, chat to other members and more with the Fit by Wix mobile app.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Staff availability management",
+      "description": "Add your staff and set their work hours so that clients can book based on their availability.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Wix Owner app",
+      "description": "Use the Wix Owner app with POS and tap to pay, manage your bookings and accept payments from anywhere.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Coupons & discounts",
+      "description": "Offer coupons and discounts to attract customers and increase sales.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Gift cards",
+      "description": "Sell digital gift cards to gain new customers and grow your revenue.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Live stream videos",
+      "description": "Broadcast live events, classes, and more directly from your website.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Online fitness programs",
+      "description": "Create and sell a series of online workout programs to clients.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Branded merch",
+      "description": "Sell branded merch and other products to clients through your site.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Zoom & video conferencing",
+      "description": "Host your appointments, classes or courses on Zoom or other video conferencing platforms.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Front desk management",
+      "description": "Allow your front desk employees to create and manage reservations.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Centralized property management",
+      "description": "Oversee reservations, calendars, inventory, payments and guests in one place.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Unlimited reservations",
+      "description": "Let clients book your rooms and services both online and in-person.",
+      "category": "Hotel"
+    },
+    {
+      "name": "External booking channels",
+      "description": "Sync your hotel's availability and rates with over 150 online travel agencies and view all your bookings in one place.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Advanced room pricing",
+      "description": "Set seasonal rates and fees for any extras not included in your room pricing.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Custom tax rates",
+      "description": "Manage multiple tax rates for any service or country.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Coupons & discounts",
+      "description": "Offer coupons and discounts to attract customers to your hotel and increase sales.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Instant confirmation emails",
+      "description": "Create custom and more personalized confirmation emails for guests to receive when they book.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Hotel availability calendar",
+      "description": "Customize the design of your hotel's availability calendar to match your site's look and feel.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Room types",
+      "description": "Offer different room types like single, deluxe, honeymoon and more.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Multiple payment methods",
+      "description": "Accept major debit and credit cards, Apple Pay, Google Pay, and more for a seamless checkout experience.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Hotel website templates",
+      "description": "Choose from a variety of professionally designed templates and customize one to make it your own.",
+      "category": "Hotel"
+    },
+    {
+      "name": "Program customization",
+      "description": "Create self paced or scheduled programs and customize them to control privacy, access, design, and more.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Content & multimedia",
+      "description": "Enrich your content with multimedia formats, including videos, audio files, documents, and PDFs.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Customizable website templates",
+      "description": "Choose from a variety of pro-designed templates and customize one to make it your own.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Participant rewards",
+      "description": "Offer a badge for accomplishments or design a certificate to confirm program completion.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Program content dripping",
+      "description": "Release content to program participants gradually and schedule when specific sections become available to students.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Quizzes & surveys",
+      "description": "Create quizzes to test what participants learned or surveys to collect their feedback.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Participant groups",
+      "description": "Create a group for your programs so that participants can connect with one another and get important updates.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Payment collection",
+      "description": "Accept payments for your online programs through all major payment gateways.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Memberships & pricing plans",
+      "description": "Sell memberships and offer access to exclusive content to your site members.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Participant management",
+      "description": "Invite new participants to join your programs, track their progress and communicate with them directly.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Program analytics",
+      "description": "Dive into participants’ data, view program completion rates, and get other important insights.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Wix Owner app",
+      "description": "Manage your programs on your mobile device from anywhere with the Wix Owner app.",
+      "category": "Programs & Courses"
+    },
+    {
+      "name": "Design program pages",
+      "description": "Choose the design and layout of your program pages.",
+      "category": "Programs & Courses"
+    }
+  ],
+  "totalFeatureCount": 262
+}

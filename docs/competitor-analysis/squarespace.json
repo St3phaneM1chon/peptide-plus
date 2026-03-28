@@ -1,0 +1,1001 @@
+{
+  "platform": "Squarespace",
+  "scrapedDate": "2026-03-28",
+  "sources": [
+    "https://www.squarespace.com/pricing",
+    "https://www.squarespace.com/feature-index",
+    "https://www.squarespace.com/ecommerce",
+    "https://www.squarespace.com/extensions",
+    "https://www.squarespace.com/templates"
+  ],
+  "pricing": {
+    "plans": [
+      {
+        "planName": "Basic",
+        "monthlyPriceMonthlyBilling": "$16/mo",
+        "annualBillingDiscount": "Save 36% annually",
+        "estimatedAnnualPrice": "$10.24/mo",
+        "transactionFee": "2%",
+        "digitalContentFee": "7%",
+        "creditCardRate": "2.9% + $0.30",
+        "contributors": "Up to 2",
+        "description": "Create your own custom website and get discovered online.",
+        "features": [
+          "Beautiful templates and powerful tools for any website",
+          "Free custom domain (1st year with annual plan)",
+          "Squarespace AI",
+          "Up to 2 contributors",
+          "Credit card rates starting at 2.9% + $0.30",
+          "Online store transaction fee of 2%",
+          "Digital Content and Memberships transaction fee of 7%",
+          "Sell products and services",
+          "Send invoices for free"
+        ]
+      },
+      {
+        "planName": "Core",
+        "monthlyPriceMonthlyBilling": "$23/mo",
+        "annualBillingDiscount": "Save 36% annually",
+        "estimatedAnnualPrice": "$14.72/mo",
+        "transactionFee": "0%",
+        "digitalContentFee": "5%",
+        "creditCardRate": "2.9% + $0.30",
+        "contributors": "Unlimited",
+        "description": "Unlock our full array of business features as you grow your business.",
+        "features": [
+          "Everything in Basic",
+          "Unlimited contributors",
+          "Advanced website analytics",
+          "Complete customization with CSS and Javascript",
+          "Professional email from Google Workspace",
+          "Online store transaction fee of 0%",
+          "Digital Content and Memberships transaction fee of 5%",
+          "Professional shipping and tax services",
+          "Sales funnel analytics",
+          "API integrations for advanced sales functionality"
+        ]
+      },
+      {
+        "planName": "Plus",
+        "monthlyPriceMonthlyBilling": "$39/mo",
+        "annualBillingDiscount": "Save 30% annually",
+        "estimatedAnnualPrice": "$27.30/mo",
+        "transactionFee": "0%",
+        "digitalContentFee": "1%",
+        "creditCardRate": "2.7% + $0.30",
+        "contributors": "Unlimited",
+        "description": "Enjoy lower payment processing fees as your business grows.",
+        "features": [
+          "Everything in Core",
+          "Lower credit card rates: 2.7% + $0.30",
+          "Digital Content and Memberships transaction fee of 1%"
+        ]
+      },
+      {
+        "planName": "Advanced",
+        "monthlyPriceMonthlyBilling": "$99/mo",
+        "annualBillingDiscount": "Save 28% annually",
+        "estimatedAnnualPrice": "$71.28/mo",
+        "transactionFee": "0%",
+        "digitalContentFee": "0%",
+        "creditCardRate": "2.5% + $0.30",
+        "contributors": "Unlimited",
+        "description": "Maximize your revenue with our lowest payment processing fees and our most advanced commerce tools.",
+        "features": [
+          "Everything in Plus",
+          "Lowest credit card rates: 2.5% + $0.30",
+          "Digital Content and Memberships transaction fee of 0%",
+          "Most advanced commerce tools"
+        ]
+      }
+    ]
+  },
+  "features": {
+    "websites": [
+      {
+        "name": "Website Builder",
+        "description": "Stand out online with a professional website, online store, portfolio, or blog."
+      },
+      {
+        "name": "Designer Website Templates",
+        "description": "A library of award-winning, preset website templates includes a full range of options to fit your personal style and professional needs."
+      },
+      {
+        "name": "Pre-Built Layouts",
+        "description": "Build a page using pre-designed structures for specific purposes such as Contact, About, Blog, Portfolio, Products, and more."
+      },
+      {
+        "name": "Customizable Page and Content Layouts",
+        "description": "Each design is built with customizable content areas."
+      },
+      {
+        "name": "Content Types",
+        "description": "Add and manage text, photos, videos, audio, galleries, products, newsletter sign-ups, appointments, calendars, and more."
+      },
+      {
+        "name": "Duplicate Pages and Content",
+        "description": "Easily duplicate pages and other content for testing purposes, or to speed up your website building process."
+      },
+      {
+        "name": "Design Tools",
+        "description": "Flexible layouts, custom color palettes, Google and TypeKit fonts, built-in photo editing, video and background banners."
+      },
+      {
+        "name": "Universal Asset Uploading",
+        "description": "Upload new assets or replace old ones anywhere on your site with the same flow."
+      },
+      {
+        "name": "Asset Library",
+        "description": "Upload, organize, and access all your content from one central hub."
+      },
+      {
+        "name": "Upload Photos from Mobile",
+        "description": "Add photos directly from your phone's camera roll to your site with the Squarespace app."
+      },
+      {
+        "name": "Custom CSS",
+        "description": "Custom CSS can be applied to any site through the built-in CSS editor."
+      },
+      {
+        "name": "Commenting System",
+        "description": "Integrated commenting system with threaded comments, content moderation, and community management."
+      },
+      {
+        "name": "Multiple Contributors and Access Levels",
+        "description": "Give contributors selective access to your site, depending on their permissions."
+      },
+      {
+        "name": "Passwords & Page Locks",
+        "description": "Lock your entire website or individual pages with a password."
+      },
+      {
+        "name": "Custom Redirects",
+        "description": "Create custom 301 and 302 redirects directly from the interface."
+      },
+      {
+        "name": "Custom Site Search Engine",
+        "description": "A robust internal search engine that provides accurate search results."
+      },
+      {
+        "name": "Built-in Mobile Websites",
+        "description": "Every design automatically includes a unique mobile experience that matches the overall style."
+      },
+      {
+        "name": "Squarespace App",
+        "description": "Manage your Squarespace site and business on the go with the mobile app."
+      }
+    ],
+    "siteBuilding": [
+      {
+        "name": "AI Website Builder (Blueprint AI)",
+        "description": "Create a personalized website in minutes with tailored design recommendations."
+      },
+      {
+        "name": "Fluid Engine",
+        "description": "A drag-and-drop editor gives you total control of your website design."
+      },
+      {
+        "name": "Auto Layouts",
+        "description": "Manage lists with interactive carousels or banner slideshows."
+      },
+      {
+        "name": "Scrolling Blocks",
+        "description": "Animated text and graphic elements."
+      },
+      {
+        "name": "Accordion Blocks",
+        "description": "Display text in collapsible sections to minimize scrolling."
+      },
+      {
+        "name": "Image Effects",
+        "description": "Apply preset visual effects to add animations or adjust settings manually."
+      },
+      {
+        "name": "Image Overlays",
+        "description": "Add one-click color palette and property filters for more visual nuance."
+      },
+      {
+        "name": "Image Resizer",
+        "description": "Resize and crop images for free online."
+      },
+      {
+        "name": "Image Shapes",
+        "description": "Transform photos with a variety of modern cropping shapes."
+      },
+      {
+        "name": "Shape Blocks",
+        "description": "Add solid color shapes to your page design."
+      },
+      {
+        "name": "Pinned Blocks",
+        "description": "Keep content stationary while visitors scroll."
+      },
+      {
+        "name": "Section Dividers",
+        "description": "Create custom breaks between website sections."
+      },
+      {
+        "name": "Stylized Headers",
+        "description": "Customize your site's navigation bar with gradients and transparency."
+      },
+      {
+        "name": "Text Highlights",
+        "description": "Amplify important text with hand-drawn styling options."
+      },
+      {
+        "name": "Scale Text",
+        "description": "Ensure consistent text display across different browser widths."
+      },
+      {
+        "name": "Background Art",
+        "description": "Apply engaging art presets to section backgrounds."
+      },
+      {
+        "name": "Hide Header or Footer",
+        "description": "Draw attention to content by hiding header/footer on certain pages."
+      },
+      {
+        "name": "Button Styles",
+        "description": "Adjust text, shape, fill, and outline of buttons."
+      },
+      {
+        "name": "Automatically Responsive Designs",
+        "description": "All pages are fully responsive on any mobile device."
+      },
+      {
+        "name": "Markdown Mode",
+        "description": "Embed Markdown on your site with a Markdown Block."
+      },
+      {
+        "name": "Automatic Image Scaling",
+        "description": "Image Blocks automatically scale images."
+      },
+      {
+        "name": "Image Galleries",
+        "description": "Slideshow strips or image grids with various presentation options."
+      },
+      {
+        "name": "Native Video Hosting",
+        "description": "Upload videos directly to Squarespace and display them on your site."
+      },
+      {
+        "name": "Cookie & Privacy Panel",
+        "description": "Add a cookie banner to your website that matches your brand."
+      }
+    ],
+    "ai": [
+      {
+        "name": "Brand Identity",
+        "description": "Create a consistent brand voice across all content using personalized AI."
+      },
+      {
+        "name": "Business Name Generator",
+        "description": "Generate AI-powered business name ideas with a short prompt."
+      },
+      {
+        "name": "AI Website Copy",
+        "description": "Start from scratch or edit pre-written text to create effective website copy."
+      },
+      {
+        "name": "AI Product Descriptions",
+        "description": "Quickly write compelling product descriptions in seconds."
+      },
+      {
+        "name": "AI Email Campaigns",
+        "description": "Generate engaging email copy tailored to your goals and target audience."
+      },
+      {
+        "name": "AI Blog Posts",
+        "description": "Draft, edit, and perfect blog posts using AI."
+      },
+      {
+        "name": "AI SEO Report",
+        "description": "Optimize search rankings through automated scans and recommendations."
+      }
+    ],
+    "blogging": [
+      {
+        "name": "Customizable Blog Layouts",
+        "description": "Customize blog posts with any content block."
+      },
+      {
+        "name": "Workflow (Publish, Draft, Schedule)",
+        "description": "Publish, draft, and schedule posts, flag drafts as Needs Review."
+      },
+      {
+        "name": "Markdown Support",
+        "description": "Compose posts using Markdown."
+      },
+      {
+        "name": "Scheduled Posts",
+        "description": "Schedule entries to be published in the future."
+      },
+      {
+        "name": "Podcast Support",
+        "description": "Complete podcasting support with Audio Block."
+      },
+      {
+        "name": "Email Campaigns Integration",
+        "description": "Auto-reformat blog post content into email campaign drafts."
+      },
+      {
+        "name": "RSS Syndication",
+        "description": "Automatically embedded RSS in every Blog Page."
+      },
+      {
+        "name": "Category/Tag Support",
+        "description": "Two levels of organization for blog posts."
+      },
+      {
+        "name": "Multiple Author Support",
+        "description": "Publish content by different authors."
+      }
+    ],
+    "commerce": [
+      {
+        "name": "Sell Products",
+        "description": "Showcase products, enable browsing and checkout."
+      },
+      {
+        "name": "Sell Services",
+        "description": "Attract customers for booking services."
+      },
+      {
+        "name": "Sell Subscriptions",
+        "description": "Recurring revenue and customer loyalty."
+      },
+      {
+        "name": "Sell Content and Memberships",
+        "description": "Online courses and memberships."
+      },
+      {
+        "name": "Sell Downloadable Content",
+        "description": "Digital content with direct download options."
+      },
+      {
+        "name": "Gated Content",
+        "description": "Charge for access to courses or members-only areas."
+      },
+      {
+        "name": "Custom Merch (Print on Demand)",
+        "description": "Design and sell custom products without handling logistics."
+      },
+      {
+        "name": "Product Merchandising",
+        "description": "Sort and organize products with drag-and-drop tools."
+      },
+      {
+        "name": "Product Subcategories",
+        "description": "Organize products into subcategories for better navigation and SEO."
+      },
+      {
+        "name": "Shipping Labels (USPS/UPS)",
+        "description": "Buy and print shipping labels directly from Squarespace."
+      },
+      {
+        "name": "Discounts",
+        "description": "Create automatic discounts for orders or specific products."
+      },
+      {
+        "name": "Related Products",
+        "description": "Show relevant products to encourage purchases."
+      },
+      {
+        "name": "Inventory Management",
+        "description": "Easy-to-use interface with low stock alerts."
+      },
+      {
+        "name": "Order Management",
+        "description": "Track orders, print packing slips, search by various criteria."
+      },
+      {
+        "name": "Order Status Page",
+        "description": "Customers track the status of their orders."
+      },
+      {
+        "name": "Flexible Product Variants",
+        "description": "Manage product variants and images in a unified interface."
+      },
+      {
+        "name": "Store Manager Permissions",
+        "description": "Designate store managers with inventory/order-only access."
+      },
+      {
+        "name": "Custom Checkout Forms",
+        "description": "Optimized checkout experience."
+      },
+      {
+        "name": "Mobile-Optimized Checkout",
+        "description": "Single page checkout for all devices."
+      },
+      {
+        "name": "Express Checkout Mode",
+        "description": "Bypass shopping cart, straight to checkout."
+      },
+      {
+        "name": "Checkout on Your Domain",
+        "description": "Secure checkout on your own domain."
+      },
+      {
+        "name": "Customer Accounts",
+        "description": "Faster checkout experience for returning customers."
+      },
+      {
+        "name": "Point of Sale",
+        "description": "Sell in-person with POS in the mobile app."
+      },
+      {
+        "name": "Invoicing",
+        "description": "Track invoice status and client info in one place."
+      },
+      {
+        "name": "Gift Cards",
+        "description": "Sell digital gift cards."
+      },
+      {
+        "name": "Sell on Instagram and Facebook",
+        "description": "Sync product catalog with social platforms."
+      },
+      {
+        "name": "Donations",
+        "description": "One-time and recurring donations."
+      },
+      {
+        "name": "Product Reviews",
+        "description": "Display reviews to build confidence."
+      },
+      {
+        "name": "Multiple Payment Methods",
+        "description": "Squarespace Payments, Apple Pay, Google Pay, PayPal, Afterpay, Klarna, ACH, Link."
+      },
+      {
+        "name": "Afterpay/Clearpay",
+        "description": "Buy now, pay later options."
+      },
+      {
+        "name": "Multiple Currencies",
+        "description": "Choose currencies for Squarespace Commerce."
+      },
+      {
+        "name": "Flexible Shipping Options",
+        "description": "Flat-rate, weight-based, real-time rates."
+      },
+      {
+        "name": "Local Pickup",
+        "description": "Offer local pickup at checkout."
+      },
+      {
+        "name": "Sales Tax Calculation",
+        "description": "Automatic tax rate management."
+      },
+      {
+        "name": "Import/Export Products",
+        "description": "Import from Shopify, Big Cartel, etc."
+      },
+      {
+        "name": "Commerce APIs",
+        "description": "Build custom integrations to third-party systems."
+      }
+    ],
+    "payments": [
+      {
+        "name": "Squarespace Payments",
+        "description": "Fully integrated payment solution."
+      },
+      {
+        "name": "Apple Pay",
+        "description": "Quick checkout via Apple Pay."
+      },
+      {
+        "name": "Google Pay",
+        "description": "Secure payment via Google Pay."
+      },
+      {
+        "name": "PayPal",
+        "description": "PayPal integration for purchases."
+      },
+      {
+        "name": "Afterpay/Clearpay",
+        "description": "Pay in installments."
+      },
+      {
+        "name": "Klarna",
+        "description": "Flexible payment options."
+      },
+      {
+        "name": "Link",
+        "description": "Autofill billing at checkout."
+      },
+      {
+        "name": "ACH",
+        "description": "Direct bank account payments."
+      },
+      {
+        "name": "Squarespace Capital",
+        "description": "Apply for financing for business growth."
+      }
+    ],
+    "domains": [
+      {
+        "name": "Custom Domain Registration",
+        "description": "Register a domain that renews at the same price yearly."
+      },
+      {
+        "name": "Free Domain (Annual Plans)",
+        "description": "Free custom domain for the first year."
+      },
+      {
+        "name": "Third-Party Domain Support",
+        "description": "Connect or transfer existing domains."
+      },
+      {
+        "name": "Google Workspace Email",
+        "description": "Custom email matching your domain."
+      },
+      {
+        "name": "Free SSL Certificate",
+        "description": "Security included with every domain."
+      },
+      {
+        "name": "Email Forwarding",
+        "description": "Create free email aliases."
+      },
+      {
+        "name": "Domain Forwarding",
+        "description": "Redirect traffic from one domain to another."
+      },
+      {
+        "name": "Domain Name Generator",
+        "description": "AI-powered domain name ideas."
+      }
+    ],
+    "marketing": [
+      {
+        "name": "Email Campaigns",
+        "description": "Unified marketing campaigns with templates and automations."
+      },
+      {
+        "name": "Smart Segments",
+        "description": "Advanced email list segmentation."
+      },
+      {
+        "name": "Automated Email Campaigns",
+        "description": "Triggered by user actions on site."
+      },
+      {
+        "name": "Mailing Lists & Contacts",
+        "description": "Collect unlimited subscribers via pop-ups and forms."
+      },
+      {
+        "name": "Social Selling",
+        "description": "Sell directly from social media posts and stories."
+      },
+      {
+        "name": "Banners & Promotions",
+        "description": "Highlight announcements with banners."
+      },
+      {
+        "name": "Form Blocks",
+        "description": "Capture data from site visitors."
+      },
+      {
+        "name": "Marketing Analytics",
+        "description": "Monitor KPIs and important metrics."
+      }
+    ],
+    "seo": [
+      {
+        "name": "Built-In SEO Tools",
+        "description": "Integrated features to maximize search visibility."
+      },
+      {
+        "name": "AI SEO Report",
+        "description": "Automated scans and recommendations."
+      },
+      {
+        "name": "Image SEO",
+        "description": "File names and alt text for images."
+      },
+      {
+        "name": "Location Management",
+        "description": "Google integration for business listings."
+      },
+      {
+        "name": "Automatic Sitemaps",
+        "description": "Auto-generated sitemap.xml."
+      },
+      {
+        "name": "Canonical Tagging",
+        "description": "Proper page versioning for search engines."
+      },
+      {
+        "name": "Clean URLs",
+        "description": "Readable URLs for SEO."
+      },
+      {
+        "name": "Robots.txt",
+        "description": "Automatically generated."
+      }
+    ],
+    "analytics": [
+      {
+        "name": "Analytics Overview",
+        "description": "Traffic, visitor geography, and sales metrics."
+      },
+      {
+        "name": "Commerce Analytics",
+        "description": "Revenue, orders, and business insights."
+      },
+      {
+        "name": "Acquisition Analytics",
+        "description": "Traffic sources and keywords."
+      },
+      {
+        "name": "Engagement Analytics",
+        "description": "Popular content and site search tracking."
+      },
+      {
+        "name": "Mobile Analytics",
+        "description": "Monitor via the Squarespace app."
+      }
+    ],
+    "scheduling": [
+      {
+        "name": "Acuity Scheduling",
+        "description": "Full appointment scheduling platform with multiple calendars, calendar syncing, payments, email/SMS reminders, intake forms, packages, gift certificates, video conferencing, HIPAA compliance, and mobile app."
+      }
+    ],
+    "contentAndMemberships": [
+      {
+        "name": "Online Courses",
+        "description": "Teach skills and guide projects using video and text lessons."
+      },
+      {
+        "name": "Member Sites",
+        "description": "Create gated pages for specific audiences."
+      },
+      {
+        "name": "Video Libraries",
+        "description": "Browsable library of videos behind a paywall."
+      }
+    ],
+    "portfolio": [
+      {
+        "name": "Portfolio Pages",
+        "description": "Stylized landing pages linking to sub-pages."
+      },
+      {
+        "name": "Image Editor",
+        "description": "Edit images directly in browser."
+      },
+      {
+        "name": "Lightbox Presentation",
+        "description": "Built-in lightbox functionality."
+      },
+      {
+        "name": "Focal Point Control",
+        "description": "Define focal points for perfect cropping."
+      },
+      {
+        "name": "Metadata Importing",
+        "description": "Auto-fill title, description, and tags."
+      }
+    ],
+    "enterprise": [
+      {
+        "name": "Squarespace Enterprise",
+        "description": "Launch and scale websites with dedicated support."
+      },
+      {
+        "name": "Multi-site Dashboard",
+        "description": "Manage multiple websites from a centralized dashboard."
+      },
+      {
+        "name": "SSO-Protected Websites",
+        "description": "Various SSO protection offerings."
+      },
+      {
+        "name": "Enterprise Templates",
+        "description": "Library of branded templates."
+      },
+      {
+        "name": "Bulk Edits",
+        "description": "Global content changes across multiple sites."
+      },
+      {
+        "name": "Roles & Permissions",
+        "description": "Control team access."
+      }
+    ],
+    "additionalProducts": [
+      {
+        "name": "Unfold App",
+        "description": "Social media content creation with templates, studio/capture tools, feed planner, brand kit, and scheduling."
+      },
+      {
+        "name": "Bio Sites",
+        "description": "Modern link-in-bio pages with unlimited links, monetization, mailing lists, and analytics."
+      },
+      {
+        "name": "Logo Maker",
+        "description": "Free logo creation tool with icons from The Noun Project."
+      }
+    ],
+    "support": [
+      {
+        "name": "24/7 Email Support",
+        "description": "Customer support via email anytime."
+      },
+      {
+        "name": "Live Chat Support",
+        "description": "Weekday live chat for immediate assistance."
+      },
+      {
+        "name": "Help Center",
+        "description": "Extensive knowledge base of guides, videos, and workshops."
+      },
+      {
+        "name": "Community Forum",
+        "description": "Q&A platform for users."
+      },
+      {
+        "name": "Webinars",
+        "description": "Free online learning sessions."
+      },
+      {
+        "name": "Hire An Expert",
+        "description": "Get matched with experienced designers/developers."
+      }
+    ]
+  },
+  "templates": {
+    "totalCount": "150+ (28 shown as Popular Designs on main page)",
+    "categories": [
+      "Photography",
+      "Design",
+      "Education",
+      "Consulting",
+      "Art",
+      "Health",
+      "Marketing",
+      "Technology",
+      "Construction & Maintenance",
+      "Apparel",
+      "Music",
+      "Real Estate & Properties",
+      "Beauty",
+      "Travel",
+      "Weddings",
+      "Online Store",
+      "Portfolio",
+      "Memberships",
+      "Blog",
+      "Scheduling",
+      "One Page",
+      "Courses",
+      "Services",
+      "Donations",
+      "Popular Designs"
+    ],
+    "popularTemplateNames": [
+      "Altaloma", "Myhra", "Comet", "Quinn", "Selene", "Condesa",
+      "Kusa", "Bloom", "Cedar", "Oranssi", "Wesley", "Crosby",
+      "Reseda", "Mariana", "Montclaire", "Bogart", "Clove", "Forma",
+      "Hales", "Klipsan", "Ortiz", "CIMEN", "Emmeline", "Zorayda",
+      "Lexington", "Fayette", "Tantillo", "Rotate"
+    ]
+  },
+  "extensions": {
+    "totalCount": "49+",
+    "categories": {
+      "salesAndMarketing": [
+        {
+          "name": "Mailchimp: Email & SMS",
+          "description": "AI-driven insights for visitor engagement and conversion"
+        },
+        {
+          "name": "Weglot Translate",
+          "description": "Translate site into 110+ languages"
+        },
+        {
+          "name": "SEOSpace",
+          "description": "All-in-one AI and SEO tool"
+        },
+        {
+          "name": "LiveChat",
+          "description": "AI-powered customer support and sales"
+        },
+        {
+          "name": "TinyIMG",
+          "description": "SEO, page speed and image optimizer"
+        },
+        {
+          "name": "EZ Texting",
+          "description": "SMS campaigns and text promotions"
+        },
+        {
+          "name": "SEOSpace Local",
+          "description": "Local SEO optimization"
+        },
+        {
+          "name": "HelpfulCrowd",
+          "description": "Trust building and conversion"
+        },
+        {
+          "name": "Delighted",
+          "description": "Post-purchase feedback surveys"
+        },
+        {
+          "name": "Channable",
+          "description": "Ecommerce growth"
+        },
+        {
+          "name": "impact.com",
+          "description": "Affiliate marketing"
+        },
+        {
+          "name": "GoDataFeed",
+          "description": "Dynamic product feeds"
+        },
+        {
+          "name": "Monocle Search",
+          "description": "Real-time search with customizable design"
+        },
+        {
+          "name": "GoodAPI",
+          "description": "Plant trees, collect plastic, social impact"
+        },
+        {
+          "name": "TinyCurrency",
+          "description": "Multi-currency for international customers"
+        },
+        {
+          "name": "Email Campaigns",
+          "description": "Built-in email marketing"
+        },
+        {
+          "name": "Outfy",
+          "description": "Social media marketing with AI video"
+        },
+        {
+          "name": "Progressier",
+          "description": "Transform site into mobile app"
+        }
+      ],
+      "inventoryAndProducts": [
+        {
+          "name": "Custom Merch by Printful",
+          "description": "On-demand custom products"
+        },
+        {
+          "name": "LitCommerce",
+          "description": "Multichannel selling"
+        },
+        {
+          "name": "SKU IQ",
+          "description": "Inventory sync with Square, Clover, LightSpeed"
+        },
+        {
+          "name": "Syncee",
+          "description": "Premium dropshipping and wholesale"
+        },
+        {
+          "name": "Printique",
+          "description": "Professional photo lab"
+        },
+        {
+          "name": "soona",
+          "description": "Virtual content studio for product photography"
+        },
+        {
+          "name": "Selfnamed",
+          "description": "Clean beauty brand platform"
+        },
+        {
+          "name": "Spocket",
+          "description": "US & EU dropshipping suppliers"
+        },
+        {
+          "name": "Trunk",
+          "description": "Multi-channel stock syncing"
+        },
+        {
+          "name": "TikTok Shop by ShoppeDance",
+          "description": "TikTok product/order/inventory sync"
+        },
+        {
+          "name": "Candid Wholesale",
+          "description": "Online wholesale"
+        },
+        {
+          "name": "inFlow Inventory",
+          "description": "Complete inventory management"
+        },
+        {
+          "name": "Printify",
+          "description": "Custom products worldwide"
+        },
+        {
+          "name": "Art of Where",
+          "description": "Custom printed products on-demand"
+        },
+        {
+          "name": "Spreadconnect",
+          "description": "Print-on-demand"
+        },
+        {
+          "name": "Allday Ordering",
+          "description": "Branded online ordering and checkout"
+        }
+      ],
+      "finance": [
+        {
+          "name": "TaxJar",
+          "description": "Automated sales tax calculations and filing"
+        },
+        {
+          "name": "QuickBooks Online Connector",
+          "description": "Automated accounting"
+        },
+        {
+          "name": "MYOB by Amaka",
+          "description": "Daily accounting sync"
+        },
+        {
+          "name": "Xero by Amaka",
+          "description": "Daily accounting sync"
+        },
+        {
+          "name": "Avalara",
+          "description": "Sales tax returns and reporting"
+        },
+        {
+          "name": "Dext",
+          "description": "Digital sales accounting"
+        },
+        {
+          "name": "FreshBooks",
+          "description": "Reports, client sync, invoicing"
+        }
+      ],
+      "shippingAndFulfillment": [
+        {
+          "name": "ShipStation",
+          "description": "Ship orders from 180+ channels"
+        },
+        {
+          "name": "Easyship",
+          "description": "Save up to 91% on shipping"
+        },
+        {
+          "name": "Shipday Local Delivery",
+          "description": "On-demand local delivery"
+        },
+        {
+          "name": "ShipBob",
+          "description": "#1 ecommerce fulfillment"
+        },
+        {
+          "name": "Shippo",
+          "description": "Save time and money on shipping"
+        },
+        {
+          "name": "AfterShip",
+          "description": "Branded tracking and notifications"
+        },
+        {
+          "name": "Sendcloud",
+          "description": "Shipping automation"
+        },
+        {
+          "name": "Order Desk",
+          "description": "Multi-channel selling (TikTok, eBay, Amazon)"
+        },
+        {
+          "name": "Returns Center by AfterShip",
+          "description": "Self-service returns management"
+        }
+      ]
+    }
+  }
+}

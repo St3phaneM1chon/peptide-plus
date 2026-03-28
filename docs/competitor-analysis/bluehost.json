@@ -1,0 +1,183 @@
+{
+  "platform": "Bluehost",
+  "scrapedDate": "2026-03-28",
+  "sources": [
+    "https://www.bluehost.com/website-builder",
+    "https://www.bluehost.com/hosting"
+  ],
+  "pricing": {
+    "plans": [
+      {
+        "planName": "Starter",
+        "introPrice": "$3.99/mo",
+        "renewalPrice": "$9.99/mo",
+        "websites": 10,
+        "storage": "10 GB NVMe SSD",
+        "monthlyVisits": "40K",
+        "customDomain": true,
+        "ecommerce": false,
+        "features": [
+          "10 Websites",
+          "10 GB NVMe SSD Storage",
+          "Ideal for 40K visits/mo",
+          "AI Site Creation Tools",
+          "99.99% Uptime SLA",
+          "30-day Money-Back Guarantee",
+          "Free Domain 1st Year",
+          "Free Site Migration Tool",
+          "Free CDN",
+          "Managed WordPress Updates",
+          "Global Data Centers",
+          "24/7 Chat Support",
+          "Free SSL - Let's Encrypt",
+          "Free Malware Scanning",
+          "Web Application Firewall",
+          "DDoS Protection Included",
+          "Weekly Website Backups",
+          "Yoast SEO - Free Plugin"
+        ],
+        "limitations": [
+          "Phone Support Not Included"
+        ]
+      },
+      {
+        "planName": "Business",
+        "introPrice": "$6.99/mo",
+        "renewalPrice": "$13.99/mo",
+        "websites": 50,
+        "storage": "50 GB NVMe SSD",
+        "monthlyVisits": "200K",
+        "customDomain": true,
+        "ecommerce": false,
+        "features": [
+          "50 Websites",
+          "50 GB NVMe SSD Storage",
+          "Ideal for 200K visits/mo",
+          "AI Site Creation Tools",
+          "99.99% Uptime SLA",
+          "30-day Money-Back Guarantee",
+          "Free Domain 1st Year",
+          "Free Site Migration Tool",
+          "Free CDN",
+          "Managed WordPress Updates",
+          "Global Data Centers",
+          "24/7 Chat Support",
+          "Phone Support Included",
+          "Free SSL - Let's Encrypt",
+          "Free Malware Scanning",
+          "Malware Detection/Removal",
+          "Web Application Firewall",
+          "DDoS Protection Included",
+          "Domain Privacy - Free 1st year",
+          "Weekly Website Backups",
+          "Yoast SEO - Free Plugin"
+        ],
+        "limitations": []
+      },
+      {
+        "planName": "eCommerce Essentials",
+        "introPrice": "$14.99/mo",
+        "renewalPrice": "$21.99/mo",
+        "websites": 100,
+        "storage": "100 GB NVMe SSD",
+        "monthlyVisits": "400K",
+        "customDomain": true,
+        "ecommerce": true,
+        "features": [
+          "100 Websites",
+          "100 GB NVMe SSD Storage",
+          "Ideal for 400K visits/mo",
+          "AI Site Creation Tools",
+          "99.99% Uptime SLA",
+          "30-day Money-Back Guarantee",
+          "Free Domain 1st Year",
+          "Free Site Migration Tool",
+          "Free CDN",
+          "Managed WordPress Updates",
+          "Global Data Centers",
+          "24/7 Chat Support",
+          "Phone Support Included",
+          "Secure Payment Processing",
+          "WooCommerce Auto-Install",
+          "Product Subscriptions",
+          "Visitor Memberships",
+          "Offer Paid Courses",
+          "Affiliate Program",
+          "Custom Email Templates",
+          "Easy Social Logins",
+          "Free SSL - Let's Encrypt",
+          "Free Malware Scanning",
+          "Malware Detection/Removal",
+          "Web Application Firewall",
+          "DDoS Protection Included",
+          "Domain Privacy - Free 1st year",
+          "Weekly Website Backups",
+          "Yoast SEO - Free Plugin"
+        ],
+        "limitations": []
+      }
+    ],
+    "freePlan": true,
+    "freeTrialNote": "Free plan available with limited features",
+    "moneyBackGuarantee": "30 days"
+  },
+  "features": {
+    "websiteBuilder": [
+      "AI-powered website builder",
+      "WordPress-based",
+      "Managed WordPress Updates",
+      "Free Site Migration Tool",
+      "Free CDN",
+      "Global Data Centers"
+    ],
+    "ai": [
+      "AI-powered website builder",
+      "AI Domain Name Generator",
+      "AI Store Quick-Start tool",
+      "AI Brand Insights tool",
+      "AI Site Creation Tools"
+    ],
+    "ecommerce": [
+      "Guided AI store setup",
+      "Built-in payments & scheduling",
+      "WooCommerce Auto-Install",
+      "Product Subscriptions",
+      "Visitor Memberships",
+      "Offer Paid Courses",
+      "Affiliate Program",
+      "Custom Email Templates",
+      "Easy Social Logins",
+      "Catalog management"
+    ],
+    "security": [
+      "Free SSL (Let's Encrypt)",
+      "Free Malware Scanning",
+      "Malware Detection/Removal (Business+)",
+      "Web Application Firewall",
+      "DDoS Protection",
+      "Domain Privacy (Business+)"
+    ],
+    "seo": [
+      "Yoast SEO (Free Plugin)"
+    ]
+  },
+  "templates": {
+    "count": "3 unique AI-generated site options",
+    "note": "AI generates unique designs rather than fixed templates"
+  },
+  "support": {
+    "chat": "24/7",
+    "phone": "Business plan and above",
+    "moneyBackGuarantee": "30 days",
+    "uptimeSLA": "99.99%"
+  },
+  "limitations": [
+    "WordPress-only platform",
+    "E-commerce requires eCommerce Essentials plan ($14.99/mo+)",
+    "Limited template selection (AI-generated, not template library)",
+    "Phone support only on Business plan+",
+    "Significant renewal price increase (2-3x intro)",
+    "No built-in marketing tools beyond Yoast SEO",
+    "Weekly backups only (not daily)"
+  ]
+}

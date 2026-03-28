@@ -1,0 +1,150 @@
+{
+  "platform": "DreamHost",
+  "scrapedDate": "2026-03-28",
+  "sources": [
+    "https://www.dreamhost.com/website-builder/",
+    "https://www.dreamhost.com/hosting/shared/"
+  ],
+  "pricing": {
+    "websiteBuilderPlans": [
+      {
+        "planName": "WordPress Hosting Launch",
+        "introPrice": "$2.89/mo",
+        "renewalPrice": "$10.99/mo",
+        "websites": 25,
+        "monthlyVisits": "40K",
+        "storage": "25 GB NVMe SSD",
+        "bandwidth": "Unmetered",
+        "customDomain": true,
+        "ecommerce": false,
+        "features": [
+          "Remixer AI Website Builder (NEW)",
+          "25 Websites",
+          "40k Monthly Visits",
+          "25 GB NVMe SSD storage",
+          "Unmetered Bandwidth",
+          "Daily Automated Backups",
+          "Unlimited Free SSL Certificates",
+          "3 Months Free - 20 Mailboxes",
+          "Free Handcrafted Starter Website",
+          "Free Domain for 1 Year",
+          "30-Day Money-Back Guarantee"
+        ]
+      },
+      {
+        "planName": "WordPress Hosting Growth",
+        "introPrice": "$3.99/mo",
+        "renewalPrice": "$12.99/mo",
+        "websites": 50,
+        "monthlyVisits": "200K",
+        "storage": "50 GB NVMe SSD",
+        "bandwidth": "Unmetered",
+        "customDomain": true,
+        "ecommerce": false,
+        "features": [
+          "Remixer AI Website Builder (NEW)",
+          "50 Websites",
+          "200k Monthly Visits",
+          "50 GB NVMe SSD storage",
+          "Unmetered Bandwidth",
+          "Daily Automated Backups",
+          "Unlimited Free SSL Certificates",
+          "3 Months Free - 40 Mailboxes",
+          "Free Handcrafted Starter Website",
+          "Free Domain for 1 Year",
+          "30-Day Money-Back Guarantee"
+        ]
+      },
+      {
+        "planName": "WordPress Hosting Scale",
+        "introPrice": "$9.99/mo",
+        "renewalPrice": "$25.99/mo",
+        "websites": 100,
+        "monthlyVisits": "400K",
+        "storage": "100 GB NVMe SSD",
+        "bandwidth": "Unmetered",
+        "customDomain": true,
+        "ecommerce": false,
+        "features": [
+          "Remixer AI Website Builder (NEW)",
+          "100 Websites",
+          "400k Monthly Visits",
+          "100 GB NVMe SSD storage",
+          "Unmetered Bandwidth",
+          "Daily Automated Backups",
+          "Unlimited Free SSL Certificates",
+          "3 Months Free - 60 Mailboxes",
+          "Free Handcrafted Starter Website",
+          "Free Domain for 1 Year",
+          "30-Day Money-Back Guarantee"
+        ]
+      }
+    ],
+    "managedWordPressPlans": [
+      {
+        "planName": "DreamPress 1",
+        "introPrice": "$14.99/mo",
+        "renewalPrice": "$19.99/mo",
+        "websites": 1,
+        "monthlyVisits": "40K",
+        "storage": "15 GB NVMe SSD",
+        "bandwidth": "Unmetered",
+        "features": [
+          "1 Professional Site Migration",
+          "14 Days Backup Retention",
+          "Free Essential CDN",
+          "24/7 WordPress Expert Support",
+          "Free Handcrafted Starter Website",
+          "Free Domain for 1 Year",
+          "30-Day Money-Back Guarantee"
+        ]
+      }
+    ],
+    "freePlan": false,
+    "moneyBackGuarantee": "30 days"
+  },
+  "features": {
+    "websiteBuilder": [
+      "Remixer AI Website Builder",
+      "One-Click WordPress Install",
+      "Personalized Dashboard",
+      "Freedom to customize sites",
+      "Hundreds of block patterns and page templates"
+    ],
+    "ai": [
+      "AI Website Generation (Liftoff)",
+      "AI Content Creator",
+      "AI-Powered Help Center",
+      "Remixer AI Website Builder"
+    ],
+    "hosting": [
+      "NVMe SSD Storage",
+      "Unmetered Bandwidth",
+      "Daily Automated Backups",
+      "Unlimited Free SSL Certificates",
+      "Free Domain for 1 Year",
+      "100% Uptime Guarantee",
+      "24/7 Customer Support"
+    ],
+    "ecommerce": [],
+    "seo": [],
+    "marketing": []
+  },
+  "templates": {
+    "count": "Hundreds of block patterns and page templates",
+    "type": "WordPress-based"
+  },
+  "support": {
+    "liveChat": "24/7",
+    "moneyBackGuarantee": "30 days",
+    "uptimeGuarantee": "100%"
+  },
+  "limitations": [
+    "WordPress-only (not a standalone website builder)",
+    "No built-in e-commerce (requires WooCommerce plugin)",
+    "No built-in SEO tools (requires plugins)",
+    "No built-in marketing tools",
+    "Intro pricing requires 1-3 year commitment",
+    "Significant price increase at renewal"
+  ]
+}

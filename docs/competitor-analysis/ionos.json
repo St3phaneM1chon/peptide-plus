@@ -1,0 +1,195 @@
+{
+  "platform": "IONOS",
+  "scrapedDate": "2026-03-28",
+  "sources": [
+    "https://www.ionos.com/website-builder",
+    "https://www.ionos.com/hosting/web-hosting"
+  ],
+  "pricing": {
+    "websiteBuilderPlans": [
+      {
+        "planName": "Starter",
+        "introPrice": "$6/mo",
+        "renewalPrice": "$18/mo",
+        "storage": "10 GB",
+        "pages": "10 webpages",
+        "mailbox": "2 GB",
+        "customDomain": true,
+        "ecommerce": false,
+        "features": [
+          "Easy website builder",
+          "Easy website editing with simple design tools",
+          "AI logo generator",
+          "Competitor tracking (marketingRadar)",
+          "Professional email address",
+          "Mobile-optimized websites",
+          "Free custom domain for 1 year",
+          "30-day money-back guarantee"
+        ]
+      },
+      {
+        "planName": "Plus",
+        "introPrice": "$1/mo (promo)",
+        "renewalPrice": "$24/mo",
+        "storage": "50 GB",
+        "pages": "200 webpages",
+        "mailbox": "12 GB",
+        "customDomain": true,
+        "ecommerce": false,
+        "features": [
+          "Everything in Starter",
+          "AI text, image, and website tools",
+          "AI search engine optimization (SEO)",
+          "Online booking tools",
+          "SiteAnalytics",
+          "Professional email address",
+          "Mobile-optimized websites",
+          "Free custom domain for 1 year",
+          "30-day money-back guarantee"
+        ]
+      },
+      {
+        "planName": "Pro",
+        "introPrice": "$17/mo",
+        "renewalPrice": "$32/mo",
+        "storage": "Unlimited",
+        "pages": "Unlimited",
+        "mailbox": "50 GB",
+        "customDomain": true,
+        "ecommerce": true,
+        "features": [
+          "Everything in Plus",
+          "Unlimited storage",
+          "Unlimited subpages",
+          "Advanced SEO with rankingCoach Standard",
+          "SiteAnalytics Plus",
+          "Secure checkout",
+          "Product management",
+          "Shipping management"
+        ]
+      }
+    ],
+    "webHostingPlans": [
+      {
+        "planName": "Essential",
+        "introPrice": "$4/mo",
+        "renewalPrice": "$10/mo",
+        "websites": 1,
+        "storage": "10 GB geo-redundant",
+        "databases": 10,
+        "bandwidth": "Unlimited",
+        "features": [
+          "SSH, SFTP, WP-CLI access",
+          "Professional email",
+          "1-click installs",
+          "Daily backup and restore",
+          "Free 24/7 support"
+        ]
+      },
+      {
+        "planName": "Starter (Hosting)",
+        "introPrice": "$6/mo",
+        "renewalPrice": "$12/mo",
+        "websites": 10,
+        "storage": "100 GB geo-redundant",
+        "databases": 50,
+        "bandwidth": "Unlimited",
+        "features": [
+          "SSH, SFTP, WP-CLI access",
+          "Professional email",
+          "1-click installs",
+          "Daily backup and restore",
+          "Free 24/7 support"
+        ]
+      },
+      {
+        "planName": "Plus (Hosting)",
+        "introPrice": "$1/mo (promo)",
+        "renewalPrice": "$16/mo",
+        "websites": "Unlimited",
+        "storage": "Unlimited geo-redundant",
+        "databases": "Unlimited",
+        "bandwidth": "Unlimited",
+        "features": [
+          "Enhanced CPU & MEM resources",
+          "SSH, SFTP, WP-CLI access",
+          "Professional email",
+          "1-click installs",
+          "Daily backup and restore",
+          "Free 24/7 support"
+        ]
+      },
+      {
+        "planName": "Ultimate (Hosting)",
+        "introPrice": "$10/mo",
+        "renewalPrice": "$20/mo",
+        "websites": "Unlimited",
+        "storage": "Unlimited geo-redundant",
+        "databases": "Unlimited",
+        "bandwidth": "Unlimited",
+        "features": [
+          "Maximum CPU & MEM resources",
+          "SSH, SFTP, WP-CLI access",
+          "Professional email",
+          "1-click installs",
+          "Daily backup and restore",
+          "Free 24/7 support"
+        ]
+      }
+    ],
+    "freePlan": true,
+    "moneyBackGuarantee": "30 days"
+  },
+  "features": {
+    "websiteBuilder": [
+      "Drag-and-drop website builder",
+      "Mobile-optimized websites",
+      "Professional email addresses",
+      "Online booking tools",
+      "SiteAnalytics",
+      "marketingRadar (competitor tracking)"
+    ],
+    "ai": [
+      "AI Website Builder",
+      "AI Text Generator",
+      "AI SEO Text Generator",
+      "AI Image Generator",
+      "AI Logo Generator"
+    ],
+    "ecommerce": [
+      "Secure checkout",
+      "Product management",
+      "Shipping management",
+      "Add products easily"
+    ],
+    "seo": [
+      "AI SEO optimization",
+      "rankingCoach Standard (Pro plan)",
+      "SiteAnalytics Plus (Pro plan)"
+    ],
+    "hosting": [
+      "99.99% uptime",
+      "Free SSL certificate",
+      "Free domain for 1st year",
+      "Unlimited bandwidth",
+      "Geo-redundant storage",
+      "Daily backup and restore"
+    ]
+  },
+  "templates": {
+    "count": "Varies by category (not disclosed)",
+    "categories": ["Business", "Personal", "Blog", "Portfolio"]
+  },
+  "support": {
+    "phone": "24/7",
+    "moneyBackGuarantee": "30 days"
+  },
+  "limitations": [
+    "Website builder limited to 10 pages on Starter plan",
+    "E-commerce only on Pro plan ($17/mo+)",
+    "Significant price increase at renewal (3x-6x intro price)",
+    "Templates count not disclosed",
+    "No free plan for website builder (hosting only)",
+    "Limited customization compared to WordPress"
+  ]
+}

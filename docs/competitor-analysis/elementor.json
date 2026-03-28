@@ -1,0 +1,246 @@
+{
+  "platform": "Elementor",
+  "scrapedDate": "2026-03-28",
+  "sources": [
+    "https://elementor.com/pricing/",
+    "https://elementor.com/features/"
+  ],
+  "pricing": {
+    "plans": [
+      {
+        "planName": "Essential",
+        "annualPrice": "$60/yr ($5/mo)",
+        "sites": 1,
+        "widgets": 57,
+        "ecommerce": false,
+        "features": [
+          "57 Editor Pro widgets",
+          "Theme Builder",
+          "Dynamic Content",
+          "Form Builder",
+          "Basic Support",
+          "10 Cloud Templates"
+        ],
+        "notIncluded": [
+          "Popup Builder",
+          "Custom code & CSS",
+          "eCommerce features",
+          "AI generated code, copy, images, & layouts",
+          "Image optimization",
+          "Site accessibility",
+          "Collaborative Notes",
+          "Email deliverability",
+          "Site management"
+        ]
+      },
+      {
+        "planName": "Advanced Solo",
+        "annualPrice": "$84/yr ($7/mo)",
+        "sites": 1,
+        "widgets": 85,
+        "ecommerce": true,
+        "features": [
+          "85 Editor Pro widgets",
+          "Theme Builder",
+          "Dynamic Content",
+          "Form Builder",
+          "Popup Builder",
+          "Custom code & CSS",
+          "eCommerce features",
+          "Basic Support",
+          "20 Cloud Templates"
+        ],
+        "notIncluded": [
+          "AI generated code, copy, images, & layouts",
+          "Image optimization",
+          "Site accessibility",
+          "Collaborative Notes",
+          "Email deliverability",
+          "Site management"
+        ]
+      },
+      {
+        "planName": "Advanced",
+        "annualPrice": "$108/yr ($9/mo)",
+        "sites": 3,
+        "widgets": 85,
+        "ecommerce": true,
+        "features": [
+          "85 Editor Pro widgets",
+          "Theme Builder",
+          "Dynamic Content",
+          "Form Builder",
+          "Popup Builder",
+          "Custom code & CSS",
+          "eCommerce features",
+          "Basic Support",
+          "30 Cloud Templates"
+        ],
+        "notIncluded": [
+          "AI generated code, copy, images, & layouts",
+          "Image optimization",
+          "Site accessibility",
+          "Collaborative Notes",
+          "Email deliverability",
+          "Site management"
+        ]
+      },
+      {
+        "planName": "One",
+        "annualPrice": "$168/yr ($14/mo)",
+        "sites": 1,
+        "widgets": 85,
+        "ecommerce": true,
+        "features": [
+          "ALL features included",
+          "85 Editor Pro widgets",
+          "Theme Builder",
+          "Dynamic Content",
+          "Form Builder",
+          "Popup Builder",
+          "Custom code & CSS",
+          "eCommerce features",
+          "AI generated code, copy, images, & layouts",
+          "Image optimization",
+          "Site accessibility",
+          "Collaborative Notes",
+          "Email deliverability",
+          "Site management",
+          "Priority Support",
+          "30 Cloud Templates"
+        ],
+        "notIncluded": []
+      },
+      {
+        "planName": "Expert",
+        "annualPrice": "$204/yr ($17/mo)",
+        "sites": 25,
+        "widgets": 85,
+        "ecommerce": true,
+        "features": [
+          "85 Editor Pro widgets",
+          "Theme Builder",
+          "Dynamic Content",
+          "Form Builder",
+          "Popup Builder",
+          "Custom code & CSS",
+          "eCommerce features",
+          "Basic Support",
+          "5,000 Cloud Templates"
+        ],
+        "notIncluded": [
+          "AI generated code, copy, images, & layouts",
+          "Image optimization",
+          "Site accessibility",
+          "Collaborative Notes",
+          "Email deliverability",
+          "Site management"
+        ]
+      },
+      {
+        "planName": "One Agency",
+        "annualPrice": "$444/yr ($37/mo)",
+        "sites": "Unlimited",
+        "widgets": 85,
+        "ecommerce": true,
+        "features": [
+          "ALL features included",
+          "Unlimited sites",
+          "85 Editor Pro widgets",
+          "Theme Builder",
+          "Dynamic Content",
+          "Form Builder",
+          "Popup Builder",
+          "Custom code & CSS",
+          "eCommerce features",
+          "AI generated code, copy, images, & layouts",
+          "Image optimization",
+          "Site accessibility",
+          "Collaborative Notes",
+          "Email deliverability",
+          "Site management",
+          "Priority Support",
+          "50,000 Cloud Templates"
+        ],
+        "notIncluded": []
+      }
+    ],
+    "freeVersion": true,
+    "freeVersionNote": "Elementor Free (WordPress plugin) with limited widgets and features"
+  },
+  "features": {
+    "design": [
+      "Drag & Drop Editor",
+      "100+ Widgets (85 Pro)",
+      "Live Editing",
+      "300+ Designer Made Templates",
+      "Responsive Editing",
+      "Global Fonts",
+      "Global Colors",
+      "Theme Style",
+      "SVG Icons",
+      "Background Videos",
+      "Gradients",
+      "Text Shadow"
+    ],
+    "ecommerce": [
+      "WooCommerce Builder",
+      "Cart Customization",
+      "Checkout Customization",
+      "WooCommerce Site Settings",
+      "Dynamic WooCommerce Tags",
+      "My Account Customization",
+      "Product Page Customization",
+      "Product Archives Customization",
+      "Payment Processing Integration"
+    ],
+    "ai": [
+      "AI generated code",
+      "AI generated copy/text",
+      "AI generated images",
+      "AI generated layouts",
+      "AI accessibility fixes",
+      "AI features usage credit system"
+    ],
+    "marketing": [
+      "Landing Pages",
+      "Popup Builder",
+      "Link in Bio Widgets",
+      "Form Builder",
+      "Dynamic Content",
+      "Contact Buttons",
+      "Action Links",
+      "Highlight Reviews",
+      "Ratings"
+    ],
+    "developer": [
+      "Custom CSS",
+      "Custom Code",
+      "Version Control",
+      "Safe Mode",
+      "RTL Ready",
+      "Experiments",
+      "Custom Attributes",
+      "Role Manager",
+      "Maintenance Mode"
+    ]
+  },
+  "templates": {
+    "designerTemplates": "300+",
+    "widgets": "100+ (57 Free, 85 Pro)",
+    "cloudTemplates": "Up to 50,000 (Agency plan)"
+  },
+  "support": {
+    "basic": "Included in all plans",
+    "priority": "One and Agency plans only"
+  },
+  "limitations": [
+    "WordPress-only (requires WordPress hosting separately)",
+    "Hosting NOT included (must buy separately)",
+    "AI features only in One/Agency plans ($14+/mo)",
+    "E-commerce requires WooCommerce (separate plugin)",
+    "Free version has only 57 widgets and limited features",
+    "No built-in hosting, email, or domain",
+    "Plugin-based approach can lead to compatibility issues"
+  ]
+}

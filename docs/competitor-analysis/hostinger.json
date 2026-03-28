@@ -1,0 +1,394 @@
+{
+  "platform": "Hostinger",
+  "scrapedDate": "2026-03-28",
+  "sources": [
+    "https://www.hostinger.com/website-builder",
+    "https://www.hostinger.com/pricing/website-builder",
+    "https://www.hostinger.com/ai-website-builder",
+    "https://www.hostinger.com/ecommerce-website"
+  ],
+  "pricing": {
+    "websiteBuilderPlans": [
+      {
+        "planName": "Premium Website Builder",
+        "monthlyPrice48mo": "$1.99/mo",
+        "monthlyPrice24mo": "$2.99/mo",
+        "monthlyPrice12mo": "$12.99/mo",
+        "monthlyPriceMonthly": "$12.99/mo",
+        "renewalPrice": "$10.99/mo",
+        "transactionFee": "0%",
+        "websites": "1 website",
+        "storage": "2 GB",
+        "mailboxes": "1 per website (free 1 year)",
+        "description": "Get the essentials to create a website.",
+        "features": [
+          "Create 1 website",
+          "2 GB storage for your files",
+          "1 mailbox per website - free for 1 year",
+          "Free domain for 1 year",
+          "Build sites in minutes with AI Website Builder",
+          "Choose from 300+ designer-made templates",
+          "Create and send email campaigns with AI in a few clicks",
+          "Grow faster with tools for SEO, email, and marketing",
+          "Update your site anytime with mobile editing"
+        ]
+      },
+      {
+        "planName": "Business Website Builder",
+        "monthlyPrice48mo": "$2.99/mo",
+        "monthlyPrice24mo": "$18.99/mo",
+        "monthlyPrice12mo": "$18.99/mo",
+        "monthlyPriceMonthly": "$18.99/mo",
+        "renewalPrice": "$16.99/mo",
+        "transactionFee": "0%",
+        "websites": "50 websites",
+        "storage": "50 GB",
+        "mailboxes": "5 per website (free 1 year)",
+        "description": "Grow with AI tools and ecommerce features.",
+        "features": [
+          "Create 50 websites",
+          "50 GB storage for your files",
+          "5 mailboxes per website - free for 1 year",
+          "Sell up to 1000 products and manage your store easily",
+          "Keep 100% of your profits with zero transaction fees",
+          "Offer 100+ payment methods to reach more customers",
+          "Track performance with live analytics",
+          "Sell custom merch with built-in Printful integration",
+          "AI text editor",
+          "AI image generator",
+          "AI blog post generator",
+          "AI product generator (upload images, auto descriptions)",
+          "AI logo maker",
+          "AI SEO assistant",
+          "Link in bio tool"
+        ]
+      }
+    ],
+    "webHostingPlans": [
+      {
+        "planName": "Premium (Web Hosting)",
+        "monthlyPrice48mo": "$1.99/mo",
+        "renewalPrice": "$10.99/mo",
+        "description": "Everything you need to get started.",
+        "features": [
+          "Create up to 3 websites",
+          "20 GB SSD storage",
+          "2 mailboxes per website - free 1 year",
+          "Free domain for 1 year",
+          "Free SSL",
+          "Weekly auto backups",
+          "WordPress maintenance",
+          "Free site migration",
+          "Free email marketing for 1 year",
+          "AI Website Builder"
+        ]
+      },
+      {
+        "planName": "Business (Web Hosting)",
+        "monthlyPrice48mo": "$2.99/mo",
+        "renewalPrice": "$16.99/mo",
+        "description": "More tools and power for growth.",
+        "features": [
+          "Create up to 50 websites",
+          "50 GB NVMe storage",
+          "5 mailboxes per website - free 1 year",
+          "Daily and on-demand backups",
+          "AI ecommerce site builder",
+          "AI Agent for WordPress",
+          "Free CDN",
+          "WordPress Multisite"
+        ]
+      },
+      {
+        "planName": "Cloud Startup",
+        "monthlyPrice48mo": "$6.99/mo",
+        "renewalPrice": "$25.99/mo",
+        "description": "20X more power for your websites with Cloud hosting.",
+        "features": [
+          "Create up to 100 websites",
+          "100 GB NVMe storage",
+          "10 mailboxes per website - free 1 year",
+          "Priority expert support 24/7",
+          "Dedicated IP address",
+          "100 PHP workers",
+          "4 GB RAM"
+        ]
+      }
+    ]
+  },
+  "features": {
+    "websiteBuilder": [
+      {
+        "name": "300+ Templates",
+        "description": "Pick from 300+ beautiful responsive templates to start your website.",
+        "category": "Design"
+      },
+      {
+        "name": "AI Website Creation",
+        "description": "Create your website in minutes by describing what you want to build.",
+        "category": "AI Tools"
+      },
+      {
+        "name": "Drag-and-Drop Editor",
+        "description": "Use a drag-and-drop editor and AI tools to customize your website effortlessly.",
+        "category": "Design"
+      },
+      {
+        "name": "Appointment Booking",
+        "description": "Let clients book appointments 24/7 with integrated scheduling features.",
+        "category": "Business Tools"
+      },
+      {
+        "name": "0% Transaction Fees",
+        "description": "Sell confidently with 0% transaction fees on all transactions.",
+        "category": "Ecommerce"
+      },
+      {
+        "name": "Marketing Tools",
+        "description": "Built-in marketing tools and integrations for better reach.",
+        "category": "Marketing"
+      },
+      {
+        "name": "AI Assistant",
+        "description": "Get instant help from your personal AI assistant for guidance and support.",
+        "category": "Support"
+      },
+      {
+        "name": "Email Marketing with AI",
+        "description": "Create ready-to-send email marketing campaigns using AI.",
+        "category": "Marketing"
+      },
+      {
+        "name": "Secure Hosting Included",
+        "description": "Fast, secure hosting included in your plan.",
+        "category": "Hosting"
+      },
+      {
+        "name": "Fillable Forms",
+        "description": "Contact forms and client interaction features.",
+        "category": "Interactive Features"
+      },
+      {
+        "name": "SEO Tools",
+        "description": "Built-in tools to optimize your site for search engines.",
+        "category": "SEO"
+      },
+      {
+        "name": "Ecommerce Integration",
+        "description": "Sell digital and physical products with comprehensive ecommerce capabilities.",
+        "category": "Ecommerce"
+      },
+      {
+        "name": "Logo Maker",
+        "description": "AI-powered logo design in seconds.",
+        "category": "Design"
+      },
+      {
+        "name": "Custom Product Pages",
+        "description": "AI generates titles and descriptions for products.",
+        "category": "Ecommerce"
+      },
+      {
+        "name": "Digital Product Delivery",
+        "description": "Automatic delivery of digital products like eBooks or music.",
+        "category": "Ecommerce"
+      },
+      {
+        "name": "100+ Payment Methods",
+        "description": "Offer secure global and local payment methods.",
+        "category": "Ecommerce"
+      },
+      {
+        "name": "Live Analytics",
+        "description": "Track website performance with real-time analytics.",
+        "category": "Analytics"
+      },
+      {
+        "name": "24/7 Live Support",
+        "description": "Customer support via live chat anytime.",
+        "category": "Support"
+      },
+      {
+        "name": "Mobile Optimization",
+        "description": "Websites automatically optimized for mobile devices.",
+        "category": "Design"
+      },
+      {
+        "name": "Mobile Editing",
+        "description": "Update your site anytime from mobile.",
+        "category": "Design"
+      },
+      {
+        "name": "Free Domain",
+        "description": "Free domain name for the first year.",
+        "category": "Domain"
+      },
+      {
+        "name": "Free SSL",
+        "description": "SSL certificate included.",
+        "category": "Security"
+      }
+    ],
+    "ai": [
+      {
+        "name": "AI Website Generation",
+        "description": "Answer two quick questions about your business and AI transforms your vision into a fully-custom website in under one minute.",
+        "category": "Website Creation"
+      },
+      {
+        "name": "AI Drag-and-Drop Customization",
+        "description": "Use AI tools to adjust colors, swap images, rewrite text, or add new sections.",
+        "category": "Customization"
+      },
+      {
+        "name": "One-Click Publishing",
+        "description": "Choose a plan, click Go live, and your website is instantly published with professional hosting and a free domain.",
+        "category": "Publishing"
+      },
+      {
+        "name": "AI Ecommerce Builder",
+        "description": "Complete ecommerce website built by AI that accepts payments, bookings, showcases products, with built-in analytics.",
+        "category": "Ecommerce"
+      },
+      {
+        "name": "AI Email Campaigns",
+        "description": "Launch AI-powered email campaigns with Hostinger Reach, connect Google Ads, Meta Pixel, and Analytics.",
+        "category": "Marketing"
+      },
+      {
+        "name": "AI Text Editor",
+        "description": "Write engaging website copy in any style with AI.",
+        "category": "Content Creation"
+      },
+      {
+        "name": "AI Image Generator",
+        "description": "Generate new pages and sections instantly, create custom logos and images in seconds.",
+        "category": "Design"
+      },
+      {
+        "name": "AI Mobile Optimization",
+        "description": "AI ensures every element adapts perfectly to any screen size.",
+        "category": "Responsiveness"
+      },
+      {
+        "name": "AI SEO Assistant",
+        "description": "Optimize content with AI to improve search rankings and drive traffic.",
+        "category": "SEO"
+      },
+      {
+        "name": "AI Blog Post Generator",
+        "description": "Generate engaging blog posts quickly to keep your website fresh.",
+        "category": "Content Creation"
+      },
+      {
+        "name": "AI Product Description Generator",
+        "description": "Upload images and get auto-generated product descriptions.",
+        "category": "Ecommerce"
+      },
+      {
+        "name": "AI Logo Maker",
+        "description": "Design brand identity with AI-generated logos.",
+        "category": "Design"
+      }
+    ],
+    "ecommerce": [
+      {
+        "name": "Physical Products",
+        "description": "Upload images in bulk, AI background removal, AI product descriptions.",
+        "category": "Product Management"
+      },
+      {
+        "name": "Digital Products",
+        "description": "Sell ebooks, courses, or templates with instant customer download.",
+        "category": "Product Management"
+      },
+      {
+        "name": "Services",
+        "description": "Showcase services and build a portfolio that converts visitors to clients.",
+        "category": "Business Management"
+      },
+      {
+        "name": "Gift Cards",
+        "description": "Create flexible, easy-to-share prepaid digital gift cards.",
+        "category": "Payments"
+      },
+      {
+        "name": "Print on Demand (Printful)",
+        "description": "Sell custom merch with zero inventory, Printful produces and ships automatically.",
+        "category": "Product Management"
+      },
+      {
+        "name": "Store Management",
+        "description": "Accept and fulfill orders, process transactions with 100+ payment methods, track inventory in real time.",
+        "category": "Store Management"
+      },
+      {
+        "name": "Shipping Zone Configuration",
+        "description": "Define shipping zones, delivery options, custom rules like free shipping on large orders.",
+        "category": "Shipping"
+      },
+      {
+        "name": "Sales Tools",
+        "description": "Product reviews, discounts, gift cards, related product recommendations.",
+        "category": "Sales"
+      },
+      {
+        "name": "Store Analytics",
+        "description": "Monitor sales, orders, and average order value for data-driven decisions.",
+        "category": "Analytics"
+      },
+      {
+        "name": "AI Email Marketing",
+        "description": "AI builds ready-to-send marketing emails from your description.",
+        "category": "Marketing"
+      },
+      {
+        "name": "Built-in SEO Tools",
+        "description": "Optimize store for search engines with AI SEO Assistant.",
+        "category": "SEO"
+      },
+      {
+        "name": "WhatsApp Integration",
+        "description": "Enable instant contact through WhatsApp for customer support.",
+        "category": "Customer Support"
+      },
+      {
+        "name": "Up to 1000 Products",
+        "description": "Sell up to 1000 products on the Business plan.",
+        "category": "Limits"
+      },
+      {
+        "name": "0% Transaction Fees",
+        "description": "Keep 100% of profits with zero transaction fees.",
+        "category": "Pricing"
+      },
+      {
+        "name": "100+ Payment Methods",
+        "description": "Offer secure global and local payment methods.",
+        "category": "Payments"
+      }
+    ]
+  },
+  "additionalProducts": {
+    "horizons": {
+      "name": "Hostinger Horizons",
+      "description": "No-code AI partner for launching ideas. Build fully functional websites and web apps by chatting with AI.",
+      "url": "https://www.hostinger.com/horizons"
+    },
+    "aiWordPressBuilder": {
+      "name": "AI Website Builder for WordPress",
+      "description": "Build a fully functional WordPress site from 1 prompt in under 1 minute.",
+      "url": "https://www.hostinger.com/ai-website-builder-for-wordpress"
+    },
+    "landingPageBuilder": {
+      "name": "AI Landing Page Builder",
+      "description": "Create effective marketing campaigns with landing page builder and built-in analytics.",
+      "url": "https://www.hostinger.com/landing-page-builder"
+    }
+  },
+  "support": {
+    "liveChat": "24/7",
+    "moneyBackGuarantee": "30 days",
+    "freeTrial": "14 days (includes AI Website Builder, 300+ templates, drag & drop editor, AI writing & design, ecommerce features, built-in SEO & marketing)"
+  }
+}

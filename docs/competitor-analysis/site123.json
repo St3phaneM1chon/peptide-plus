@@ -1,0 +1,165 @@
+{
+  "platform": "Site123",
+  "scrapedDate": "2026-03-28",
+  "sources": [
+    "https://www.site123.com/pricing",
+    "https://www.site123.com/features"
+  ],
+  "pricing": {
+    "plans": [
+      {
+        "planName": "Free",
+        "monthlyPrice": "$0",
+        "annualPrice": "$0",
+        "transactionFee": "N/A",
+        "storage": "250 MB",
+        "bandwidth": "250 MB",
+        "customDomain": false,
+        "ecommerce": false,
+        "description": "Basic free plan with subdomain only.",
+        "features": [
+          "250 MB Storage",
+          "250 MB Bandwidth",
+          "Subdomain only",
+          "SITE123 branding/floating tag"
+        ]
+      },
+      {
+        "planName": "Premium",
+        "monthlyPrice": "$12.80/mo",
+        "annualPrice": "$10.80/mo",
+        "transactionFee": "N/A",
+        "storage": "3 GB",
+        "bandwidth": "3 GB",
+        "customDomain": true,
+        "ecommerce": true,
+        "description": "Full-featured plan with custom domain and store.",
+        "features": [
+          "Free Domain for 1 year",
+          "3 GB storage",
+          "3 GB bandwidth",
+          "Remove SITE123 floating tag",
+          "Connect Your Domain",
+          "Online Store",
+          "14-Day Money-Back Guarantee"
+        ]
+      }
+    ],
+    "freePlan": true,
+    "moneyBackGuarantee": "14 days"
+  },
+  "features": {
+    "website": [
+      "Responsive Web Design",
+      "SEO Tools",
+      "Free Hosting",
+      "Free Website Domain",
+      "Email Accounts",
+      "24/7 Website Support",
+      "Free Image & Icons Library",
+      "Multilingual Website",
+      "Schedule Booking",
+      "Events",
+      "Restaurant Reservations",
+      "Website Design Tools",
+      "Logo Tools",
+      "Custom Form Builder",
+      "Image Galleries",
+      "One Page / Multi-Page Option",
+      "Social Media Integration",
+      "Favicon",
+      "Third-Party Plugins",
+      "Restaurant Menu",
+      "Musician Tools",
+      "Share Image",
+      "Cookie Consent Plugin",
+      "Website Password",
+      "Under Construction Page",
+      "Dropdown Menus",
+      "Promotion Popups",
+      "Testimonial Page"
+    ],
+    "ecommerce": [
+      "Manage An Online Store",
+      "Design Your Store",
+      "Ecommerce Currency Selection",
+      "Offer Product Options",
+      "PayPal Payment Method",
+      "Wire Transfer Payments",
+      "Create Coupons",
+      "Sort Products By Categories",
+      "Conversion Code",
+      "Shipping And Tax",
+      "Payment Gateway Integration",
+      "Sell Digital Products",
+      "Store Inventory",
+      "Display Related Products",
+      "Display Ribbons",
+      "Variants Tool",
+      "Product Attributes",
+      "Bought Together",
+      "Brands",
+      "Product Shipping Options",
+      "Min/Max Order Limit",
+      "Non Taxable Products",
+      "Sub-Categories",
+      "Products in Multiple Categories",
+      "Show / Hide Products",
+      "Customizable Ecommerce Homepage",
+      "Store Labels",
+      "Customized Order Form",
+      "Product Sku",
+      "Duplicate Products",
+      "Abandoned Cart Tool",
+      "Product Reviews",
+      "Store Wishlist",
+      "Multi-Currency Ecommerce",
+      "Order Management System"
+    ],
+    "blog": [
+      "Blog Templates",
+      "Comment System",
+      "Auto-Confirm Comments",
+      "Reply To Comment",
+      "Schedule Blog Posts",
+      "RSS",
+      "Disqus and Facebook comment on blog"
+    ],
+    "domains": [
+      "Free SSL Certificate",
+      "Get A Free Domain Name",
+      "Search Domain Availability",
+      "Connect Domain Name",
+      "Domain Name Management",
+      "Domain Redirect",
+      "Domain Privacy Protection",
+      "Domain Extensions"
+    ],
+    "ai": [],
+    "seo": [
+      "SEO Tools",
+      "Free SSL Certificate"
+    ],
+    "marketing": [
+      "Email Marketing",
+      "Promotion Popups",
+      "Social Media Integration"
+    ]
+  },
+  "templates": {
+    "count": "N/A (not disclosed)",
+    "categories": ["Various industry templates"]
+  },
+  "support": {
+    "liveChat": "24/7",
+    "moneyBackGuarantee": "14 days"
+  },
+  "limitations": [
+    "Only 2 plans (Free + Premium)",
+    "Very low storage (3 GB max)",
+    "Very low bandwidth (3 GB max)",
+    "No AI features",
+    "No advanced customization (no CSS/JS)",
+    "Limited scalability"
+  ]
+}
