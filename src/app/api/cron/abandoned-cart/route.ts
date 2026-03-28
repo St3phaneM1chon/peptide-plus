@@ -437,8 +437,8 @@ export async function GET(request: NextRequest) {
             await sendSms({
               to: user.phone,
               body: isFr
-                ? 'BioCycle: Votre panier vous attend! Finalisez votre commande sur attitudes.vip/checkout'
-                : 'BioCycle: Your cart is waiting! Complete your order at attitudes.vip/checkout',
+                ? 'Attitudes VIP: Votre panier vous attend! Finalisez votre commande sur attitudes.vip/checkout'
+                : 'Attitudes VIP: Your cart is waiting! Complete your order at attitudes.vip/checkout',
             });
 
             await db.emailLog.create({

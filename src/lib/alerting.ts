@@ -77,7 +77,7 @@ export async function sendAlert(
 
   const emailPromise = sendEmail({
     to: { email: adminEmail, name: 'Admin' },
-    subject: `[${level.toUpperCase()}] BioCycle Alert: ${message.substring(0, 80)}`,
+    subject: `[${level.toUpperCase()}] Attitudes VIP Alert: ${message.substring(0, 80)}`,
     html: buildAlertEmailHtml(level, message, context, timestamp),
     tags: ['alert', level],
   }).catch((err) => {
@@ -118,7 +118,7 @@ async function sendCriticalSms(message: string, adminPhoneOverride?: string): Pr
     const truncated = message.length > 140 ? message.substring(0, 137) + '...' : message;
     await sendSms({
       to: phone,
-      body: `[CRITICAL] BioCycle: ${truncated}`,
+      body: `[CRITICAL] Attitudes VIP: ${truncated}`,
     });
   } catch (err) {
     // SMS is best-effort; don't throw

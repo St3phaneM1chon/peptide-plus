@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: `Accumulez des points à chaque achat et échangez-les contre des rabais. Rejoignez le programme de fidélité ${siteName}.`,
   openGraph: {
     title: `Programme de récompenses | ${siteName}`,
-    description: 'Accumulez des points et échangez-les contre des rabais sur les peptides de recherche.',
+    description: 'Accumulez des points et échangez-les contre des rabais sur vos achats.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/rewards`,
     siteName,
     type: 'website',

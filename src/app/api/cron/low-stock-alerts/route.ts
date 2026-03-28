@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
 
       const emailResult = await sendEmail({
         to: { email: adminEmail },
-        subject: `[BioCycle] Low Stock Alert: ${outOfStock.length} out-of-stock, ${lowStock.length} low-stock`,
+        subject: `[Attitudes VIP] Low Stock Alert: ${outOfStock.length} out-of-stock, ${lowStock.length} low-stock`,
         html,
         tags: ['low-stock-alert', 'inventory', 'admin'],
       });

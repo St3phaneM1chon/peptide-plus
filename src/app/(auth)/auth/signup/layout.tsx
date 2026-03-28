@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Create Account',
-  description: 'Create your Attitudes VIP account to start ordering premium research peptides.',
+  description: 'Create your Attitudes VIP account to access the Suite Koraline platform.',
   robots: { index: false, follow: false },
 };
 

@@ -6,11 +6,11 @@ const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
 
 export const metadata: Metadata = {
   title: `My Products | ${siteName}`,
-  description: 'View and manage the research peptide products associated with your account.',
+  description: 'View and manage the products associated with your account.',
   robots: { index: false, follow: false },
   openGraph: {
     title: `My Products | ${siteName}`,
-    description: 'View and manage the research peptide products associated with your account.',
+    description: 'View and manage the products associated with your account.',
   },
 };
 

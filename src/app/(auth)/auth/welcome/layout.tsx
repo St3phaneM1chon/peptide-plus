@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Welcome to Attitudes VIP',
-  description: 'Welcome! Your Attitudes VIP account is ready. Start exploring our catalogue of high-purity research peptides.',
+  description: 'Welcome! Your Attitudes VIP account is ready. Start exploring the Suite Koraline platform.',
   robots: { index: false, follow: false },
   openGraph: {
     title: 'Welcome to Attitudes VIP',

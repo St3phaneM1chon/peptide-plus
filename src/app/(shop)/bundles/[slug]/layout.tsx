@@ -38,20 +38,20 @@ export async function generateMetadata({
 
   return {
     title: bundle.name,
-    description: bundle.description || `${bundle.name} - Research peptide bundle`,
+    description: bundle.description || `${bundle.name} - Product bundle`,
     alternates: {
       canonical: `${siteUrl}/bundles/${slug}`,
     },
     openGraph: {
       title: `${bundle.name} | ${process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP'}`,
-      description: bundle.description || `${bundle.name} - Research peptide bundle`,
+      description: bundle.description || `${bundle.name} - Product bundle`,
       url: `${siteUrl}/bundles/${slug}`,
       images: [{ url: ogImageUrl, width: 1200, height: 630, alt: bundle.name }],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${bundle.name} | ${process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP'}`,
-      description: bundle.description || `${bundle.name} - Research peptide bundle`,
+      description: bundle.description || `${bundle.name} - Product bundle`,
       images: [ogImageUrl],
     },
   };
