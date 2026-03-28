@@ -1,0 +1,72 @@
+// =============================================================================
+// BOOKING / SCHEDULING MODULE
+// Allows tenants to offer bookable services (consultations, appointments, etc.)
+// =============================================================================
+
+model BookingService {
+  id             String   @id @default(cuid())
+  tenantId       String?
+  name           String
+  slug           String
+  description    String?
+  duration       Int      // minutes
+  price          Decimal  @default(0) @db.Decimal(10, 2)
+  currency       String   @default("CAD")
+  color          String?  // calendar color hex
+  isActive       Boolean  @default(true)
+  maxAdvanceDays Int      @default(30)
+  bufferBefore   Int      @default(0) // minutes before appointment
+  bufferAfter    Int      @default(0) // minutes after appointment
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  slots    BookingSlot[]
+  bookings Booking[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, isActive])
+  @@index([isActive, sortOrder])
+}
+
+model BookingSlot {
+  id        String  @id @default(cuid())
+  tenantId  String?
+  serviceId String
+  dayOfWeek Int     // 0=Sunday, 6=Saturday
+  startTime String  // "09:00" (HH:mm)
+  endTime   String  // "17:00" (HH:mm)
+  isActive  Boolean @default(true)
+
+  service BookingService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, serviceId])
+  @@index([serviceId, dayOfWeek, isActive])
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  tenantId      String?
+  serviceId     String
+  customerId    String?  // optional: linked user id
+  customerName  String
+  customerEmail String
+  customerPhone String?
+  startTime     DateTime
+  endTime       DateTime
+  status        String   @default("confirmed") // confirmed, cancelled, completed, no_show
+  notes         String?
+  paymentStatus String?  // pending, paid, refunded
+  paymentAmount Decimal? @db.Decimal(10, 2)
+  reminderSent  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  service BookingService @relation(fields: [serviceId], references: [id])
+
+  @@index([tenantId, startTime])
+  @@index([tenantId, serviceId])
+  @@index([tenantId, status])
+  @@index([serviceId, startTime])
+  @@index([customerEmail])
+}

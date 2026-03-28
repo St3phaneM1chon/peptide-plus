@@ -6580,7 +6580,9 @@
       "clientsTools": "Client Tools",
       "broadcast": "Broadcast",
       "assistedSetup": "Assisted Setup",
-      "platformConfig": "Platform Configuration"
+      "platformConfig": "Platform Configuration",
+      "membership": "Membership",
+      "bookings": "Bookings"
     },
     "newsletter": {
       "activeSubscribers": "Aktiva prenumeranter",
@@ -9358,6 +9360,77 @@
       "valuePlaceholder": "PHYSICAL",
       "labelPlaceholder": "Physical product",
       "backToSettings": "Back to settings"
+    },
+    "membership": {
+      "title": "Membership & Paywall",
+      "description": "Manage membership plans and content access for your customers",
+      "totalPlans": "Total Plans",
+      "totalMembers": "Total Members",
+      "monthlyRevenue": "Monthly Revenue",
+      "gatedContent": "Gated Content",
+      "contentRules": "content rules",
+      "plans": "Plans",
+      "members": "Members",
+      "active": "active",
+      "inactive": "Inactive",
+      "newPlan": "New Plan",
+      "editPlan": "Edit Plan",
+      "noPlans": "No membership plans yet",
+      "noPlansDesc": "Create your first membership plan to start gating content and building a member community.",
+      "noMembers": "No members yet",
+      "noMembersDesc": "Members will appear here once users subscribe to your plans.",
+      "planName": "Plan Name",
+      "slug": "Slug",
+      "slugHint": "URL-friendly identifier (auto-generated from name if empty)",
+      "planDescription": "Description",
+      "price": "Price",
+      "interval": "Billing Interval",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "oneTime": "One-time",
+      "free": "Free",
+      "trialDays": "Trial Days",
+      "maxMembers": "Max Members",
+      "maxMembersHint": "Leave empty for unlimited",
+      "unlimited": "Unlimited",
+      "features": "Features",
+      "featuresHint": "One feature per line",
+      "contentAccess": "Content Access Rules",
+      "contentAccessHint": "One rule per line (e.g. blog:*, article:premium, page:vip-lounge)",
+      "stripePriceId": "Stripe Price ID",
+      "stripePriceIdHint": "Required for paid plans. Get from Stripe Dashboard.",
+      "planActive": "Plan is active",
+      "planCreated": "Plan created successfully",
+      "planUpdated": "Plan updated successfully",
+      "planDeleted": "Plan deleted successfully",
+      "deletePlanTitle": "Delete Plan",
+      "deletePlanConfirm": "Are you sure you want to delete this plan?",
+      "errorLoadingPlans": "Error loading plans",
+      "errorSavingPlan": "Error saving plan",
+      "errorDeletingPlan": "Error deleting plan",
+      "searchMembers": "Search members...",
+      "allStatuses": "All statuses",
+      "allPlans": "All plans",
+      "member": "Member",
+      "plan": "Plan",
+      "status": "Status",
+      "since": "Since",
+      "actions": "Actions",
+      "statusActive": "Active",
+      "statusTrialing": "Trialing",
+      "statusPaused": "Paused",
+      "statusCancelled": "Cancelled",
+      "statusExpired": "Expired",
+      "pause": "Pause",
+      "cancel": "Cancel",
+      "reactivate": "Reactivate",
+      "memberUpdated": "Member status updated",
+      "errorLoadingMembers": "Error loading members",
+      "errorUpdatingMember": "Error updating member"
+    },
+    "booking": {
+      "title": "Bookings",
+      "subtitle": "Manage your services and bookings"
     }
   },
   "ambassador": {
@@ -10016,7 +10089,8 @@
     "currency": "Valuta",
     "of": "av",
     "closedAt": "Stängd",
-    "filter": "Filtrera"
+    "filter": "Filtrera",
+    "more": "more"
   },
   "community": {
     "allDiscussions": "Alla Diskussioner",
@@ -14242,5 +14316,10 @@
       "challengeCompleted": "Challenge completed",
       "variable": "Variable"
     }
+  },
+  "booking": {
+    "chooseService": "Choose a service",
+    "confirm": "Confirm booking",
+    "confirmed": "Booking confirmed!"
   }
 }

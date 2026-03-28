@@ -18,7 +18,7 @@ import {
   Workflow, ClipboardList, Mic, ArrowRightLeft, PhoneForwarded,
   Filter, MessageSquare, ListChecks, Trophy, CheckSquare,
   ToggleRight, Bot, Building2, Palette, Boxes, GraduationCap,
-  UserPlus, Medal, ShieldCheck, ExternalLink,
+  UserPlus, Medal, ShieldCheck, ExternalLink, Crown,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -143,6 +143,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/customers', labelKey: 'admin.nav.customers', icon: Users },
           { href: '/admin/clients', labelKey: 'admin.nav.distributors', icon: Briefcase },
           { href: '/admin/abonnements', labelKey: 'admin.nav.subscriptions', icon: RefreshCw },
+          { href: '/admin/reservations', labelKey: 'admin.nav.bookings', icon: Calendar },
           { href: '/admin/inventaire', labelKey: 'admin.nav.inventory', icon: Archive },
           { href: '/admin/fournisseurs', labelKey: 'admin.nav.suppliers', icon: Truck },
           { href: '/admin/livraison', labelKey: 'admin.nav.shippingZones', icon: Package },
@@ -179,6 +180,7 @@ export const folderSections: Record<string, NavFolderSection> = {
         items: [
           { href: '/admin/ambassadeurs', labelKey: 'admin.nav.ambassadors', icon: Award },
           { href: '/admin/fidelite', labelKey: 'admin.nav.loyaltyProgram', icon: Gift },
+          { href: '/admin/membership', labelKey: 'admin.nav.membership', icon: Crown },
         ],
         collapsible: true,
         defaultOpen: true,
@@ -796,7 +798,7 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/comptabilite') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/paiements')) return 'accounting';
   if (pathname.startsWith('/admin/emails') || pathname.startsWith('/admin/newsletter')) return 'emails';
   if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles') || pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/livraison')) return 'commerce';
-  if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell') || pathname.startsWith('/admin/ambassadeurs') || pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/seo')) return 'marketing';
+  if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell') || pathname.startsWith('/admin/ambassadeurs') || pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/membership') || pathname.startsWith('/admin/seo')) return 'marketing';
   if (pathname.startsWith('/admin/media') || pathname.startsWith('/admin/webinaires') || pathname.startsWith('/admin/blog')) return 'media';
   if (pathname.startsWith('/admin/rapports') || pathname.startsWith('/admin/analytics')) return 'dashboard';
   if (pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/diagnostics') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/monitoring') || pathname.startsWith('/admin/system/crons')) return 'dev';
