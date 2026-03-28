@@ -302,7 +302,7 @@ export async function getRecommendations(
           },
           select: { id: true, name: true },
           take: limit,
-          orderBy: { viewCount: 'desc' },
+          orderBy: { createdAt: 'desc' },
         });
 
         for (const p of similar) {
