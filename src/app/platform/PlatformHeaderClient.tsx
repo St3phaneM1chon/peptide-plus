@@ -11,21 +11,34 @@ interface DropdownItem {
 }
 
 const produitItems: DropdownItem[] = [
-  { label: 'Fonctionnalites', href: '/#features' },
-  { label: 'Modules', href: '/#modules' },
-  { label: 'Formation (LMS)', href: '/learn' },
+  { label: 'Fonctionnalites (Vue d\u2019ensemble)', href: '/platform/features' },
+  { label: 'Commerce', href: '/platform/features/commerce' },
+  { label: 'CRM', href: '/platform/features/crm' },
+  { label: 'Comptabilite', href: '/platform/features/comptabilite' },
+  { label: 'Formation (LMS)', href: '/platform/features/formation' },
+  { label: 'Telephonie', href: '/platform/features/telephonie' },
+  { label: 'Integrations', href: '/platform/integrations' },
   { label: 'Securite', href: '/securite' },
+];
+
+const solutionsItems: DropdownItem[] = [
+  { label: 'Pour le e-commerce', href: '/platform/pour/ecommerce' },
+  { label: 'Pour les services', href: '/platform/pour/services' },
+  { label: 'Pour le coaching', href: '/platform/pour/coaching' },
+  { label: 'Pour la formation', href: '/platform/pour/formation' },
+  { label: 'Pour le B2B', href: '/platform/pour/b2b' },
+  { label: 'Calculateur ROI', href: '/platform/calculateur-roi' },
+  { label: 'Comparaison', href: '/platform/comparer' },
 ];
 
 const entrepriseItems: DropdownItem[] = [
   { label: 'A propos', href: '/a-propos' },
   { label: 'Mission', href: '/a-propos/mission' },
-  { label: 'Valeurs', href: '/a-propos/valeurs' },
   { label: 'Equipe', href: '/a-propos/equipe' },
-  { label: 'Histoire', href: '/a-propos/histoire' },
-  { label: 'Engagements', href: '/a-propos/engagements' },
   { label: 'Carrieres', href: '/carrieres' },
   { label: 'Contact', href: '/contact' },
+  { label: 'Partenaires', href: '/platform/partenaires' },
+  { label: 'Blog', href: '/blog' },
 ];
 
 function NavDropdown({ label, items }: { label: string; items: DropdownItem[] }) {
@@ -92,80 +105,60 @@ function NavDropdown({ label, items }: { label: string; items: DropdownItem[] })
   );
 }
 
-function MobileMenu({ onClose }: { onClose: () => void }) {
-  const [produitOpen, setProduitOpen] = useState(false);
-  const [entrepriseOpen, setEntrepriseOpen] = useState(false);
+function MobileMenuSection({
+  label,
+  items,
+  onClose,
+}: {
+  label: string;
+  items: DropdownItem[];
+  onClose: () => void;
+}) {
+  const [open, setOpen] = useState(false);
 
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between py-2.5 text-sm font-medium text-gray-900"
+      >
+        {label}
+        <svg
+          className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="pl-4 space-y-1 pb-2">
+          {items.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="block py-2 text-sm text-gray-600 hover:text-gray-900"
+              onClick={onClose}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileMenu({ onClose }: { onClose: () => void }) {
   return (
     <div className="md:hidden bg-white border-b border-gray-100 shadow-lg">
       <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-        {/* Produit */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setProduitOpen((v) => !v)}
-            className="w-full flex items-center justify-between py-2.5 text-sm font-medium text-gray-900"
-          >
-            Produit
-            <svg
-              className={`w-4 h-4 transition-transform ${produitOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {produitOpen && (
-            <div className="pl-4 space-y-1 pb-2">
-              {produitItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="block py-2 text-sm text-gray-600 hover:text-gray-900"
-                  onClick={onClose}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Entreprise */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setEntrepriseOpen((v) => !v)}
-            className="w-full flex items-center justify-between py-2.5 text-sm font-medium text-gray-900"
-          >
-            Entreprise
-            <svg
-              className={`w-4 h-4 transition-transform ${entrepriseOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {entrepriseOpen && (
-            <div className="pl-4 space-y-1 pb-2">
-              {entrepriseItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="block py-2 text-sm text-gray-600 hover:text-gray-900"
-                  onClick={onClose}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        <MobileMenuSection label="Produit" items={produitItems} onClose={onClose} />
+        <MobileMenuSection label="Solutions" items={solutionsItems} onClose={onClose} />
+        <MobileMenuSection label="Entreprise" items={entrepriseItems} onClose={onClose} />
 
         {/* Direct links */}
         <Link
@@ -174,13 +167,6 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
           onClick={onClose}
         >
           Tarifs
-        </Link>
-        <Link
-          href="/blog"
-          className="block py-2.5 text-sm font-medium text-gray-900"
-          onClick={onClose}
-        >
-          Blog
         </Link>
 
         {/* Mobile CTA */}
@@ -236,12 +222,10 @@ export function PlatformHeaderClient({ company }: { company: CompanyBranding }) 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             <NavDropdown label="Produit" items={produitItems} />
+            <NavDropdown label="Solutions" items={solutionsItems} />
             <NavDropdown label="Entreprise" items={entrepriseItems} />
             <Link href="/pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               Tarifs
-            </Link>
-            <Link href="/blog" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-              Blog
             </Link>
           </nav>
 

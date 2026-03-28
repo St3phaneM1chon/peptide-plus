@@ -28,7 +28,7 @@ function PlatformFooter({ company }: { company: CompanyBranding }) {
   return (
     <footer className="bg-[#003366] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
@@ -83,40 +83,41 @@ function PlatformFooter({ company }: { company: CompanyBranding }) {
             </div>
           </div>
 
-          {/* Product */}
+          {/* Fonctionnalites */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Produit</h3>
+            <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Fonctionnalites</h3>
             <ul className="space-y-2.5">
-              <li><Link href="/#features" className="text-sm text-blue-200 hover:text-white transition-colors">Fonctionnalites</Link></li>
-              <li><Link href="/#modules" className="text-sm text-blue-200 hover:text-white transition-colors">Modules</Link></li>
-              <li><Link href="/learn" className="text-sm text-blue-200 hover:text-white transition-colors">Formation (LMS)</Link></li>
+              <li><Link href="/platform/features" className="text-sm text-blue-200 hover:text-white transition-colors">Vue d&apos;ensemble</Link></li>
+              <li><Link href="/platform/features/commerce" className="text-sm text-blue-200 hover:text-white transition-colors">Commerce</Link></li>
+              <li><Link href="/platform/features/crm" className="text-sm text-blue-200 hover:text-white transition-colors">CRM</Link></li>
+              <li><Link href="/platform/features/comptabilite" className="text-sm text-blue-200 hover:text-white transition-colors">Comptabilite</Link></li>
+              <li><Link href="/platform/features/formation" className="text-sm text-blue-200 hover:text-white transition-colors">Formation (LMS)</Link></li>
               <li><Link href="/pricing" className="text-sm text-blue-200 hover:text-white transition-colors">Tarifs</Link></li>
-              <li><Link href="/securite" className="text-sm text-blue-200 hover:text-white transition-colors">Securite</Link></li>
-              <li><Link href="/demo" className="text-sm text-blue-200 hover:text-white transition-colors">Demande de demo</Link></li>
             </ul>
           </div>
 
-          {/* Company */}
+          {/* Solutions */}
+          <div>
+            <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Solutions</h3>
+            <ul className="space-y-2.5">
+              <li><Link href="/platform/pour/ecommerce" className="text-sm text-blue-200 hover:text-white transition-colors">Pour le e-commerce</Link></li>
+              <li><Link href="/platform/pour/services" className="text-sm text-blue-200 hover:text-white transition-colors">Pour les services</Link></li>
+              <li><Link href="/platform/pour/coaching" className="text-sm text-blue-200 hover:text-white transition-colors">Pour le coaching</Link></li>
+              <li><Link href="/platform/calculateur-roi" className="text-sm text-blue-200 hover:text-white transition-colors">Calculateur ROI</Link></li>
+              <li><Link href="/platform/comparer" className="text-sm text-blue-200 hover:text-white transition-colors">Comparaison</Link></li>
+            </ul>
+          </div>
+
+          {/* Entreprise */}
           <div>
             <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Entreprise</h3>
             <ul className="space-y-2.5">
               <li><Link href="/a-propos" className="text-sm text-blue-200 hover:text-white transition-colors">A propos</Link></li>
               <li><Link href="/a-propos/mission" className="text-sm text-blue-200 hover:text-white transition-colors">Mission</Link></li>
-              <li><Link href="/a-propos/valeurs" className="text-sm text-blue-200 hover:text-white transition-colors">Valeurs</Link></li>
               <li><Link href="/a-propos/equipe" className="text-sm text-blue-200 hover:text-white transition-colors">Equipe</Link></li>
               <li><Link href="/carrieres" className="text-sm text-blue-200 hover:text-white transition-colors">Carrieres</Link></li>
               <li><Link href="/contact" className="text-sm text-blue-200 hover:text-white transition-colors">Contact</Link></li>
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Ressources</h3>
-            <ul className="space-y-2.5">
               <li><Link href="/blog" className="text-sm text-blue-200 hover:text-white transition-colors">Blog</Link></li>
-              <li><Link href="/docs" className="text-sm text-blue-200 hover:text-white transition-colors">Documentation</Link></li>
-              <li><Link href="/aide" className="text-sm text-blue-200 hover:text-white transition-colors">Aide</Link></li>
-              <li><Link href="/api/health" className="text-sm text-blue-200 hover:text-white transition-colors">Statut</Link></li>
             </ul>
           </div>
 
