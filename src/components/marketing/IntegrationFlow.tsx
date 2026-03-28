@@ -105,7 +105,7 @@ export function IntegrationFlow({ currentSlug, integrations }: IntegrationFlowPr
           return (
             <Link
               key={mod.slug}
-              href={`/modules/${mod.slug}`}
+              href={`/platform/features/${mod.slug}`}
               className={`integration-flow__node ${visible ? 'integration-flow__node--visible' : ''}`}
               style={{
                 left: `${x}%`,
