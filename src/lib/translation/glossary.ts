@@ -106,8 +106,7 @@ export const UNITS = [
 // Noms de marque / entreprise
 export const BRAND_TERMS = [
   'Attitudes VIP',
-  'BioCycle',
-  'Peptide Plus+',
+  'Attitudes',
   'AureliaPay',
 ];
 

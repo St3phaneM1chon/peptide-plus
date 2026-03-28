@@ -90,13 +90,13 @@ const PROJECT_LABELS: Record<string, { label: string; icon: typeof Database; des
     icon: Activity,
     desc: 'Scripts, Knowledge Graph, vecteurs, sessions, hooks',
   },
-  'peptide-db': {
-    label: 'Peptide-Plus (Base de donnees)',
+  'app-db': {
+    label: 'Application (Base de donnees)',
     icon: Database,
     desc: 'Commandes, clients, produits, comptabilite, factures',
   },
-  'peptide-code': {
-    label: 'Peptide-Plus (Code source)',
+  'app-code': {
+    label: 'Application (Code source)',
     icon: FileArchive,
     desc: 'src/, prisma/, config, public/',
   },

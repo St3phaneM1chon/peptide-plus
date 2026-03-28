@@ -219,7 +219,7 @@ export default function SubscriptionsPage() {
             {t('subscriptions.title') || 'Subscribe & Save'}
           </h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
-            {t('subscriptions.subtitle') || 'Never run out of your essential peptides. Set up automatic deliveries and save up to 20% on every order.'}
+            {t('subscriptions.subtitle') || 'Never run out of your essential products. Set up automatic deliveries and save up to 20% on every order.'}
           </p>
 
           <div className="flex flex-wrap justify-center gap-6 mt-8">

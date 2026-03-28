@@ -682,7 +682,7 @@ function SearchPageInner() {
                       {t('search.startSearching') || 'Start searching'}
                     </p>
                     <p className="text-neutral-500 mb-6">
-                      {t('search.enterKeyword') || 'Enter a keyword above to find research peptides.'}
+                      {t('search.enterKeyword') || 'Enter a keyword above to find products.'}
                     </p>
                   </>
                 )}

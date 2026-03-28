@@ -383,7 +383,7 @@ export default function KnowledgeBasePage() {
                   value={formTags}
                   onChange={(e) => setFormTags(e.target.value)}
                   className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
-                  placeholder="peptide, bpc-157, research"
+                  placeholder="produit, recherche, qualité"
                 />
               </div>
             </div>

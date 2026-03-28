@@ -3,7 +3,7 @@
  * Stripe webhook handler for Attitudes VIP (Koraline SaaS billing).
  * Handles subscription lifecycle events.
  *
- * Separate from BioCycle's /api/payments/webhook (different Stripe account).
+ * Separate from the main /api/payments/webhook (different Stripe account).
  */
 
 export const dynamic = 'force-dynamic';

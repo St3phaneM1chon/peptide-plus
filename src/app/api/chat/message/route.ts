@@ -371,7 +371,7 @@ export async function POST(request: NextRequest) {
           // FIX F-034: Sanitize bot response to prevent prompt injection XSS
           content: stripHtml(botResponse.content),
           sender: 'BOT',
-          senderName: 'BioCycle Assistant',
+          senderName: 'Attitudes VIP Assistant',
           language: conversation.visitorLanguage,
           isFromBot: true,
         },
@@ -382,7 +382,7 @@ export async function POST(request: NextRequest) {
         type: 'message',
         conversationId,
         userId: undefined,
-        userName: 'BioCycle Assistant',
+        userName: 'Attitudes VIP Assistant',
         data: { message: savedBotMessage, botMessage: true },
         timestamp: Date.now(),
       }).catch((err) => { logger.error('[chat/message] Non-blocking operation failed:', { error: err instanceof Error ? err.message : String(err) }); });

@@ -347,7 +347,7 @@ export default function EstimateClientPortalPage() {
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-2xl font-bold">{process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP'}</h1>
-                <p className="text-indigo-200 text-sm mt-1">Research-grade peptides</p>
+                <p className="text-indigo-200 text-sm mt-1">{t('estimate.tagline') || 'Produits de qualité supérieure'}</p>
               </div>
               <div className="text-end">
                 <p className="text-sm text-indigo-200">{t('estimate.estimateNumber')}</p>

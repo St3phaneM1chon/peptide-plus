@@ -1,5 +1,5 @@
 /**
- * Zoom API Integration - BioCycle Peptides
+ * Zoom API Integration - Attitudes VIP
  * Used for: customer support calls, product demos, webinars
  */
 

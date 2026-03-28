@@ -88,7 +88,7 @@ export default function RewardsPage() {
   };
 
   const copyReferralCode = () => {
-    navigator.clipboard.writeText(`https://peptideplus.ca/ref/${referralCode}`);
+    navigator.clipboard.writeText(`${typeof window !== 'undefined' ? window.location.origin : 'https://attitudes.vip'}/ref/${referralCode}`);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
@@ -395,7 +395,7 @@ export default function RewardsPage() {
                     <input
                       type="text"
                       readOnly
-                      value={`https://peptideplus.ca/ref/${referralCode}`}
+                      value={`${typeof window !== 'undefined' ? window.location.origin : 'https://attitudes.vip'}/ref/${referralCode}`}
                       aria-label={t('rewards.yourReferralLink') || 'Your referral link'}
                       className="flex-1 px-3 py-2 bg-white/20 rounded-lg text-white text-sm"
                     />

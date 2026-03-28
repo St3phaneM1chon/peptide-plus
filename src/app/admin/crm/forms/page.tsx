@@ -90,11 +90,11 @@ export default function LeadFormsPage() {
 
   const getEmbedCode = (formId: string, form: LeadForm) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com';
-    return `<!-- BioCycle Lead Capture Form -->
-<div id="biocycle-form-${formId}"></div>
+    return `<!-- Lead Capture Form -->
+<div id="lead-form-${formId}"></div>
 <script>
 (function() {
-  var container = document.getElementById('biocycle-form-${formId}');
+  var container = document.getElementById('lead-form-${formId}');
   var form = document.createElement('form');
   form.style.maxWidth = '500px';
   form.style.fontFamily = 'system-ui, sans-serif';

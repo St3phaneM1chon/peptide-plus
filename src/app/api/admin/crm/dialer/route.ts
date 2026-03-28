@@ -185,7 +185,7 @@ export const POST = withAdminGuard(
     const { campaignName, callerIdNumber, leadIds, filters } = parsed.data;
 
     // Find a company to associate the campaign with.
-    // For a single-tenant BioCycle setup, use the first active company.
+    // For a single-tenant setup, use the first active company.
     const company = await prisma.company.findFirst({
       where: { isActive: true },
       select: { id: true },

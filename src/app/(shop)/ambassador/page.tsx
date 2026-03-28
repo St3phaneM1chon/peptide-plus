@@ -347,7 +347,7 @@ export default function AmbassadorPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
                   { q: t('ambassador.faq1Q') || 'How do I get paid?', a: t('ambassador.faq1A') || 'Payments are made monthly via PayPal or bank transfer for earnings over $50.' },
-                  { q: t('ambassador.faq2Q') || 'Is there a minimum audience size?', a: t('ambassador.faq2A') || 'No minimum required! We welcome ambassadors of all sizes who are passionate about peptide research.' },
+                  { q: t('ambassador.faq2Q') || 'Is there a minimum audience size?', a: t('ambassador.faq2A') || 'No minimum required! We welcome ambassadors of all sizes who are passionate about our products.' },
                   { q: t('ambassador.faq3Q') || 'Can I promote on any platform?', a: t('ambassador.faq3A') || 'Yes! Blog, YouTube, Instagram, TikTok, email lists - wherever your audience is.' },
                   { q: t('ambassador.faq4Q') || 'How long does the cookie last?', a: t('ambassador.faq4A') || 'Our tracking cookie lasts 30 days, so you get credit for sales within that window.' },
                   { q: t('ambassador.faq5Q') || 'Do I need to be a customer first?', a: t('ambassador.faq5A') || 'While not required, it helps! Authentic recommendations from users perform best.' },

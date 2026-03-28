@@ -115,7 +115,7 @@ export const POST = withAdminGuard(
             text: sanitizedTextBody || undefined,
             from: {
               email: process.env.SMTP_FROM || 'support@attitudes.vip',
-              name: session.user.name || 'BioCycle Support',
+              name: session.user.name || 'Attitudes VIP Support',
             },
             replyTo: process.env.SMTP_FROM || 'support@attitudes.vip',
             unsubscribeUrl,

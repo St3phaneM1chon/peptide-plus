@@ -1,5 +1,5 @@
 /**
- * Chat Module - BioCycle Peptides
+ * Chat Module - Attitudes VIP
  * Exports centralisés
  */
 

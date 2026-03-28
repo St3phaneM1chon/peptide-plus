@@ -1,5 +1,5 @@
 /**
- * SERVICE DE TRADUCTION AUTOMATIQUE - BioCycle Peptides
+ * SERVICE DE TRADUCTION AUTOMATIQUE - Attitudes VIP
  *
  * Utilise GPT-4o-mini (Batch API pour masse, Standard pour urgent)
  * avec glossaire peptides et cache en mémoire.

@@ -19,7 +19,7 @@ interface HashtagSuggestion {
 
 const BRAND_HASHTAGS: HashtagSuggestion[] = [
   { tag: '#AttitudesVIP', category: 'brand', priority: 10 },
-  { tag: '#BioCycle', category: 'brand', priority: 9 },
+  { tag: '#AttitudesVIP', category: 'brand', priority: 9 },
   { tag: '#PeptideResearch', category: 'brand', priority: 8 },
 ];
 

@@ -20,8 +20,8 @@ export const LOYALTY_EMAIL_TRIGGERS: LoyaltyEmailTrigger[] = [
     name: 'Loyalty Welcome',
     nameFr: 'Bienvenue fidélité',
     description: 'Sent when user first joins loyalty program',
-    subject: 'Welcome to BioCycle Rewards!',
-    subjectFr: 'Bienvenue au programme fidélité BioCycle!',
+    subject: 'Welcome to Attitudes VIP Rewards!',
+    subjectFr: 'Bienvenue au programme fidélité Attitudes VIP!',
   },
   {
     id: 'tier-upgrade',
@@ -56,8 +56,8 @@ export const LOYALTY_EMAIL_TRIGGERS: LoyaltyEmailTrigger[] = [
     name: 'Monthly Summary',
     nameFr: 'Résumé mensuel',
     description: 'Monthly points and activity summary',
-    subject: 'Your BioCycle Rewards Summary - {{month}}',
-    subjectFr: 'Votre résumé fidélité BioCycle - {{month}}',
+    subject: 'Your Attitudes VIP Rewards Summary - {{month}}',
+    subjectFr: 'Votre résumé fidélité Attitudes VIP - {{month}}',
   },
 ];
 

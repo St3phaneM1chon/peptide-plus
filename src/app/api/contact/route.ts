@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     // Envoyer le message par email au support
     const result = await sendEmail({
-      to: { email: supportEmail, name: 'BioCycle Support' },
+      to: { email: supportEmail, name: 'Attitudes VIP Support' },
       subject: `[Contact] ${subject} - ${name}`,
       replyTo: email,
       html: `

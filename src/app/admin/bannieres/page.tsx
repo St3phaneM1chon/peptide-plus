@@ -675,7 +675,7 @@ export default function BannieresPage() {
                   <Input
                     value={form.slug}
                     onChange={(e) => { setForm({ ...form, slug: e.target.value }); }}
-                    placeholder="research-peptides"
+                    placeholder="promotion-printemps"
                     autoFocus
                     className={formErrors.slug ? 'border-red-300 focus:ring-red-500' : ''}
                   />

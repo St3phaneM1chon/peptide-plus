@@ -210,9 +210,9 @@ export default function SocialSchedulerPage() {
 
   const generateCaption = () => {
     const captions = [
-      '🧬 Peptides de recherche de qualité supérieure, maintenant disponibles chez Attitudes VIP! Certificat d\'analyse inclus avec chaque commande. #peptides #research #quality',
-      '🔬 Vous cherchez des peptides de recherche fiables? Notre laboratoire garantit une pureté de 98%+ sur chaque lot. Découvrez notre catalogue! #biocycle #science',
-      '💎 Livraison gratuite sur les commandes de 150$+! Profitez de nos peptides certifiés avec analyse HPLC. attitudes.vip #research #peptides',
+      '🧬 Produits de qualité supérieure, maintenant disponibles chez Attitudes VIP! Certificat d\'analyse inclus avec chaque commande. #quality #attitudesvip',
+      '🔬 Vous cherchez des produits de recherche fiables? Notre laboratoire garantit une pureté de 98%+ sur chaque lot. Découvrez notre catalogue! #attitudesvip #science',
+      '💎 Livraison gratuite sur les commandes de 150$+! Profitez de nos produits certifiés avec analyse HPLC. attitudes.vip #quality #attitudesvip',
     ];
     setNewPost(prev => ({ ...prev, content: captions[Math.floor(Math.random() * captions.length)] }));
     toast.success(t('admin.media.socialScheduler.aiCaptionGenerated'));

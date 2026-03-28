@@ -1,5 +1,5 @@
 /**
- * WhatsApp Business API Integration - BioCycle Peptides
+ * WhatsApp Business API Integration - Attitudes VIP
  * Used for: order notifications, customer support, marketing messages
  */
 

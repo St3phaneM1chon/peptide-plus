@@ -1,5 +1,5 @@
 /**
- * Service OpenAI pour le Chat - BioCycle Peptides
+ * Service OpenAI pour le Chat - Attitudes VIP
  * Traduction automatique + Chatbot IA spécialisé
  */
 

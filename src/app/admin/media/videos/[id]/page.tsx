@@ -1288,7 +1288,7 @@ export default function VideoDetailPage() {
                   value={ytForm.tags}
                   onChange={e => setYtForm(prev => ({ ...prev, tags: e.target.value }))}
                   className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
-                  placeholder="peptides, research, biocycle"
+                  placeholder="produits, recherche, attitudes vip"
                 />
               </div>
 

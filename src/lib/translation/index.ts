@@ -1,5 +1,5 @@
 /**
- * MODULE DE TRADUCTION AUTOMATIQUE - BioCycle Peptides
+ * MODULE DE TRADUCTION AUTOMATIQUE - Attitudes VIP
  *
  * Usage:
  *   import { translateEntity, withTranslation, enqueue } from '@/lib/translation';

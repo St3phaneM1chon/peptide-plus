@@ -1,5 +1,5 @@
 /**
- * FILE D'ATTENTE DE TRADUCTION PERSISTANTE - BioCycle Peptides
+ * FILE D'ATTENTE DE TRADUCTION PERSISTANTE - Attitudes VIP
  *
  * Queue backed by PostgreSQL (via Prisma TranslationJob model).
  * Survit aux redémarrages du serveur.

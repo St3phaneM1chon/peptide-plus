@@ -428,7 +428,7 @@ export default function SEOPage() {
   const handleRibbonResetDefaults = useCallback(() => {
     setGlobalSettings({
       siteName: 'Attitudes VIP',
-      siteUrl: 'https://biocycle.ca',
+      siteUrl: 'https://attitudes.vip',
       defaultOgImage: '/og-image.jpg',
       googleAnalyticsId: '',
       googleTagManagerId: '',
@@ -845,7 +845,7 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
                   setAiLoading(editingPage?.id || '');
                   await new Promise(resolve => setTimeout(resolve, 800));
                   const title = editTitle || editingPage?.path || '';
-                  const suggestion = `${title} - ${globalSettings.siteName}. Découvrez nos peptides de recherche de haute qualité avec certificat d'analyse.`.substring(0, 160);
+                  const suggestion = `${title} - ${globalSettings.siteName}. Découvrez nos produits de haute qualité avec certificat d'analyse.`.substring(0, 160);
                   setEditDescription(suggestion);
                   setAiLoading(null);
                   toast.success('Suggestion IA générée');

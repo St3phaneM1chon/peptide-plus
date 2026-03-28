@@ -6,7 +6,7 @@ const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
 
 export const metadata: Metadata = {
   title: 'Résultats de laboratoire et certificats d\'analyse',
-  description: `Consultez les résultats de tests de laboratoires tiers et les certificats d'analyse (COA) pour tous les peptides ${siteName}. Pureté vérifiée à 99 %+.`,
+  description: `Consultez les résultats de tests de laboratoires tiers et les certificats d'analyse (COA) pour tous les produits ${siteName}. Pureté vérifiée à 99 %+.`,
   openGraph: {
     title: `Résultats de laboratoire | ${siteName}`,
     description: 'Résultats de tests tiers et certificats d\'analyse (COA). Pureté vérifiée à 99 %+.',

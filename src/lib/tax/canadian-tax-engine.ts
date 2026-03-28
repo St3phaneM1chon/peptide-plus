@@ -254,7 +254,7 @@ const INTERNATIONAL_VAT_RATES: Record<string, { rate: number; name: string }> = 
  * I-TAX: Calculate VAT for international orders.
  * This extends calculateInternationalTax() with actual VAT rates for major countries.
  *
- * Note: BioCycle Peptides ships from Canada. For most B2C international sales,
+ * Note: Attitudes VIP ships from Canada. For most B2C international sales,
  * the customer's country VAT applies. For B2B with valid VAT numbers, VAT is
  * typically reverse-charged (rate = 0). VAT number validation is not implemented here.
  */

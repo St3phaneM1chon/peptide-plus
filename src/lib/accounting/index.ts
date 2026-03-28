@@ -27,7 +27,7 @@
  * lower-level Prisma calls directly, or extract shared logic into a common
  * journal-entry-factory.ts that both services can import.
  *
- * Comprehensive accounting functionality for BioCycle Peptides:
+ * Comprehensive accounting functionality for Attitudes VIP:
  * 
  * PHASE 1-2: Core Functionality
  * - Automatic journal entries from sales, refunds, and fees

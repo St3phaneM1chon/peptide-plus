@@ -553,7 +553,7 @@ export async function syncPayPalTransactions(
 
   // Also fetch PayPal settings for payee email
   const settings = await prisma.accountingSettings.findFirst();
-  const payeeEmail = settings?.companyEmail || 'business@biocycle.ca';
+  const payeeEmail = settings?.companyEmail || 'business@attitudes.vip';
 
   // Load configurable fee rates (cached 5min, DB-backed with hardcoded fallback)
   const feeConfig = await getPaymentProcessorFees();

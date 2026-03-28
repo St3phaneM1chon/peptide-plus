@@ -351,5 +351,5 @@ function extractName(str: string | undefined): string | undefined {
 
 function generateMessageId(): string {
   // AMELIORATION: Use crypto.randomUUID instead of Math.random for message IDs
-  return `<${Date.now()}.${crypto.randomUUID().replace(/-/g, '')}@biocycle.ca>`;
+  return `<${Date.now()}.${crypto.randomUUID().replace(/-/g, '')}@attitudes.vip>`;
 }

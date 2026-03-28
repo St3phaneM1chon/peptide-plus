@@ -87,7 +87,7 @@ export const QC_EMPLOYER_2026 = {
   CNT_MAX_INSURABLE: 98_000,
 
   // WSDRF - Workforce Skills Development (Loi sur les competences - 1%)
-  // Only for employers with payroll > $2M; BioCycle is below threshold
+  // Only for employers with payroll > $2M; below threshold currently
   WSDRF_RATE: 0.01,
   WSDRF_THRESHOLD: 2_000_000,
 } as const;
@@ -315,7 +315,7 @@ export function calculateProvincialTax(
     return calculateQuebecTax(annualizedIncome, tdCredit, payPeriods);
   }
 
-  // Simplified estimate for other provinces (not primary focus for BioCycle)
+  // Simplified estimate for other provinces (not primary focus currently)
   // Use an average effective rate of ~10% for income > personal exemption
   const taxableIncome = Math.max(0, annualizedIncome - 12_000);
   const tax = taxableIncome * 0.10;

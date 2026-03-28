@@ -97,7 +97,7 @@ const RESPONSE_TEMPLATES = [
   {
     id: 'thank-positive',
     label: 'Remerciement (avis positif)',
-    text: 'Merci beaucoup pour votre avis positif ! Nous sommes ravis que nos produits vous donnent satisfaction. Votre retour nous motive a continuer d\'offrir des peptides de la plus haute qualite.',
+    text: 'Merci beaucoup pour votre avis positif ! Nous sommes ravis que nos produits vous donnent satisfaction. Votre retour nous motive a continuer d\'offrir des produits de la plus haute qualite.',
   },
   {
     id: 'thank-constructive',
@@ -112,7 +112,7 @@ const RESPONSE_TEMPLATES = [
   {
     id: 'quality',
     label: 'Assurance qualite',
-    text: 'Merci pour votre avis. La qualite de nos peptides est notre priorite absolue. Chaque lot est teste en laboratoire independant. Si vous avez la moindre question sur nos produits, contactez-nous a support@biocycle.ca.',
+    text: 'Merci pour votre avis. La qualite de nos produits est notre priorite absolue. Chaque lot est teste en laboratoire independant. Si vous avez la moindre question sur nos produits, contactez-nous via notre page de support.',
   },
 ];
 

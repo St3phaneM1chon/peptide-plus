@@ -593,7 +593,7 @@ export function isEUCountry(countryCode: string): boolean {
  * Check if B2B reverse charge applies for a given country and buyer context.
  * Reverse charge means the buyer accounts for VAT (seller charges 0%).
  *
- * For BioCycle Peptides (Canadian seller):
+ * For Attitudes VIP (Canadian seller):
  * - Selling B2B to EU: reverse charge applies if buyer has valid VAT ID
  * - Selling B2C to EU: destination VAT applies (seller must register or use OSS)
  * - Selling to UK B2B: reverse charge may apply (buyer self-accounts)

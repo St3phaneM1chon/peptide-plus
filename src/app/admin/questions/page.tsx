@@ -105,7 +105,7 @@ export default function QuestionsPage() {
       setQuestions(prev => prev.map(q => q.id === id ? {
         ...q,
         answer: answerText,
-        answeredBy: 'Admin BioCycle',
+        answeredBy: 'Admin',
         answeredAt: new Date().toISOString(),
       } : q));
       setShowAnswerModal(false);

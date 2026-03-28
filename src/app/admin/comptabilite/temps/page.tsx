@@ -1356,7 +1356,7 @@ export default function TimeTrackingPage() {
                   value={projectForm.name}
                   onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
                   className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Site Web BioCycle"
+                  placeholder="Site Web Attitudes VIP"
                 />
               </div>
               <div>

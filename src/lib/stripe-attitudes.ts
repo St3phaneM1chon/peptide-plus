@@ -1,7 +1,7 @@
 /**
  * STRIPE CLIENT — Attitudes VIP (Koraline SaaS Platform Billing)
  *
- * Compte Stripe séparé de BioCycle. Utilisé UNIQUEMENT pour :
+ * Compte Stripe séparé (platform). Utilisé UNIQUEMENT pour :
  * - Facturation des abonnements Koraline (plans + modules + licences)
  * - Factures automatiques aux clients Koraline
  * - Gestion des paiements récurrents de la plateforme
@@ -16,7 +16,7 @@ let _stripeAttitudes: Stripe | null = null;
 
 /**
  * Lazy-initialized Stripe client for Attitudes VIP platform billing.
- * Uses STRIPE_ATTITUDES_SECRET_KEY (separate from BioCycle's STRIPE_SECRET_KEY).
+ * Uses STRIPE_ATTITUDES_SECRET_KEY (separate from the main STRIPE_SECRET_KEY).
  */
 export function getStripeAttitudes(): Stripe {
   if (!_stripeAttitudes) {

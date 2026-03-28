@@ -333,7 +333,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
                   value={form.tags}
                   onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
                   className={inputCls}
-                  placeholder="peptide, research, premium"
+                  placeholder="produit, recherche, premium"
                 />
               </div>
             </div>

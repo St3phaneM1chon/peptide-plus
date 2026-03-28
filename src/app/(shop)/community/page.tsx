@@ -440,9 +440,9 @@ function CommunityContent() {
               <p className="text-sm text-purple-200">{t('community.statsMembers') || 'Members'}</p>
             </div>
           </div>
-          {/* F091 FIX: Research disclaimer for peptide content */}
+          {/* F091 FIX: Research disclaimer for community content */}
           <p className="text-xs text-purple-300 mt-4">
-            {t('community.researchDisclaimer') || 'This community is for research discussion purposes only. Content shared here does not constitute medical advice. All peptides discussed are for research use only.'}
+            {t('community.researchDisclaimer') || 'This community is for discussion purposes only. Content shared here does not constitute medical advice. All products discussed are for research use only.'}
           </p>
         </div>
       </section>

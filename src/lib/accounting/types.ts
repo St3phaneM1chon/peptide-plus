@@ -39,7 +39,7 @@ export type AccountingPeriodStatus = 'OPEN' | 'IN_REVIEW' | 'CLOSED' | 'LOCKED';
 
 export type TaxType = 'TPS' | 'TVQ' | 'TVH' | 'PST' | 'GST' | 'SALES_TAX' | 'VAT';
 
-// Account codes for BioCycle (Quebec NCECF structure)
+// Account codes (Quebec NCECF structure)
 export const ACCOUNT_CODES = {
   // Assets (1000-1999)
   CASH_BANK_MAIN: '1010',

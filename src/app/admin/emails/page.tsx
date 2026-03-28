@@ -1647,7 +1647,7 @@ export default function EmailsPage() {
                 <Input type="text" readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/inbound-email`} />
               </FormField>
               <FormField label={t('admin.emailConfig.receptionAddress')} hint={t('admin.emailConfig.receptionAddressHint')}>
-                <Input type="email" defaultValue={emailSettings['email.receptionAddress'] || 'support@biocycle.ca'} data-field="receptionAddress" />
+                <Input type="email" defaultValue={emailSettings['email.receptionAddress'] || 'support@attitudes.vip'} data-field="receptionAddress" />
               </FormField>
               <FormField label={t('admin.emailConfig.webhookSecret')}>
                 <Input type="password" defaultValue={emailSettings['email.webhookSecret'] || ''} placeholder={t('admin.emailConfig.webhookSecretPlaceholder')} data-field="webhookSecret" />

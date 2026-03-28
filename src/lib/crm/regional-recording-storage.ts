@@ -135,7 +135,7 @@ const DEFAULT_REGIONS: RegionalStorageConfig[] = [
   {
     regionCode: 'US',
     regionName: 'United States',
-    storageEndpoint: 'https://biocyclerecordings-us.blob.core.windows.net',
+    storageEndpoint: 'https://attitudesrecordings-us.blob.core.windows.net',
     retentionDays: 365,
     isActive: true,
     countries: ['US'],
@@ -143,7 +143,7 @@ const DEFAULT_REGIONS: RegionalStorageConfig[] = [
   {
     regionCode: 'CA',
     regionName: 'Canada',
-    storageEndpoint: 'https://biocyclerecordings-ca.blob.core.windows.net',
+    storageEndpoint: 'https://attitudesrecordings-ca.blob.core.windows.net',
     retentionDays: 730,
     isActive: true,
     countries: ['CA'],
@@ -151,7 +151,7 @@ const DEFAULT_REGIONS: RegionalStorageConfig[] = [
   {
     regionCode: 'EU',
     regionName: 'European Union',
-    storageEndpoint: 'https://biocyclerecordings-eu.blob.core.windows.net',
+    storageEndpoint: 'https://attitudesrecordings-eu.blob.core.windows.net',
     retentionDays: 365,
     isActive: true,
     countries: Object.entries(COUNTRY_REGION_MAP)
@@ -161,7 +161,7 @@ const DEFAULT_REGIONS: RegionalStorageConfig[] = [
   {
     regionCode: 'BR',
     regionName: 'Brazil',
-    storageEndpoint: 'https://biocyclerecordings-br.blob.core.windows.net',
+    storageEndpoint: 'https://attitudesrecordings-br.blob.core.windows.net',
     retentionDays: 365,
     isActive: false,
     countries: ['BR'],
@@ -169,7 +169,7 @@ const DEFAULT_REGIONS: RegionalStorageConfig[] = [
   {
     regionCode: 'APAC',
     regionName: 'Asia-Pacific',
-    storageEndpoint: 'https://biocyclerecordings-apac.blob.core.windows.net',
+    storageEndpoint: 'https://attitudesrecordings-apac.blob.core.windows.net',
     retentionDays: 365,
     isActive: false,
     countries: Object.entries(COUNTRY_REGION_MAP)

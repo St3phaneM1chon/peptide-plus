@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
           conversationId,
           direction: 'OUTBOUND',
           content: reply,
-          senderName: 'BioCycle Bot',
+          senderName: 'Attitudes VIP Bot',
           metadata: {
             aiGenerated: true,
             escalated: needsEscalation,
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
         conversationId: conversation.id,
         direction: 'OUTBOUND',
         content: reply,
-        senderName: 'BioCycle Bot',
+        senderName: 'Attitudes VIP Bot',
         metadata: {
           aiGenerated: true,
           escalated: needsEscalation,

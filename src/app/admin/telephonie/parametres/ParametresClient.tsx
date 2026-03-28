@@ -133,8 +133,8 @@ export default function ParametresClient({ settings: initial }: { settings: Reco
         body: JSON.stringify({
           action: 'validate',
           address: {
-            firstName: 'BioCycle',
-            lastName: 'Peptides',
+            firstName: 'Attitudes',
+            lastName: 'VIP',
             streetAddress: e911Address,
             city: e911City,
             stateProvince: e911Province,

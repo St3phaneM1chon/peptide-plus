@@ -53,8 +53,8 @@ export default function ParametresPage() {
     // General
     siteName: 'Attitudes VIP',
     logoUrl: '',
-    siteEmail: 'info@biocycle.ca',
-    supportEmail: 'support@biocycle.ca',
+    siteEmail: 'info@attitudes.vip',
+    supportEmail: 'support@attitudes.vip',
     phone: '+1 (888) 555-0123',
     timezone: 'America/Toronto',
 
@@ -162,8 +162,8 @@ export default function ParametresPage() {
       setSettings({
         siteName: ss.companyName || 'Attitudes VIP',
         logoUrl: ss.logoUrl || '',
-        siteEmail: ss.email || 'info@biocycle.ca',
-        supportEmail: ss.supportEmail || 'support@biocycle.ca',
+        siteEmail: ss.email || 'info@attitudes.vip',
+        supportEmail: ss.supportEmail || 'support@attitudes.vip',
         phone: ss.phone || '+1 (888) 555-0123',
         timezone: getSettingValue(kv, 'timezone', 'America/Toronto'),
         currency: ss.defaultCurrency || 'CAD',
@@ -265,8 +265,8 @@ export default function ParametresPage() {
     setSettings({
       siteName: 'Attitudes VIP',
       logoUrl: '',
-      siteEmail: 'info@biocycle.ca',
-      supportEmail: 'support@biocycle.ca',
+      siteEmail: 'info@attitudes.vip',
+      supportEmail: 'support@attitudes.vip',
       phone: '+1 (888) 555-0123',
       timezone: 'America/Toronto',
       currency: 'CAD',

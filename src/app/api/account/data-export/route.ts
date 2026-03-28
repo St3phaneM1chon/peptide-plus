@@ -534,7 +534,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
     // Return as downloadable file in requested format
     if (format === 'csv') {
       const csvContent = jsonToCsv(exportData);
-      const filename = `biocycle-data-export-${userId.substring(0, 8)}-${Date.now()}.csv`;
+      const filename = `data-export-${userId.substring(0, 8)}-${Date.now()}.csv`;
 
       return new NextResponse(csvContent, {
         status: 200,
@@ -548,7 +548,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
 
     // Default: JSON format
     const jsonContent = JSON.stringify(exportData, null, 2);
-    const filename = `biocycle-data-export-${userId.substring(0, 8)}-${Date.now()}.json`;
+    const filename = `data-export-${userId.substring(0, 8)}-${Date.now()}.json`;
 
     return new NextResponse(jsonContent, {
       status: 200,

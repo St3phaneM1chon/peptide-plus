@@ -47,7 +47,7 @@ export default function LabResultsClient({ coaData }: LabResultsClientProps) {
             <div className="text-center p-6">
               <div className="text-4xl mb-3">✅</div>
               <h2 className="font-bold text-lg mb-1">{t('labResults.purity') || 'Pureté 99%+'}</h2>
-              <p className="text-sm text-gray-600">{t('labResults.purityDesc') || 'Garantie sur tous nos peptides'}</p>
+              <p className="text-sm text-gray-600">{t('labResults.purityDesc') || 'Garantie sur tous nos produits'}</p>
             </div>
             <div className="text-center p-6">
               <div className="text-4xl mb-3">📄</div>

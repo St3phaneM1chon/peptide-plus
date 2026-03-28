@@ -1,5 +1,5 @@
 /**
- * Microsoft Teams Integration - BioCycle Peptides
+ * Microsoft Teams Integration - Attitudes VIP
  * Used for: internal notifications, order alerts, team collaboration
  */
 

@@ -1,5 +1,5 @@
 /**
- * AI Copilot Service - BioCycle Peptides Admin
+ * AI Copilot Service - Attitudes VIP Admin
  *
  * Context-aware AI assistant for admin users.
  * Provides: customer summaries, anomaly detection, email drafts,
