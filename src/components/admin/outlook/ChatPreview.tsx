@@ -7,7 +7,7 @@ import { useRecentChats } from '@/hooks/useRecentChats';
 
 export default function ChatPreview() {
   const { t, locale } = useI18n();
-  const { chats, loading } = useRecentChats();
+  const { chats, loading, stopped, retry } = useRecentChats();
 
   return (
     <div className="border-t border-slate-200 flex flex-col" style={{ maxHeight: '35%' }}>
@@ -34,6 +34,18 @@ export default function ChatPreview() {
             >
               <span className="sr-only">{t('common.loading')}</span>
             </div>
+          </div>
+        ) : stopped ? (
+          <div className="p-3 text-center">
+            <p className="text-xs text-slate-400">
+              {t('admin.chat.unavailable') || 'Chat unavailable'}
+            </p>
+            <button
+              onClick={retry}
+              className="mt-1 text-xs text-indigo-500 hover:text-indigo-700 underline"
+            >
+              {t('common.retry') || 'Retry'}
+            </button>
           </div>
         ) : chats.length === 0 ? (
           <p className="p-3 text-xs text-slate-400 text-center">
