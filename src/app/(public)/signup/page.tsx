@@ -1,10 +1,12 @@
 'use client';
 
 /**
- * Page d'inscription Koraline — Choisir un plan et créer un compte
+ * Page d'inscription Koraline — Choisir un plan et creer un compte
  * URL: /signup?plan=essential|pro|enterprise
  *
- * Flow: Choisir plan -> Remplir infos -> Stripe Checkout -> Onboarding
+ * Flow:
+ *   - Essai gratuit (defaut): Choisir plan -> Remplir infos + mot de passe -> Onboarding
+ *   - Paiement direct: Choisir plan -> Remplir infos -> Stripe Checkout -> Onboarding
  *
  * Supports:
  * - ?plan=essential|pro|enterprise -> pre-select plan, skip to info step
@@ -14,7 +16,7 @@
 import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { KORALINE_PLANS, type KoralinePlan } from '@/lib/stripe-attitudes';
+import { KORALINE_PLANS, KORALINE_TRIAL_DAYS, type KoralinePlan } from '@/lib/stripe-attitudes';
 
 function isValidPlan(plan: string | null): plan is KoralinePlan {
   return plan !== null && plan in KORALINE_PLANS;
@@ -31,7 +33,7 @@ function SignupContent() {
 
   const [selectedPlan, setSelectedPlan] = useState<KoralinePlan>(initialPlan);
   const [step, setStep] = useState<'plan' | 'info'>(initialStep);
-  const [form, setForm] = useState({ slug: '', name: '', email: '' });
+  const [form, setForm] = useState({ slug: '', name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
@@ -82,10 +84,17 @@ function SignupContent() {
     };
   }, [form.slug]);
 
-  const handleCheckout = async (e: React.FormEvent) => {
+  // Start free trial (default signup flow)
+  const handleTrialSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    if (form.password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caracteres.');
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/platform/checkout', {
@@ -96,6 +105,8 @@ function SignupContent() {
           slug: form.slug,
           name: form.name,
           email: form.email,
+          password: form.password,
+          trial: true,
         }),
       });
 
@@ -106,16 +117,18 @@ function SignupContent() {
         return;
       }
 
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
+      // Redirect to onboarding (trial flow — no Stripe)
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
       }
     } catch {
-      setError('Erreur de connexion. Veuillez réessayer.');
+      setError('Erreur de connexion. Veuillez reessayer.');
     } finally {
       setLoading(false);
     }
   };
+
+  const trialDays = KORALINE_TRIAL_DAYS[selectedPlan];
 
   const plans = Object.entries(KORALINE_PLANS) as [KoralinePlan, typeof KORALINE_PLANS[KoralinePlan]][];
 
@@ -169,6 +182,9 @@ function SignupContent() {
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 Tout ce dont vous avez besoin pour vendre en ligne. Commerce, CRM, comptabilite, marketing — tout inclus dans une seule plateforme.
               </p>
+              <p className="mt-3 text-sm font-medium text-green-600">
+                Essai gratuit de 14 jours — aucune carte de credit requise
+              </p>
             </div>
 
             {/* Plans */}
@@ -176,6 +192,7 @@ function SignupContent() {
               {plans.map(([key, plan]) => {
                 const isSelected = selectedPlan === key;
                 const isPro = key === 'pro';
+                const planTrialDays = KORALINE_TRIAL_DAYS[key];
                 return (
                   <button
                     key={key}
@@ -191,13 +208,19 @@ function SignupContent() {
                         Populaire
                       </span>
                     )}
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.name}</h3>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
+                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                        {planTrialDays}j gratuit
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-500 mb-4">{plan.description}</p>
                     <div className="mb-4">
                       <span className="text-3xl font-bold text-gray-900">
                         {(plan.monthlyPrice / 100).toFixed(0)}$
                       </span>
                       <span className="text-gray-500">/mois</span>
+                      <span className="text-xs text-gray-400 ml-2">apres l&apos;essai</span>
                     </div>
                     <ul className="space-y-2">
                       {plan.features.map((feature, i) => (
@@ -222,10 +245,10 @@ function SignupContent() {
                 onClick={() => setStep('info')}
                 className="px-8 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors text-lg"
               >
-                Continuer avec {KORALINE_PLANS[selectedPlan].name}
+                Essayer {KORALINE_PLANS[selectedPlan].name} gratuitement
               </button>
               <p className="text-sm text-gray-400 mt-3">
-                Modules optionnels disponibles apres l&apos;inscription
+                Aucune carte de credit requise. Modules optionnels disponibles apres l&apos;inscription.
               </p>
             </div>
           </>
@@ -248,17 +271,24 @@ function SignupContent() {
                   </span>
                 </div>
 
-                {/* Plan summary */}
-                <div className="mb-5 p-3 bg-gray-50 rounded-lg">
+                {/* Trial badge */}
+                <div className="mb-5 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{KORALINE_PLANS[selectedPlan].description}</span>
-                    <span className="text-sm font-bold text-gray-900 whitespace-nowrap ml-3">
-                      {(KORALINE_PLANS[selectedPlan].monthlyPrice / 100).toFixed(0)}$/mois
+                    <div>
+                      <span className="text-sm font-semibold text-green-800">
+                        Essai gratuit {trialDays} jours
+                      </span>
+                      <span className="text-xs text-green-600 ml-2">
+                        Aucune carte de credit requise
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      puis {(KORALINE_PLANS[selectedPlan].monthlyPrice / 100).toFixed(0)}$/mois
                     </span>
                   </div>
                 </div>
 
-                <form onSubmit={handleCheckout} className="space-y-4">
+                <form onSubmit={handleTrialSignup} className="space-y-4">
                   <div>
                     <label htmlFor="signup-name" className="block text-sm font-medium text-gray-700 mb-1">
                       Nom de votre entreprise
@@ -339,6 +369,22 @@ function SignupContent() {
                     </p>
                   </div>
 
+                  <div>
+                    <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-1">
+                      Mot de passe
+                    </label>
+                    <input
+                      id="signup-password"
+                      type="password"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      placeholder="Minimum 8 caracteres"
+                      className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                      minLength={8}
+                    />
+                  </div>
+
                   {error && (
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
                       {error}
@@ -348,13 +394,16 @@ function SignupContent() {
                   <button
                     type="submit"
                     disabled={loading || slugAvailable === false}
-                    className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
-                    {loading ? 'Redirection vers le paiement...' : `Passer au paiement — ${(KORALINE_PLANS[selectedPlan].monthlyPrice / 100).toFixed(0)}$/mois`}
+                    {loading
+                      ? 'Creation de votre compte...'
+                      : `Commencer mon essai gratuit de ${trialDays} jours`
+                    }
                   </button>
 
                   <p className="text-xs text-gray-400 text-center">
-                    Paiement securise par Stripe. Annulable a tout moment.
+                    Aucune carte de credit requise. Annulable a tout moment.
                   </p>
                 </form>
               </div>
@@ -369,9 +418,9 @@ function SignupContent() {
                 </span>
                 <span className="flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                   </svg>
-                  Paiement Stripe
+                  {trialDays} jours gratuit
                 </span>
                 <span className="flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

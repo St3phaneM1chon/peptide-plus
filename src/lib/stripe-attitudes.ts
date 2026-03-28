@@ -85,6 +85,16 @@ export const KORALINE_PLANS = {
 export type KoralinePlan = keyof typeof KORALINE_PLANS;
 
 // ---------------------------------------------------------------------------
+// Free Trial Configuration
+// ---------------------------------------------------------------------------
+
+export const KORALINE_TRIAL_DAYS: Record<KoralinePlan, number> = {
+  essential: 14,
+  pro: 14,
+  enterprise: 7,
+} as const;
+
+// ---------------------------------------------------------------------------
 // Optional Modules — Add-on pricing
 // ---------------------------------------------------------------------------
 

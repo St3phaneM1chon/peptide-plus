@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { KORALINE_PLANS, KORALINE_MODULES, KORALINE_LICENSES } from '@/lib/stripe-attitudes';
+import { KORALINE_PLANS, KORALINE_MODULES, KORALINE_LICENSES, KORALINE_TRIAL_DAYS } from '@/lib/stripe-attitudes';
 import { JsonLd } from '@/components/seo/JsonLd';
 import {
   organizationSchema,
@@ -614,12 +614,16 @@ export default function PlatformLandingPage() {
               Choisissez le plan qui correspond a votre entreprise. Ajoutez des modules
               au besoin. Aucune commission sur vos ventes.
             </p>
+            <p className="mt-3 text-sm font-semibold text-green-600">
+              Essai gratuit de 14 jours — aucune carte de credit requise
+            </p>
           </div>
 
           {/* Plans */}
           <div className="grid md:grid-cols-3 gap-6 mb-20">
             {plans.map(([key, plan], index) => {
               const isPro = key === 'pro';
+              const planTrialDays = KORALINE_TRIAL_DAYS[key as keyof typeof KORALINE_TRIAL_DAYS];
               return (
                 <div
                   key={key}
@@ -634,13 +638,19 @@ export default function PlatformLandingPage() {
                       Populaire
                     </div>
                   )}
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+                    <span className="px-2.5 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                      {planTrialDays}j gratuit
+                    </span>
+                  </div>
                   <p className="text-sm text-gray-500 mb-6">{plan.description}</p>
                   <div className="mb-6">
                     <span className="text-4xl font-extrabold text-gray-900">
                       {(plan.monthlyPrice / 100).toFixed(0)}$
                     </span>
                     <span className="text-gray-500 text-sm font-medium"> CAD/mois</span>
+                    <span className="text-xs text-gray-400 ml-1">apres l&apos;essai</span>
                   </div>
                   <ul className="space-y-3 mb-8 flex-1">
                     {plan.features.map((feature, i) => (
@@ -664,7 +674,7 @@ export default function PlatformLandingPage() {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {index === 2 ? 'Nous contacter' : 'Commencer maintenant'}
+                    {index === 2 ? 'Nous contacter' : `Essai gratuit ${planTrialDays} jours`}
                   </Link>
                 </div>
               );

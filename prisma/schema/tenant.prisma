@@ -39,6 +39,11 @@ model Tenant {
   taxProvince         String    @default("QC")            // Province du tenant (pour déterminer les taxes applicables)
   taxConfig           Json      @default("{}")            // Config avancée : {"gst":true,"qst":true,"pst":false,"rates_override":{}}
 
+  // Free Trial
+  isTrialing         Boolean   @default(false)
+  trialStartedAt     DateTime?
+  trialEndsAt        DateTime?
+
   // Stripe
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique

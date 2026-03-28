@@ -19,6 +19,7 @@ import AICopilotPanel from '@/components/admin/AICopilotPanel';
 import { Sparkles } from 'lucide-react';
 import { SoftphoneProvider } from '@/components/voip/SoftphoneProvider';
 import Softphone from '@/components/voip/Softphone';
+import TrialBanner from '@/components/admin/TrialBanner';
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -175,6 +176,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         <main id="main-content" className="flex-1 overflow-y-auto outlook-scroll bg-[var(--k-bg-base)]" tabIndex={-1}>
           <div className="p-4 pb-16 lg:p-6 lg:pb-6">
             <Breadcrumbs />
+            <TrialBanner />
             {children}
           </div>
         </main>

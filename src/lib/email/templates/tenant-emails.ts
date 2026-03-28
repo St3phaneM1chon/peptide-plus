@@ -414,3 +414,98 @@ export function tenantOnboardingReminderEmail(
     html: tenantBaseTemplate(content),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Trial Expiry Emails
+// ---------------------------------------------------------------------------
+
+interface TrialExpiryData {
+  tenantName: string;
+  ownerName: string;
+  daysRemaining: number;
+  trialEndsAt: string;
+  adminUrl: string;
+  planName: string;
+  monthlyPrice: number;
+}
+
+/**
+ * Trial expiry reminder email (3 days before, 1 day before, and on expiry).
+ */
+export function tenantTrialExpiryEmail(data: TrialExpiryData): { subject: string; html: string } {
+  const safeTenantName = escapeHtmlTenant(data.tenantName);
+  const safeOwnerName = escapeHtmlTenant(data.ownerName);
+  const safePlanName = escapeHtmlTenant(data.planName);
+  const price = (data.monthlyPrice / 100).toFixed(0);
+
+  let title: string;
+  let urgencyMessage: string;
+  let subject: string;
+
+  if (data.daysRemaining <= 0) {
+    subject = `Votre essai gratuit Koraline est termine — ${safeTenantName}`;
+    title = 'Votre essai gratuit est termine';
+    urgencyMessage = `
+      <p>Votre p&eacute;riode d&rsquo;essai gratuit pour <strong>${safeTenantName}</strong> est maintenant termin&eacute;e.</p>
+      <p>Pour continuer &agrave; utiliser toutes les fonctionnalit&eacute;s de votre boutique, passez au plan <strong>${safePlanName}</strong> d&egrave;s maintenant.</p>
+      <div class="info-box" style="background: #fef2f2;">
+        <p style="color: #991b1b; font-weight: 600; margin: 0;">Certaines fonctionnalit&eacute;s seront restreintes tant que vous n&rsquo;aurez pas souscrit &agrave; un plan.</p>
+      </div>
+    `;
+  } else if (data.daysRemaining === 1) {
+    subject = `Dernier jour d'essai gratuit — ${safeTenantName}`;
+    title = 'Dernier jour de votre essai gratuit';
+    urgencyMessage = `
+      <p>Il ne reste plus que <strong>24 heures</strong> &agrave; votre p&eacute;riode d&rsquo;essai gratuit pour <strong>${safeTenantName}</strong>.</p>
+      <p>Mettez &agrave; niveau maintenant pour ne rien perdre.</p>
+      <div class="info-box" style="background: #fffbeb;">
+        <p style="color: #92400e; font-weight: 600; margin: 0;">Votre essai se termine demain. Souscrivez d&egrave;s maintenant pour une transition sans interruption.</p>
+      </div>
+    `;
+  } else {
+    subject = `${data.daysRemaining} jours restants dans votre essai gratuit — ${safeTenantName}`;
+    title = `${data.daysRemaining} jours restants dans votre essai gratuit`;
+    urgencyMessage = `
+      <p>Votre essai gratuit pour <strong>${safeTenantName}</strong> se termine dans <strong>${data.daysRemaining} jours</strong> (le ${data.trialEndsAt}).</p>
+      <p>Profitez de ce temps pour explorer toutes les fonctionnalit&eacute;s, puis choisissez le plan qui vous convient.</p>
+    `;
+  }
+
+  const content = `
+    <h1>${title}</h1>
+    <p>Bonjour ${safeOwnerName},</p>
+    ${urgencyMessage}
+
+    <div class="info-box">
+      <div class="info-row">
+        <span class="info-label">Plan actuel</span>
+        <span class="info-value">${safePlanName} (essai gratuit)</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Prix apr&egrave;s l&rsquo;essai</span>
+        <span class="info-value">${price}$ CAD/mois</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Fin de l&rsquo;essai</span>
+        <span class="info-value">${escapeHtmlTenant(data.trialEndsAt)}</span>
+      </div>
+    </div>
+
+    <div class="btn-container">
+      <a href="${data.adminUrl}/admin/abonnement" class="btn" style="${data.daysRemaining <= 0 ? 'background: #dc2626;' : data.daysRemaining <= 1 ? 'background: #d97706;' : ''}">
+        ${data.daysRemaining <= 0 ? 'Mettre &agrave; niveau maintenant' : 'G&eacute;rer mon abonnement'}
+      </a>
+    </div>
+
+    <p style="font-size: 13px; color: #666;">
+      Des questions&nbsp;? R&eacute;pondez &agrave; cet email ou contactez-nous &agrave;
+      <a href="mailto:support@attitudes.vip" style="color: #0066CC;">support@attitudes.vip</a>.
+    </p>
+    <p style="font-size: 12px; color: #999;">L&rsquo;&eacute;quipe Koraline by Attitudes&nbsp;VIP</p>
+  `;
+
+  return {
+    subject,
+    html: tenantBaseTemplate(content),
+  };
+}
