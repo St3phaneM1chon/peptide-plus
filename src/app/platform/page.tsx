@@ -362,6 +362,27 @@ export default function PlatformLandingPage() {
       </section>
 
       {/* ================================================================== */}
+      {/* KEY STATS                                                          */}
+      {/* ================================================================== */}
+      <section className="py-14 bg-white border-b border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { value: '500+', label: 'Entreprises en croissance' },
+              { value: '22', label: 'Langues supportees' },
+              { value: '99.9%', label: 'Disponibilite' },
+              { value: '11', label: 'Modules integres' },
+            ].map((stat, i) => (
+              <div key={i} className="text-center p-5 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#0066CC] mb-1">{stat.value}</div>
+                <div className="text-sm font-medium text-gray-500">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================== */}
       {/* FEATURES                                                           */}
       {/* ================================================================== */}
       <section id="features" className="py-24">
@@ -477,6 +498,104 @@ export default function PlatformLandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================== */}
+      {/* SOCIAL PROOF — Ils nous font confiance                             */}
+      {/* ================================================================== */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Ils nous font confiance
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Des entrepreneurs et PME du Quebec qui ont transforme leur activite avec Koraline.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Testimonial 1 */}
+            <div className="flex flex-col p-8 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:shadow-blue-50 transition-all duration-300">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <blockquote className="text-sm text-gray-600 leading-relaxed mb-6 flex-1">
+                &laquo;&nbsp;On gerait notre boutique, notre comptabilite et notre CRM avec trois outils differents. Depuis Koraline, tout est au meme endroit. On a gagne un temps fou et notre chiffre d&apos;affaires a suivi.&nbsp;&raquo;
+              </blockquote>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-[#0066CC] text-white flex items-center justify-center text-sm font-bold shrink-0">
+                  ML
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">Marie-Eve Lavoie</div>
+                  <div className="text-xs text-gray-500">Fondatrice, Atelier Nordique</div>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-gray-100">
+                <div className="text-xl font-bold text-[#0066CC]">+40%</div>
+                <div className="text-xs text-gray-500">Revenu en 6 mois</div>
+              </div>
+            </div>
+
+            {/* Testimonial 2 */}
+            <div className="flex flex-col p-8 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:shadow-blue-50 transition-all duration-300">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <blockquote className="text-sm text-gray-600 leading-relaxed mb-6 flex-1">
+                &laquo;&nbsp;L&apos;integration comptabilite-commerce est incroyable. Chaque vente genere automatiquement les ecritures. Mon comptable adore — et moi je ne passe plus mes vendredis soir a reconcilier des chiffres.&nbsp;&raquo;
+              </blockquote>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-[#003366] text-white flex items-center justify-center text-sm font-bold shrink-0">
+                  JF
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">Jean-Francois Tremblay</div>
+                  <div className="text-xs text-gray-500">Directeur general, Distribution JFT</div>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-gray-100">
+                <div className="text-xl font-bold text-[#0066CC]">-50%</div>
+                <div className="text-xs text-gray-500">Temps d&apos;administration</div>
+              </div>
+            </div>
+
+            {/* Testimonial 3 */}
+            <div className="flex flex-col p-8 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:shadow-blue-50 transition-all duration-300">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <blockquote className="text-sm text-gray-600 leading-relaxed mb-6 flex-1">
+                &laquo;&nbsp;Je cherchais une plateforme bilingue avec un vrai LMS pour vendre mes formations. Koraline fait tout ca — plus le CRM, les courriels et meme la telephonie. C&apos;est le couteau suisse que j&apos;attendais.&nbsp;&raquo;
+              </blockquote>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
+                  SB
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">Sarah Bouchard</div>
+                  <div className="text-xs text-gray-500">Coach certifiee, Equilibre Pro</div>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-gray-100">
+                <div className="text-xl font-bold text-[#0066CC]">3x</div>
+                <div className="text-xs text-gray-500">Plus de ventes de formations</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
