@@ -1,6 +1,6 @@
 /**
  * GLOSSAIRE PEPTIDES - Termes à préserver lors de la traduction
- * BioCycle Peptides - Terminologie scientifique
+ * Attitudes VIP - Terminologie scientifique
  *
  * Ces termes sont injectés dans le system prompt de GPT-4o-mini
  * pour garantir leur préservation exacte dans toutes les langues.
@@ -105,7 +105,7 @@ export const UNITS = [
 
 // Noms de marque / entreprise
 export const BRAND_TERMS = [
-  'BioCycle Peptides',
+  'Attitudes VIP',
   'BioCycle',
   'Peptide Plus+',
   'AureliaPay',

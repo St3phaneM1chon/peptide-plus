@@ -151,7 +151,7 @@ async function runAiEvaluation(
       {
         role: 'system',
         content:
-          `You are a Quality Assurance AI evaluator for BioCycle Peptides customer interactions. ` +
+          `You are a Quality Assurance AI evaluator for Attitudes VIP customer interactions. ` +
           `Evaluate the following ${interactionType} transcript against these criteria:\n\n` +
           `${criteriaPrompt}\n\n` +
           `Respond ONLY with a JSON object containing exactly these fields:\n` +

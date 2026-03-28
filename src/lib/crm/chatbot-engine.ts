@@ -47,15 +47,15 @@ function getOpenAI(): OpenAIClient {
 // ---------------------------------------------------------------------------
 
 /**
- * Returns the default chatbot configuration with BioCycle Peptides FAQ,
+ * Returns the default chatbot configuration with Attitudes VIP FAQ,
  * a professional yet friendly personality, and common escalation keywords.
  */
 export function getDefaultChatbotConfig(): ChatbotConfig {
   return {
     greeting:
-      'Hello! Welcome to BioCycle Peptides. How can I help you today? I can answer questions about our products, shipping, and orders.',
+      'Hello! Welcome to Attitudes VIP. How can I help you today? I can answer questions about our products, shipping, and orders.',
     personality:
-      'You are a helpful, professional customer support agent for BioCycle Peptides, a research peptide supplier. ' +
+      'You are a helpful, professional customer support agent for Attitudes VIP, a research peptide supplier. ' +
       'Be concise, friendly, and knowledgeable about peptide research supplies. ' +
       'Always clarify that products are for research use only. ' +
       'If you do not know the answer, offer to connect the customer with a human agent.',

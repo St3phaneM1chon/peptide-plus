@@ -51,9 +51,9 @@ const SURVEY_PROMPTS: Record<string, string> = {
 
 /** SMS survey message templates by language */
 const SMS_TEMPLATES: Record<string, string> = {
-  fr: 'Merci pour votre appel avec BioCycle Peptides. Comment evaluez-vous le service? Repondez avec un chiffre de 1 (insatisfait) a 5 (excellent).',
-  en: 'Thank you for calling BioCycle Peptides. How would you rate our service? Reply with a number from 1 (poor) to 5 (excellent).',
-  es: 'Gracias por llamar a BioCycle Peptides. Como califica nuestro servicio? Responda con un numero del 1 (malo) al 5 (excelente).',
+  fr: 'Merci pour votre appel avec Attitudes VIP. Comment evaluez-vous le service? Repondez avec un chiffre de 1 (insatisfait) a 5 (excellent).',
+  en: 'Thank you for calling Attitudes VIP. How would you rate our service? Reply with a number from 1 (poor) to 5 (excellent).',
+  es: 'Gracias por llamar a Attitudes VIP. Como califica nuestro servicio? Responda con un numero del 1 (malo) al 5 (excelente).',
 };
 
 // ---------------------------------------------------------------------------

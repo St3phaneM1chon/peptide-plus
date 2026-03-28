@@ -344,7 +344,7 @@ async function performAIEvaluation(params: {
   const criteriaPrompt = buildCriteriaPrompt(form.criteria);
 
   const systemPrompt = [
-    `You are a quality assurance evaluator for BioCycle Peptides' ${channel} interactions.`,
+    `You are a quality assurance evaluator for Attitudes VIP' ${channel} interactions.`,
     `Evaluate the following ${contentLabel} against these QA criteria:`,
     '',
     criteriaPrompt,

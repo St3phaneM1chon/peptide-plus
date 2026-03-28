@@ -192,11 +192,11 @@ export function generateInvoiceHtml(
 
   <div class="header">
     <div>
-      <div class="company-name">BioCycle Peptides Inc.</div>
+      <div class="company-name">Attitudes VIP inc.</div>
       <div class="company-info">
         Research-Grade Peptides<br>
         Montreal, QC, Canada<br>
-        info@biocyclepeptides.com<br>
+        info@attitudes.vip<br>
         TPS: 123456789 RT0001<br>
         TVQ: 1234567890 TQ0001
       </div>
@@ -273,7 +273,7 @@ export function generateInvoiceHtml(
 
   <div class="footer">
     <p class="thanks">Merci pour votre confiance!</p>
-    <p>BioCycle Peptides Inc. &mdash; Montreal, QC, Canada</p>
+    <p>Attitudes VIP inc. &mdash; Montreal, QC, Canada</p>
   </div>
 </body>
 </html>`;

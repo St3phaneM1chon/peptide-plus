@@ -302,7 +302,7 @@ export async function sendConsentConfirmationEmail(
       ${pdfNotice}
       <p style="margin:0 0 16px;font-size:15px;color:#3f3f46;line-height:1.6;">
         ${t.revokeNotice}
-        <a href="mailto:support@biocyclepeptides.com" style="color:${BRAND_COLOR};text-decoration:none;">support@biocyclepeptides.com</a>.
+        <a href="mailto:support@attitudes.vip" style="color:${BRAND_COLOR};text-decoration:none;">support@attitudes.vip</a>.
       </p>
       <p style="margin:0;font-size:13px;color:#a1a1aa;line-height:1.5;">
         ${t.automatedConfirmation}

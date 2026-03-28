@@ -130,7 +130,7 @@ export async function sendWeeklyReport(recipientEmail?: string): Promise<void> {
   try {
     const report = await generateWeeklyReport();
     const html = reportToHtml(report);
-    const to = recipientEmail || process.env.ADMIN_EMAIL || 'admin@biocyclepeptides.com';
+    const to = recipientEmail || process.env.ADMIN_EMAIL || 'admin@attitudes.vip';
 
     const emailModule = await import('@/lib/email');
     if (typeof emailModule.sendEmail === 'function') {

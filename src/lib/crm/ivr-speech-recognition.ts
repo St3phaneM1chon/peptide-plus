@@ -262,7 +262,7 @@ const DEFAULT_INTENTS: IvrIntent[] = [
       'Home',
     ],
     action: 'play_message',
-    responseTemplate: 'Welcome to BioCycle Peptides. How can I help you today? You can say billing, support, sales, check order status, or speak to an agent.',
+    responseTemplate: 'Welcome to Attitudes VIP. How can I help you today? You can say billing, support, sales, check order status, or speak to an agent.',
     requiresAuth: false,
     priority: 1,
   },
@@ -425,7 +425,7 @@ export async function matchIntent(
         {
           role: 'system',
           content:
-            'You are an IVR intent classifier for BioCycle Peptides, a research peptide supplier.\n' +
+            'You are an IVR intent classifier for Attitudes VIP, a research peptide supplier.\n' +
             'Given a caller\'s spoken input, classify it into one of the available intents.\n\n' +
             'Available intents:\n' +
             intentDescriptions +

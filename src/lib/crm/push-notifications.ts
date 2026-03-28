@@ -74,7 +74,7 @@ async function getWebPush(): Promise<WebPushLib | null> {
 
     const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
     const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-    const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@biocyclepeptides.com';
+    const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@attitudes.vip';
 
     if (vapidPublicKey && vapidPrivateKey && webPushModule) {
       webPushModule.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);

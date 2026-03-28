@@ -116,7 +116,7 @@ const _sessions = new Map<string, ConversationContext>();
 const INTENT_FUNCTIONS = [
   {
     name: 'answer_faq',
-    description: 'Answer a frequently asked question about BioCycle Peptides products, shipping, returns, etc.',
+    description: 'Answer a frequently asked question about Attitudes VIP products, shipping, returns, etc.',
     parameters: {
       type: 'object',
       properties: {
@@ -326,7 +326,7 @@ export async function processVoiceInput(
       {
         role: 'system' as const,
         content:
-          `You are ${config.agentName || 'an AI voice assistant'} for BioCycle Peptides. ` +
+          `You are ${config.agentName || 'an AI voice assistant'} for Attitudes VIP. ` +
           `${config.personality || 'Be professional, friendly, and concise.'}\n\n` +
           `Knowledge Base:\n${kbContext}\n\n` +
           `Guidelines:\n` +
@@ -408,7 +408,7 @@ export async function processVoiceInput(
         case 'end_call':
           intent = 'end_call';
           action = { type: 'end_call', reason: funcArgs.reason || 'Issue resolved' };
-          responseText = 'Thank you for calling BioCycle Peptides! Is there anything else I can help you with before we end the call?';
+          responseText = 'Thank you for calling Attitudes VIP! Is there anything else I can help you with before we end the call?';
           confidence = 0.9;
           break;
 
@@ -486,14 +486,14 @@ export async function generateVoiceResponse(
     });
 
     if (!campaign?.targetCriteria) {
-      return 'Thank you for calling BioCycle Peptides. How can I help you?';
+      return 'Thank you for calling Attitudes VIP. How can I help you?';
     }
 
     const config = campaign.targetCriteria as Record<string, any>;
 
     // If no turns yet, return greeting
     if (context.turns.length === 0) {
-      return config.greetingPrompt || 'Hello! Thank you for calling BioCycle Peptides. How can I assist you today?';
+      return config.greetingPrompt || 'Hello! Thank you for calling Attitudes VIP. How can I assist you today?';
     }
 
     const openai = getOpenAI();
@@ -509,7 +509,7 @@ export async function generateVoiceResponse(
         {
           role: 'system',
           content:
-            `Generate a concise, natural-sounding phone response for a BioCycle Peptides voice agent. ` +
+            `Generate a concise, natural-sounding phone response for a Attitudes VIP voice agent. ` +
             `Personality: ${config.personality || 'professional and friendly'}. ` +
             `Keep under 2 sentences. Current intent: ${context.currentIntent || 'unknown'}.`,
         },

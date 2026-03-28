@@ -26,7 +26,7 @@ interface SharedMailbox {
  * Reads from SHARED_MAILBOXES env var (JSON array) or returns sensible defaults.
  *
  * Env format example:
- *   SHARED_MAILBOXES='[{"address":"support@biocyclepeptides.com","name":"Support","assignedTeam":["userId1","userId2"]}]'
+ *   SHARED_MAILBOXES='[{"address":"support@attitudes.vip","name":"Support","assignedTeam":["userId1","userId2"]}]'
  */
 export async function getSharedMailboxes(): Promise<SharedMailbox[]> {
   const envMailboxes = process.env.SHARED_MAILBOXES;
@@ -59,17 +59,17 @@ export async function getSharedMailboxes(): Promise<SharedMailbox[]> {
 
   return [
     {
-      address: 'support@biocyclepeptides.com',
+      address: 'support@attitudes.vip',
       name: 'Support',
       assignedTeam: employeeIds,
     },
     {
-      address: 'sales@biocyclepeptides.com',
+      address: 'sales@attitudes.vip',
       name: 'Sales',
       assignedTeam: employeeIds,
     },
     {
-      address: 'info@biocyclepeptides.com',
+      address: 'info@attitudes.vip',
       name: 'General',
       assignedTeam: employeeIds,
     },

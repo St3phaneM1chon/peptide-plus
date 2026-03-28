@@ -156,7 +156,7 @@ const PEPTIDE_KNOWLEDGE = `
 - Remboursement complet ou échange
 
 ## SUPPORT
-- Email: support@biocyclepeptides.com
+- Email: support@attitudes.vip
 - Chat en ligne 24/7
 - Réponse sous 24h maximum
 `;

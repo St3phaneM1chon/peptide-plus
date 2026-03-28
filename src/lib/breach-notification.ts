@@ -148,7 +148,7 @@ function buildUserEmailEn(date: string, dataTypes: string, description: string):
     </ul>
 
     <h3 style="color:#1f2937;">Contact us</h3>
-    <p>If you have any questions or concerns, please contact our Data Protection Officer at <a href="mailto:privacy@biocyclepeptides.com">privacy@biocyclepeptides.com</a>.</p>
+    <p>If you have any questions or concerns, please contact our Data Protection Officer at <a href="mailto:privacy@attitudes.vip">privacy@attitudes.vip</a>.</p>
 
     <p>We sincerely apologize for any inconvenience this may cause and are committed to protecting your personal information.</p>
 
@@ -191,7 +191,7 @@ function buildUserEmailFr(date: string, dataTypes: string, description: string):
     </ul>
 
     <h3 style="color:#1f2937;">Nous contacter</h3>
-    <p>Si vous avez des questions ou des preoccupations, veuillez contacter notre responsable de la protection des donnees a <a href="mailto:privacy@biocyclepeptides.com">privacy@biocyclepeptides.com</a>.</p>
+    <p>Si vous avez des questions ou des preoccupations, veuillez contacter notre responsable de la protection des donnees a <a href="mailto:privacy@attitudes.vip">privacy@attitudes.vip</a>.</p>
 
     <p>Nous nous excusons sincerement pour tout desagrement que cela pourrait causer et nous engageons a proteger vos informations personnelles.</p>
 
@@ -222,7 +222,7 @@ function buildRegulatoryEmailEn(
     <table style="width:100%;border-collapse:collapse;">
       <tr><td style="padding:4px 8px;color:#6b7280;width:200px;">Organization:</td><td style="padding:4px 8px;color:#1f2937;"><strong>${COMPANY_NAME}</strong></td></tr>
       <tr><td style="padding:4px 8px;color:#6b7280;">Address:</td><td style="padding:4px 8px;color:#1f2937;">Montreal, Quebec, Canada</td></tr>
-      <tr><td style="padding:4px 8px;color:#6b7280;">Contact:</td><td style="padding:4px 8px;color:#1f2937;">privacy@biocyclepeptides.com</td></tr>
+      <tr><td style="padding:4px 8px;color:#6b7280;">Contact:</td><td style="padding:4px 8px;color:#1f2937;">privacy@attitudes.vip</td></tr>
     </table>
 
     <h3 style="color:#1f2937;">2. Description of the Breach</h3>
@@ -256,7 +256,7 @@ function buildRegulatoryEmailEn(
 
     <p>We remain available for any questions or additional information you may require.</p>
 
-    <p>Respectfully,<br><strong>${COMPANY_NAME}</strong><br>Data Protection Officer<br>privacy@biocyclepeptides.com</p>
+    <p>Respectfully,<br><strong>${COMPANY_NAME}</strong><br>Data Protection Officer<br>privacy@attitudes.vip</p>
   `;
 }
 
@@ -279,7 +279,7 @@ function buildRegulatoryEmailFr(
     <table style="width:100%;border-collapse:collapse;">
       <tr><td style="padding:4px 8px;color:#6b7280;width:200px;">Organisation :</td><td style="padding:4px 8px;color:#1f2937;"><strong>${COMPANY_NAME}</strong></td></tr>
       <tr><td style="padding:4px 8px;color:#6b7280;">Adresse :</td><td style="padding:4px 8px;color:#1f2937;">Montreal, Quebec, Canada</td></tr>
-      <tr><td style="padding:4px 8px;color:#6b7280;">Contact :</td><td style="padding:4px 8px;color:#1f2937;">privacy@biocyclepeptides.com</td></tr>
+      <tr><td style="padding:4px 8px;color:#6b7280;">Contact :</td><td style="padding:4px 8px;color:#1f2937;">privacy@attitudes.vip</td></tr>
     </table>
 
     <h3 style="color:#1f2937;">2. Description de l'atteinte</h3>
@@ -313,7 +313,7 @@ function buildRegulatoryEmailFr(
 
     <p>Nous demeurons disponibles pour toute question ou information supplementaire que vous pourriez requirir.</p>
 
-    <p>Respectueusement,<br><strong>${COMPANY_NAME}</strong><br>Responsable de la protection des donnees<br>privacy@biocyclepeptides.com</p>
+    <p>Respectueusement,<br><strong>${COMPANY_NAME}</strong><br>Responsable de la protection des donnees<br>privacy@attitudes.vip</p>
   `;
 }
 

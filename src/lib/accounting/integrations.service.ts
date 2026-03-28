@@ -572,7 +572,7 @@ export async function syncPayPalTransactions(
       },
       payee: { email_address: payeeEmail },
       payer: {
-        email_address: order.user?.email || 'noreply@biocyclepeptides.com',
+        email_address: order.user?.email || 'noreply@attitudes.vip',
         name: {
           given_name: order.user?.name?.split(' ')[0] || '',
           surname: order.user?.name?.split(' ').slice(1).join(' ') || '',

@@ -191,13 +191,13 @@ interface CompanyInfo {
 }
 
 const DEFAULT_COMPANY: CompanyInfo = {
-  name: process.env.BUSINESS_NAME || 'BioCycle Peptides Inc.',
+  name: process.env.BUSINESS_NAME || 'Attitudes VIP inc.',
   address: process.env.BUSINESS_STREET || '',
   city: process.env.BUSINESS_CITY || 'Montréal',
   province: process.env.BUSINESS_PROVINCE || 'QC',
   postalCode: process.env.BUSINESS_POSTAL_CODE || '',
   phone: process.env.BUSINESS_PHONE || '',
-  email: process.env.NEXT_PUBLIC_INFO_EMAIL || 'info@biocyclepeptides.com',
+  email: process.env.NEXT_PUBLIC_INFO_EMAIL || 'info@attitudes.vip',
   tpsNumber: process.env.TPS_NUMBER || '',
   tvqNumber: process.env.TVQ_NUMBER || '',
   neq: process.env.NEQ_NUMBER || '',

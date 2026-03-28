@@ -55,7 +55,7 @@ export async function getRealtimeSuggestions(
         {
           role: 'system',
           content:
-            'You are a real-time sales coaching assistant for BioCycle Peptides, a research peptide supplier. ' +
+            'You are a real-time sales coaching assistant for Attitudes VIP, a research peptide supplier. ' +
             'Based on the call transcript provided, generate 2-4 concise suggestions for the agent. ' +
             'Focus on:\n' +
             '1. Objection handling (if the customer raises concerns)\n' +
@@ -116,7 +116,7 @@ export async function generatePostCallCoaching(
         {
           role: 'system',
           content:
-            'You are a sales coaching AI for BioCycle Peptides. Analyze the call summary and provide coaching feedback. ' +
+            'You are a sales coaching AI for Attitudes VIP. Analyze the call summary and provide coaching feedback. ' +
             'Respond ONLY with a JSON object containing exactly three fields:\n' +
             '- "strengths": array of 2-3 things the agent did well\n' +
             '- "improvements": array of 2-3 areas for improvement\n' +

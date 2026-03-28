@@ -77,7 +77,7 @@ export async function testTeamsConnection(): Promise<{ success: boolean; org?: s
           '@type': 'MessageCard',
           '@context': 'http://schema.org/extensions',
           themeColor: '0076D7',
-          summary: 'BioCycle Peptides - Connection Test',
+          summary: 'Attitudes VIP - Connection Test',
           sections: [{
             activityTitle: 'Connection Test',
             activitySubtitle: new Date().toISOString(),

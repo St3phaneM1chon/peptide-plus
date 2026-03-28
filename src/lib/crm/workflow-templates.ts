@@ -43,7 +43,7 @@ const TEMPLATES: WorkflowTemplate[] = [
     steps: [
       {
         actionType: 'SEND_EMAIL',
-        config: { subject: 'Welcome to BioCycle Peptides!', body: 'Thank you for your interest. We are excited to have you.' },
+        config: { subject: 'Bienvenue!', body: 'Thank you for your interest. We are excited to have you.' },
         delayMinutes: 0,
       },
       {

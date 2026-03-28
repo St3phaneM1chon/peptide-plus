@@ -259,8 +259,8 @@ export async function generateEmailSuggestion(
         tone: 'professional',
       },
       introduction: {
-        subject: `Présentation - BioCycle Peptides${companyName ? ` x ${companyName}` : ''}`,
-        body: `Bonjour ${contactName},\n\nJe me permets de vous contacter pour vous présenter nos solutions. Chez BioCycle Peptides, nous offrons des produits de recherche de haute qualité.\n\nJ'aimerais discuter de la façon dont nous pourrions répondre à vos besoins.\n\nCordialement`,
+        subject: `Présentation - Attitudes VIP${companyName ? ` x ${companyName}` : ''}`,
+        body: `Bonjour ${contactName},\n\nJe me permets de vous contacter pour vous présenter nos solutions. Chez Attitudes VIP, nous offrons des produits de recherche de haute qualité.\n\nJ'aimerais discuter de la façon dont nous pourrions répondre à vos besoins.\n\nCordialement`,
         tone: 'professional',
       },
       proposal: {
@@ -286,8 +286,8 @@ export async function generateEmailSuggestion(
         tone: 'professional',
       },
       introduction: {
-        subject: `Introduction - BioCycle Peptides${companyName ? ` x ${companyName}` : ''}`,
-        body: `Hi ${contactName},\n\nI'm reaching out to introduce our solutions at BioCycle Peptides. We offer high-quality research products that could benefit your work.\n\nI'd love to discuss how we can help.\n\nBest regards`,
+        subject: `Introduction - Attitudes VIP${companyName ? ` x ${companyName}` : ''}`,
+        body: `Hi ${contactName},\n\nI'm reaching out to introduce our solutions at Attitudes VIP. We offer high-quality research products that could benefit your work.\n\nI'd love to discuss how we can help.\n\nBest regards`,
         tone: 'professional',
       },
       proposal: {
