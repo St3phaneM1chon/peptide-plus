@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getTenantBranding } from '@/lib/tenant-branding';
 import { PlatformHeaderClient } from './PlatformHeaderClient';
+import PlatformClientProviders from './PlatformClientProviders';
 
 /**
  * LAYOUT PLATFORM — Clean SaaS layout for Koraline landing pages
@@ -168,7 +169,9 @@ export default async function PlatformLayout({
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <PlatformHeaderClient company={company} />
-      <main className="flex-1">{children}</main>
+      <PlatformClientProviders>
+        <main className="flex-1">{children}</main>
+      </PlatformClientProviders>
       <PlatformFooter company={company} />
     </div>
   );

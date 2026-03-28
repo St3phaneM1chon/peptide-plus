@@ -8,6 +8,7 @@
 import Header from '@/components/shop/Header';
 import Footer from '@/components/shop/Footer';
 import DisclaimerModal from '@/components/shop/DisclaimerModal';
+import CookieConsent from '@/components/shop/CookieConsent';
 import SkipToContent from '@/components/ui/SkipToContent';
 import { TenantBrandingProvider } from '@/components/shop/TenantBrandingProvider';
 import { getTenantBranding } from '@/lib/tenant-branding';
@@ -27,6 +28,7 @@ export default async function PublicLayout({
         <main id="main-content" className="flex-1" tabIndex={-1}>{children}</main>
         <Footer />
         <DisclaimerModal />
+        <CookieConsent />
       </div>
     </TenantBrandingProvider>
   );
