@@ -24,6 +24,8 @@ interface Page {
   metaTitle: string | null;
   metaDescription: string | null;
   template: string;
+  heroImageUrl: string | null;
+  parentSlug: string | null;
   isPublished: boolean;
   publishedAt: string | null;
   updatedAt: string;
@@ -79,7 +81,7 @@ export default function ContenuPage() {
   const [pageModal, setPageModal] = useState(false);
   const [editingPage, setEditingPage] = useState<Page | null>(null);
   const [pageForm, setPageForm] = useState({
-    title: '', slug: '', content: '', excerpt: '', metaTitle: '', metaDescription: '', template: 'default', isPublished: false,
+    title: '', slug: '', content: '', excerpt: '', metaTitle: '', metaDescription: '', template: 'default', heroImageUrl: '', parentSlug: '', isPublished: false,
   });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -137,11 +139,12 @@ export default function ContenuPage() {
         title: page.title, slug: page.slug, content: page.content,
         excerpt: page.excerpt || '', metaTitle: page.metaTitle || '',
         metaDescription: page.metaDescription || '', template: page.template,
+        heroImageUrl: page.heroImageUrl || '', parentSlug: page.parentSlug || '',
         isPublished: page.isPublished,
       });
     } else {
       setEditingPage(null);
-      setPageForm({ title: '', slug: '', content: '', excerpt: '', metaTitle: '', metaDescription: '', template: 'default', isPublished: false });
+      setPageForm({ title: '', slug: '', content: '', excerpt: '', metaTitle: '', metaDescription: '', template: 'default', heroImageUrl: '', parentSlug: '', isPublished: false });
     }
     setPageModal(true);
   };
@@ -803,11 +806,31 @@ export default function ContenuPage() {
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="default">{t('admin.content.templateDefault')}</option>
-                <option value="full-width">{t('admin.content.templateFullWidth')}</option>
-                <option value="sidebar">{t('admin.content.templateSidebar')}</option>
+                <option value="hero-content">{t('admin.content.templateHeroContent')}</option>
+                <option value="sections">{t('admin.content.templateSections')}</option>
+                <option value="landing">{t('admin.content.templateLanding')}</option>
               </select>
             </FormField>
           </div>
+          {(pageForm.template === 'hero-content' || pageForm.template === 'landing') && (
+            <FormField label={t('admin.content.fieldHeroImageUrl')} hint={t('admin.content.fieldHeroImageUrlHint')}>
+              <Input
+                value={pageForm.heroImageUrl}
+                onChange={e => setPageForm(f => ({ ...f, heroImageUrl: e.target.value }))}
+                placeholder={t('admin.content.fieldHeroImageUrlPlaceholder')}
+              />
+            </FormField>
+          )}
+          <FormField label={t('admin.content.fieldParentSlug')} hint={t('admin.content.fieldParentSlugHint')}>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-400 text-sm">/</span>
+              <Input
+                value={pageForm.parentSlug}
+                onChange={e => setPageForm(f => ({ ...f, parentSlug: e.target.value }))}
+                placeholder={t('admin.content.fieldParentSlugPlaceholder')}
+              />
+            </div>
+          </FormField>
           <FormField label={t('admin.content.fieldMetaDescription')} hint={t('admin.content.fieldMetaDescriptionHint')}>
             <Input
               value={pageForm.metaDescription}

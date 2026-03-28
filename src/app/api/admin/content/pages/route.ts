@@ -18,6 +18,8 @@ const createPageSchema = z.object({
   metaTitle: z.string().max(200).optional(),
   metaDescription: z.string().max(500).optional(),
   template: z.string().max(50).optional(),
+  heroImageUrl: z.string().max(2000).optional(),
+  parentSlug: z.string().max(200).optional(),
   isPublished: z.boolean().optional(),
 });
 
@@ -30,6 +32,8 @@ const updatePageSchema = z.object({
   metaTitle: z.string().max(200).optional(),
   metaDescription: z.string().max(500).optional(),
   template: z.string().max(50).optional(),
+  heroImageUrl: z.string().max(2000).optional(),
+  parentSlug: z.string().max(200).optional(),
   isPublished: z.boolean().optional(),
 });
 
@@ -72,7 +76,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
-    const { title, slug, content, excerpt, metaTitle, metaDescription, template, isPublished } = parsed.data;
+    const { title, slug, content, excerpt, metaTitle, metaDescription, template, heroImageUrl, parentSlug, isPublished } = parsed.data;
 
     // BE-SEC-06: Sanitize content to prevent stored XSS
     const safeTitle = typeof title === 'string' ? stripHtml(title) : title;
@@ -80,6 +84,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     const safeExcerpt = typeof excerpt === 'string' ? stripHtml(excerpt) : excerpt;
     const safeMetaTitle = typeof metaTitle === 'string' ? stripHtml(metaTitle) : metaTitle;
     const safeMetaDesc = typeof metaDescription === 'string' ? stripHtml(metaDescription) : metaDescription;
+    const safeHeroImageUrl = typeof heroImageUrl === 'string' ? stripHtml(heroImageUrl) : heroImageUrl;
+    const safeParentSlug = typeof parentSlug === 'string' ? stripHtml(parentSlug) : parentSlug;
 
     // Check slug uniqueness
     const existing = await prisma.page.findUnique({ where: { slug } });
@@ -96,6 +102,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         metaTitle: safeMetaTitle || null,
         metaDescription: safeMetaDesc || null,
         template: template || 'default',
+        heroImageUrl: safeHeroImageUrl || null,
+        parentSlug: safeParentSlug || null,
         isPublished: isPublished || false,
         publishedAt: isPublished ? new Date() : null,
         createdBy: session.user.id,
@@ -139,7 +147,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
-    const { id, title, slug, content, excerpt, metaTitle, metaDescription, template, isPublished } = parsed.data;
+    const { id, title, slug, content, excerpt, metaTitle, metaDescription, template, heroImageUrl, parentSlug, isPublished } = parsed.data;
 
     const existing = await prisma.page.findUnique({ where: { id } });
     if (!existing) {
@@ -163,6 +171,8 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
     const safeExcerpt2 = typeof excerpt === 'string' ? stripHtml(excerpt) : excerpt;
     const safeMetaTitle2 = typeof metaTitle === 'string' ? stripHtml(metaTitle) : metaTitle;
     const safeMetaDesc2 = typeof metaDescription === 'string' ? stripHtml(metaDescription) : metaDescription;
+    const safeHeroImageUrl2 = typeof heroImageUrl === 'string' ? stripHtml(heroImageUrl) : heroImageUrl;
+    const safeParentSlug2 = typeof parentSlug === 'string' ? stripHtml(parentSlug) : parentSlug;
 
     const page = await prisma.page.update({
       where: { id },
@@ -174,6 +184,8 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
         metaTitle: safeMetaTitle2 !== undefined ? safeMetaTitle2 : existing.metaTitle,
         metaDescription: safeMetaDesc2 !== undefined ? safeMetaDesc2 : existing.metaDescription,
         template: template ?? existing.template,
+        heroImageUrl: safeHeroImageUrl2 !== undefined ? (safeHeroImageUrl2 || null) : existing.heroImageUrl,
+        parentSlug: safeParentSlug2 !== undefined ? (safeParentSlug2 || null) : existing.parentSlug,
         isPublished: nowPublished,
         publishedAt: !wasPublished && nowPublished ? new Date() : existing.publishedAt,
       },
