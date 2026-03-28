@@ -8,18 +8,33 @@ import type { CompanyBranding } from './layout';
 interface DropdownItem {
   label: string;
   href: string;
+  description?: string;
 }
 
-const produitItems: DropdownItem[] = [
-  { label: 'Fonctionnalites (Vue d\u2019ensemble)', href: '/platform/features' },
-  { label: 'Commerce', href: '/platform/features/commerce' },
-  { label: 'CRM', href: '/platform/features/crm' },
-  { label: 'Comptabilite', href: '/platform/features/comptabilite' },
-  { label: 'Formation (LMS)', href: '/platform/features/formation' },
-  { label: 'Telephonie', href: '/platform/features/telephonie' },
-  { label: 'Integrations', href: '/platform/integrations' },
-  { label: 'Securite', href: '/securite' },
+// Left column: overview + core modules
+const produitCol1: DropdownItem[] = [
+  { label: 'Vue d\u2019ensemble', href: '/platform/features', description: 'Toutes les fonctionnalit\u00e9s' },
+  { label: 'Commerce', href: '/platform/features/commerce', description: 'E-commerce & ventes' },
+  { label: 'CRM', href: '/platform/features/crm', description: 'Gestion de la relation client' },
+  { label: 'Comptabilit\u00e9', href: '/platform/features/comptabilite', description: 'Finances & rapports' },
+  { label: 'Marketing', href: '/platform/features/marketing', description: 'Campagnes & automatisation' },
+  { label: 'T\u00e9l\u00e9phonie', href: '/platform/features/telephonie', description: 'VoIP & centre d\u2019appels' },
+  { label: 'Formation', href: '/platform/features/formation', description: 'LMS & apprentissage' },
 ];
+
+// Right column: secondary modules + cross-cutting
+const produitCol2: DropdownItem[] = [
+  { label: 'Emails', href: '/platform/features/emails', description: 'Messagerie & templates' },
+  { label: 'M\u00e9dias', href: '/platform/features/media', description: 'Biblioth\u00e8que & gestion' },
+  { label: 'Fid\u00e9lit\u00e9', href: '/platform/features/fidelite', description: 'Points & r\u00e9compenses' },
+  { label: 'Communaut\u00e9', href: '/platform/features/communaute', description: 'Forum & \u00e9changes' },
+  { label: 'IA Aur\u00e9lia', href: '/platform/features/ia', description: 'Intelligence artificielle' },
+  { label: 'Int\u00e9grations', href: '/platform/integrations', description: 'Connecteurs & API' },
+  { label: 'S\u00e9curit\u00e9', href: '/securite', description: 'Protection & conformit\u00e9' },
+];
+
+// Combined flat list for mobile menu
+const produitItems: DropdownItem[] = [...produitCol1, ...produitCol2];
 
 const solutionsItems: DropdownItem[] = [
   { label: 'Pour le e-commerce', href: '/platform/pour/ecommerce' },
@@ -99,6 +114,98 @@ function NavDropdown({ label, items }: { label: string; items: DropdownItem[] })
               {item.label}
             </Link>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProduitMegaMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => setOpen(false), 150);
+  };
+
+  return (
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button
+        type="button"
+        className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        Produit
+        <svg
+          className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-full -left-4 mt-2 w-[520px] bg-white rounded-xl shadow-lg border border-gray-100 p-4 z-50">
+          <div className="grid grid-cols-2 gap-x-4">
+            {/* Column 1 */}
+            <div className="space-y-0.5">
+              {produitCol1.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="block text-sm font-medium text-gray-900 group-hover:text-[#0066CC] transition-colors">
+                    {item.label}
+                  </span>
+                  {item.description && (
+                    <span className="block text-xs text-gray-400 mt-0.5">{item.description}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+            {/* Column 2 */}
+            <div className="space-y-0.5">
+              {produitCol2.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="block text-sm font-medium text-gray-900 group-hover:text-[#0066CC] transition-colors">
+                    {item.label}
+                  </span>
+                  {item.description && (
+                    <span className="block text-xs text-gray-400 mt-0.5">{item.description}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -221,7 +328,7 @@ export function PlatformHeaderClient({ company }: { company: CompanyBranding }) 
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            <NavDropdown label="Produit" items={produitItems} />
+            <ProduitMegaMenu />
             <NavDropdown label="Solutions" items={solutionsItems} />
             <NavDropdown label="Entreprise" items={entrepriseItems} />
             <Link href="/pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
