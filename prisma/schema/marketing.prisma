@@ -122,3 +122,53 @@ model AbTestImpression {
   @@index([testId, variantId])
   @@index([tenantId, createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// Shoppable Link (Social Commerce — trackable product links for social media)
+// ---------------------------------------------------------------------------
+model ShoppableLink {
+  id          String    @id @default(cuid())
+  tenantId    String?
+  shortCode   String    @unique
+  fullUrl     String
+  productId   String
+  productName String
+  platform    String    // instagram, facebook, tiktok, twitter, linkedin, pinterest, whatsapp, email, sms, other
+  utmSource   String
+  utmMedium   String
+  utmCampaign String
+  utmContent  String?
+  clicks      Int       @default(0)
+  conversions Int       @default(0)
+  revenue     Decimal   @default(0) @db.Decimal(12, 2)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  product     Product   @relation("ProductShoppableLinks", fields: [productId], references: [id], onDelete: Cascade)
+  clickEvents ShoppableLinkClick[]
+
+  @@index([tenantId])
+  @@index([shortCode])
+  @@index([productId])
+  @@index([platform])
+  @@index([utmCampaign])
+}
+
+// ---------------------------------------------------------------------------
+// Shoppable Link Click (individual click tracking)
+// ---------------------------------------------------------------------------
+model ShoppableLinkClick {
+  id               String   @id @default(cuid())
+  tenantId         String?
+  shoppableLinkId  String
+  referrer         String?
+  userAgent        String?
+  ipHash           String?  // SHA-256 truncated hash (privacy-safe)
+  createdAt        DateTime @default(now())
+
+  shoppableLink    ShoppableLink @relation(fields: [shoppableLinkId], references: [id], onDelete: Cascade)
+
+  @@index([shoppableLinkId])
+  @@index([tenantId, createdAt])
+}

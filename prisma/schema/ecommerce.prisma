@@ -677,6 +677,9 @@ model Product {
   productViews             ProductView[]         @relation("ProductViews")
   discounts                Discount[]            @relation("ProductDiscounts")
 
+  // Social Commerce: shoppable links for social selling
+  shoppableLinks           ShoppableLink[]      @relation("ProductShoppableLinks")
+
   @@index([categoryId])
   @@index([isBestseller])
   @@index([isFeatured])
