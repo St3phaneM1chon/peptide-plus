@@ -971,23 +971,27 @@ model QuantityDiscount {
 }
 
 model ReturnRequest {
-  id          String   @id @default(cuid())
-  tenantId    String?
-  orderItemId String
-  orderId     String
-  userId      String
-  reason      String
-  details     String?
-  status      String   @default("PENDING")
-  resolution  String?
-  adminNotes  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  id           String   @id @default(cuid())
+  tenantId     String?
+  orderItemId  String
+  orderId      String
+  userId       String
+  reason       String
+  details      String?
+  status       String   @default("PENDING") // PENDING, APPROVED, REJECTED, COMPLETED, EXCHANGE
+  resolution   String?
+  adminNotes   String?
+  items        Json?    // [{productId, quantity, reason}] — detailed per-item breakdown
+  refundAmount Decimal? @db.Decimal(10, 2) // calculated refund amount
+  exchangeFor  String?  // product ID for exchanges
+  trackingNumber String? // return shipment tracking
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   // FIX A1-P0-002: Reverse relation for Refund FK
-  refunds     Refund[] @relation("ReturnRequestRefunds")
+  refunds      Refund[] @relation("ReturnRequestRefunds")
 
   @@index([orderItemId])
   @@index([orderId])
@@ -1559,5 +1563,48 @@ model PriceBookEntry {
   @@unique([priceBookId, productId, minQuantity])
   @@index([priceBookId])
   @@index([productId])
+  @@index([tenantId])
+}
+
+// ---------------------------------------------------------------------------
+// BNPL — Buy Now Pay Later provider configuration per tenant
+// ---------------------------------------------------------------------------
+
+model BnplProvider {
+  id        String   @id @default(cuid())
+  tenantId  String
+  provider  String   // afterpay, klarna, sezzle, paybright
+  isActive  Boolean  @default(true)
+  config    Json     @default("{}")
+  minAmount Decimal? @db.Decimal(10, 2) // minimum order for BNPL
+  maxAmount Decimal? @db.Decimal(10, 2) // maximum order for BNPL
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, provider])
+  @@index([tenantId])
+  @@index([isActive])
+}
+
+// ---------------------------------------------------------------------------
+// Carrier Rate Cache — cached shipping rates from carrier APIs
+// ---------------------------------------------------------------------------
+
+model CarrierRateCache {
+  id            String   @id @default(cuid())
+  tenantId      String?
+  carrier       String   // canada_post, purolator, fedex
+  originPostal  String
+  destPostal    String
+  weightGrams   Int
+  lengthCm      Int?
+  widthCm       Int?
+  heightCm      Int?
+  rates         Json     // [{service, rate, estimatedDays, currency}]
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([carrier, originPostal, destPostal, weightGrams])
+  @@index([expiresAt])
   @@index([tenantId])
 }

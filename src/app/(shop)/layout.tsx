@@ -1,6 +1,7 @@
 import Header from '@/components/shop/Header';
 import Footer from '@/components/shop/Footer';
 import FreeShippingBanner from '@/components/shop/FreeShippingBanner';
+import PwaInstallPrompt from '@/components/shop/PwaInstallPrompt';
 import SkipToContent from '@/components/ui/SkipToContent';
 import ShopClientProviders from './ShopClientProviders';
 import { TenantBrandingProvider } from '@/components/shop/TenantBrandingProvider';
@@ -39,6 +40,7 @@ export default async function ShopLayout({
           <Header />
           <main id="main-content" className="flex-1 relative z-0" tabIndex={-1}>{children}</main>
           <Footer />
+          <PwaInstallPrompt />
         </div>
       </ShopClientProviders>
     </TenantBrandingProvider>

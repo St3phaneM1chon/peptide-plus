@@ -1,21 +1,21 @@
 /**
- * Service Worker for BioCycle CRM PWA
+ * Service Worker for Koraline PWA (tenant-aware)
  * - Cache-first for static assets (CSS, JS, images, fonts, icons)
  * - Network-first for API calls (with cache fallback)
+ * - Network-first for dynamic content (product pages, etc.)
  * - Offline fallback page for navigation requests
  * - Push notification handler
  */
 
-const CACHE_VERSION = 'v3';
-const STATIC_CACHE = `biocycle-crm-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `biocycle-crm-dynamic-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v4';
+const STATIC_CACHE = `koraline-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `koraline-dynamic-${CACHE_VERSION}`;
 const OFFLINE_PAGE = '/offline.html';
 
 // Static assets to precache on install
 const STATIC_ASSETS = [
   '/',
   '/offline.html',
-  '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
   '/icons/icon-192.png',
@@ -28,7 +28,7 @@ const STATIC_ASSETS = [
 // ---------------------------------------------------------------------------
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
+  console.log('[SW] Installing service worker v4...');
 
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -48,7 +48,7 @@ self.addEventListener('install', (event) => {
 // ---------------------------------------------------------------------------
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
+  console.log('[SW] Activating service worker v4...');
 
   event.waitUntil(
     caches.keys()
@@ -56,7 +56,7 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames
             .filter((cacheName) => {
-              return (cacheName.startsWith('biocycle-crm-') || cacheName.startsWith('biocycle-'))
+              return (cacheName.startsWith('koraline-') || cacheName.startsWith('biocycle-'))
                 && !cacheName.endsWith(CACHE_VERSION);
             })
             .map((cacheName) => {
@@ -84,6 +84,12 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome-extension and other non-http(s) protocols
   if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // Dynamic manifest: always network-first (tenant-specific)
+  if (url.pathname === '/manifest.json' || url.pathname.endsWith('/manifest')) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
@@ -134,7 +140,7 @@ async function cacheFirst(request) {
 }
 
 // ---------------------------------------------------------------------------
-// Network-first strategy (API calls)
+// Network-first strategy (API calls, dynamic content)
 // ---------------------------------------------------------------------------
 
 async function networkFirst(request) {
@@ -223,13 +229,13 @@ self.addEventListener('sync', (event) => {
 // ---------------------------------------------------------------------------
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'BioCycle CRM', body: 'New notification' };
+  let data = { title: 'Koraline', body: 'New notification' };
 
   if (event.data) {
     try {
       data = event.data.json();
     } catch {
-      data = { title: 'BioCycle CRM', body: event.data.text() };
+      data = { title: 'Koraline', body: event.data.text() };
     }
   }
 
@@ -239,7 +245,7 @@ self.addEventListener('push', (event) => {
     badge: '/icons/icon-96.png',
     vibrate: [100, 50, 100],
     data: {
-      url: data.url || '/admin/crm',
+      url: data.url || '/',
       dateOfArrival: Date.now(),
     },
     actions: [
@@ -249,7 +255,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'BioCycle CRM', options)
+    self.registration.showNotification(data.title || 'Koraline', options)
   );
 });
 
@@ -264,14 +270,14 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  const url = event.notification.data?.url || '/admin/crm';
+  const url = event.notification.data?.url || '/';
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((windowClients) => {
         // Focus existing window if available
         for (const client of windowClients) {
-          if (client.url.includes('/admin/crm') && 'focus' in client) {
+          if ('focus' in client) {
             client.navigate(url);
             return client.focus();
           }

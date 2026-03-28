@@ -19,7 +19,7 @@ import {
   Filter, MessageSquare, ListChecks, Trophy, CheckSquare,
   ToggleRight, Bot, Building2, Palette, Boxes, GraduationCap,
   UserPlus, Medal, ShieldCheck, ExternalLink, Crown, Layers,
-  Store,
+  Store, RotateCcw,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -149,6 +149,9 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/inventaire', labelKey: 'admin.nav.inventory', icon: Archive },
           { href: '/admin/fournisseurs', labelKey: 'admin.nav.suppliers', icon: Truck },
           { href: '/admin/livraison', labelKey: 'admin.nav.shippingZones', icon: Package },
+          { href: '/admin/retours', labelKey: 'admin.nav.returnsExchanges', icon: RotateCcw },
+          { href: '/admin/bnpl', labelKey: 'admin.nav.bnplProviders', icon: CreditCard },
+          { href: '/admin/tarifs-transporteurs', labelKey: 'admin.nav.carrierRates', icon: Calculator },
         ],
         defaultOpen: true,
       },
@@ -816,7 +819,7 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/formation')) return 'formation';
   if (pathname.startsWith('/admin/comptabilite') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/paiements')) return 'accounting';
   if (pathname.startsWith('/admin/emails') || pathname.startsWith('/admin/newsletter')) return 'emails';
-  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles') || pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/livraison')) return 'commerce';
+  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles') || pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/retours') || pathname.startsWith('/admin/bnpl') || pathname.startsWith('/admin/tarifs-transporteurs')) return 'commerce';
   if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell') || pathname.startsWith('/admin/ambassadeurs') || pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/membership') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/ab-tests')) return 'marketing';
   if (pathname.startsWith('/admin/media') || pathname.startsWith('/admin/webinaires') || pathname.startsWith('/admin/blog')) return 'media';
   if (pathname.startsWith('/admin/rapports') || pathname.startsWith('/admin/analytics')) return 'dashboard';
