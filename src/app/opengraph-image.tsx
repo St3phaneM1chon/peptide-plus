@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'Attitudes VIP - Research-Grade Peptides';
+export const alt = 'Attitudes VIP - Suite Koraline SaaS';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -14,35 +14,36 @@ export default function OGImage() {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          background: '#1a1a2e',
+          background: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0d1b2a 100%)',
           padding: '60px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
-        {/* Logo */}
+        {/* Logo area */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div
             style={{
               width: '64px',
               height: '64px',
               borderRadius: '16px',
-              background: '#238838',
+              background: 'linear-gradient(135deg, #0066CC 0%, #003366 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              fontSize: '28px',
+              fontSize: '24px',
               fontWeight: 700,
+              letterSpacing: '-1px',
             }}
           >
-            BC
+            A
           </div>
-          <div style={{ color: 'white', fontSize: '28px', fontWeight: 600 }}>
+          <div style={{ color: 'white', fontSize: '28px', fontWeight: 600, letterSpacing: '-0.5px' }}>
             Attitudes VIP
           </div>
         </div>
 
-        {/* Main */}
+        {/* Main headline */}
         <div
           style={{
             flex: 1,
@@ -55,74 +56,87 @@ export default function OGImage() {
           <div
             style={{
               color: 'white',
-              fontSize: '64px',
+              fontSize: '60px',
               fontWeight: 700,
               lineHeight: 1.1,
+              letterSpacing: '-1.5px',
             }}
           >
-            Research-Grade
-            <br />
-            Peptides
+            Suite Koraline
           </div>
           <div
             style={{
-              color: '#cbd5e1',
-              fontSize: '30px',
+              color: '#94a3b8',
+              fontSize: '28px',
               fontWeight: 400,
+              lineHeight: 1.4,
             }}
           >
-            Premium quality peptides for scientific research
+            Plateforme SaaS tout-en-un : commerce, CRM, comptabilite, formation, telephonie
           </div>
         </div>
 
-        {/* Bottom */}
+        {/* Bottom badges */}
         <div
           style={{
             display: 'flex',
-            gap: '32px',
+            gap: '24px',
             alignItems: 'center',
-            borderTop: '1px solid rgba(255,255,255,0.1)',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
             paddingTop: '24px',
           }}
         >
           <div
             style={{
-              background: 'rgba(35,136,56,0.15)',
-              border: '1px solid rgba(35,136,56,0.3)',
+              background: 'rgba(0,102,204,0.15)',
+              border: '1px solid rgba(0,102,204,0.3)',
               borderRadius: '8px',
               padding: '8px 16px',
-              color: '#238838',
-              fontSize: '18px',
+              color: '#60a5fa',
+              fontSize: '17px',
               fontWeight: 600,
             }}
           >
-            Lab Tested
+            E-Commerce
           </div>
           <div
             style={{
-              background: 'rgba(34,211,238,0.15)',
-              border: '1px solid rgba(34,211,238,0.3)',
+              background: 'rgba(34,211,238,0.12)',
+              border: '1px solid rgba(34,211,238,0.25)',
               borderRadius: '8px',
               padding: '8px 16px',
               color: '#22d3ee',
-              fontSize: '18px',
+              fontSize: '17px',
               fontWeight: 600,
             }}
           >
-            COA Available
+            CRM + Telephonie
           </div>
           <div
             style={{
-              background: 'rgba(34,197,94,0.15)',
-              border: '1px solid rgba(34,197,94,0.3)',
+              background: 'rgba(34,197,94,0.12)',
+              border: '1px solid rgba(34,197,94,0.25)',
               borderRadius: '8px',
               padding: '8px 16px',
               color: '#22c55e',
-              fontSize: '18px',
+              fontSize: '17px',
               fontWeight: 600,
             }}
           >
-            Free Shipping $150+
+            LMS Formation
+          </div>
+          <div
+            style={{
+              background: 'rgba(168,85,247,0.12)',
+              border: '1px solid rgba(168,85,247,0.25)',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              color: '#a855f7',
+              fontSize: '17px',
+              fontWeight: 600,
+            }}
+          >
+            Comptabilite
           </div>
           <div style={{ marginLeft: 'auto', color: '#64748b', fontSize: '18px' }}>
             attitudes.vip

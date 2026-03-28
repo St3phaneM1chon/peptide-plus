@@ -20,6 +20,10 @@ function buildAlternates(url: string) {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
+  // Use a stable lastModified date for static pages to avoid signaling
+  // false freshness to crawlers on every request.
+  const staticLastModified = new Date('2026-03-28T00:00:00Z');
+
   // --- Main pages (high traffic, updated often) ---
   const mainPages: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }[] = [
     { path: '',                    changeFrequency: 'daily',   priority: 1.0 },
@@ -31,6 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/rewards',            changeFrequency: 'weekly',  priority: 0.8 },
     { path: '/subscriptions',      changeFrequency: 'weekly',  priority: 0.8 },
     { path: '/tarifs',             changeFrequency: 'weekly',  priority: 0.8 },
+    { path: '/pricing',            changeFrequency: 'weekly',  priority: 0.8 },
     { path: '/blog',               changeFrequency: 'weekly',  priority: 0.8 },
     { path: '/calculator',         changeFrequency: 'monthly', priority: 0.8 },
     { path: '/lab-results',        changeFrequency: 'weekly',  priority: 0.8 },
@@ -38,9 +43,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/webinars',           changeFrequency: 'weekly',  priority: 0.8 },
     { path: '/catalogue',          changeFrequency: 'weekly',  priority: 0.8 },
     { path: '/bundles',            changeFrequency: 'weekly',  priority: 0.8 },
+    { path: '/ambassador',         changeFrequency: 'monthly', priority: 0.7 },
     { path: '/search',             changeFrequency: 'weekly',  priority: 0.7 },
     { path: '/compare',            changeFrequency: 'monthly', priority: 0.7 },
     { path: '/gift-cards',         changeFrequency: 'monthly', priority: 0.7 },
+    { path: '/track-order',        changeFrequency: 'monthly', priority: 0.5 },
+    { path: '/support',            changeFrequency: 'monthly', priority: 0.6 },
+    { path: '/docs',               changeFrequency: 'monthly', priority: 0.5 },
   ];
 
   // --- Solutions pages ---
@@ -89,6 +98,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // --- Platform / Marketing pages ---
   const platformPages: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }[] = [
+    { path: '/platform',                         changeFrequency: 'weekly',  priority: 0.9 },
     { path: '/platform/features',                changeFrequency: 'weekly',  priority: 0.9 },
     { path: '/platform/features/commerce',       changeFrequency: 'monthly', priority: 0.8 },
     { path: '/platform/features/crm',            changeFrequency: 'monthly', priority: 0.8 },
@@ -110,6 +120,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/platform/calculateur-roi',         changeFrequency: 'monthly', priority: 0.7 },
     { path: '/platform/comparer',               changeFrequency: 'monthly', priority: 0.8 },
     { path: '/platform/partenaires',            changeFrequency: 'monthly', priority: 0.7 },
+    { path: '/platform/demo',                   changeFrequency: 'monthly', priority: 0.7 },
+    { path: '/platform/pricing',                changeFrequency: 'weekly',  priority: 0.8 },
     { path: '/changelog',                       changeFrequency: 'weekly',  priority: 0.6 },
     { path: '/status',                          changeFrequency: 'daily',   priority: 0.5 },
   ];
@@ -119,9 +131,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/mentions-legales/conditions',       changeFrequency: 'yearly', priority: 0.3 },
     { path: '/mentions-legales/confidentialite',  changeFrequency: 'yearly', priority: 0.3 },
     { path: '/mentions-legales/cookies',          changeFrequency: 'yearly', priority: 0.3 },
+    { path: '/privacy',                           changeFrequency: 'yearly', priority: 0.3 },
+    { path: '/terms',                             changeFrequency: 'yearly', priority: 0.3 },
     { path: '/refund-policy',                     changeFrequency: 'yearly', priority: 0.3 },
     { path: '/shipping-policy',                   changeFrequency: 'yearly', priority: 0.3 },
     { path: '/accessibilite',                     changeFrequency: 'yearly', priority: 0.3 },
+  ];
+
+  // --- LMS public pages (accessible without login) ---
+  const lmsPublicPages: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }[] = [
+    { path: '/learn/glossaire',    changeFrequency: 'monthly', priority: 0.6 },
+    { path: '/learn/forfaits',     changeFrequency: 'weekly',  priority: 0.7 },
+    { path: '/learn/achievements', changeFrequency: 'monthly', priority: 0.5 },
   ];
 
   // Combine all static pages
@@ -133,6 +154,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...resourcePages,
     ...corporatePages,
     ...platformPages,
+    ...lmsPublicPages,
     ...legalPages,
   ];
 
@@ -140,7 +162,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const url = `${baseUrl}${entry.path}`;
     return {
       url,
-      lastModified: new Date(),
+      lastModified: staticLastModified,
       changeFrequency: entry.changeFrequency,
       priority: entry.priority,
       alternates: buildAlternates(url),
