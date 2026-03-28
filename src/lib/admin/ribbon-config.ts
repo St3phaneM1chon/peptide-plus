@@ -1523,6 +1523,7 @@ export function getSubSectionId(
     pathname.startsWith('/admin/livraison') ||
     pathname.startsWith('/admin/devises') ||
     pathname.startsWith('/admin/seo') ||
+    pathname.startsWith('/admin/ab-tests') ||
     pathname.startsWith('/admin/traductions') ||
     pathname.startsWith('/admin/contenu')
   ) return 'system.config';

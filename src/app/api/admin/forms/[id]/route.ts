@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
@@ -73,7 +74,7 @@ function extractId(ctx: unknown): string | null {
 
 // ── GET /api/admin/forms/[id] ────────────────────────────────────
 
-export const GET = withAdminGuard(async (request: NextRequest, ctx) => {
+export const GET = withAdminGuard(async (_request: NextRequest, ctx) => {
   try {
     const params = ctx?.params ? (typeof ctx.params.then === 'function' ? await ctx.params : ctx.params) : {};
     const id = params?.id || extractId(ctx);
@@ -131,8 +132,8 @@ export const PUT = withAdminGuard(async (request: NextRequest, ctx) => {
     const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.fields !== undefined) updateData.fields = data.fields;
-    if (data.settings !== undefined) updateData.settings = data.settings;
+    if (data.fields !== undefined) updateData.fields = data.fields as unknown as Prisma.InputJsonValue;
+    if (data.settings !== undefined) updateData.settings = data.settings as unknown as Prisma.InputJsonValue;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
     const form = await prisma.formDefinition.update({

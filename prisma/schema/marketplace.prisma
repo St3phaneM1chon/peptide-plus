@@ -1,0 +1,70 @@
+// =============================================================================
+// MARKETPLACE — Third-Party App Ecosystem (Koraline SaaS Platform)
+// =============================================================================
+// Enables tenants to browse, install, and manage third-party apps/integrations.
+// Similar to Shopify App Store / Wix App Market.
+
+model AppListing {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  tagline          String
+  description      String
+  category         String   // productivity, marketing, analytics, shipping, payments, etc.
+  icon             String?
+  screenshots      Json     @default("[]")
+  developerName    String
+  developerUrl     String?
+  websiteUrl       String?
+  documentationUrl String?
+  pricing          String   @default("free") // free, freemium, paid, contact
+  monthlyPrice     Decimal?
+  rating           Decimal  @default(0)
+  reviewCount      Int      @default(0)
+  installCount     Int      @default(0)
+  isVerified       Boolean  @default(false)
+  isFeatured       Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  permissions      Json     @default("[]") // required permissions
+  webhookUrl       String?  // app callback URL
+  apiKey           String?  // app authentication
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  installs AppInstall[]
+  reviews  AppReview[]
+
+  @@index([category])
+  @@index([isFeatured])
+  @@index([isActive])
+}
+
+model AppInstall {
+  id          String   @id @default(cuid())
+  tenantId    String
+  appId       String
+  status      String   @default("active") // active, disabled, uninstalled
+  settings    Json     @default("{}")
+  installedAt DateTime @default(now())
+
+  app AppListing @relation(fields: [appId], references: [id])
+
+  @@unique([tenantId, appId])
+  @@index([tenantId])
+}
+
+model AppReview {
+  id        String   @id @default(cuid())
+  tenantId  String
+  appId     String
+  userId    String
+  rating    Int      // 1-5
+  title     String?
+  content   String?
+  createdAt DateTime @default(now())
+
+  app AppListing @relation(fields: [appId], references: [id])
+
+  @@unique([tenantId, appId, userId])
+  @@index([appId])
+}

@@ -19,6 +19,7 @@ import {
   Filter, MessageSquare, ListChecks, Trophy, CheckSquare,
   ToggleRight, Bot, Building2, Palette, Boxes, GraduationCap,
   UserPlus, Medal, ShieldCheck, ExternalLink, Crown, Layers,
+  Store,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -46,6 +47,7 @@ export const railItems: NavRailItem[] = [
   { id: 'crm', labelKey: 'admin.nav.crm', icon: Briefcase, badge: 'unreadChats', requiredModule: 'crm' },
   { id: 'accounting', labelKey: 'admin.nav.accounting', icon: Calculator, requiredModule: 'comptabilite' },
   { id: 'formation', labelKey: 'admin.nav.formation', icon: GraduationCap, requiredModule: 'formation' },
+  { id: 'marketplace', labelKey: 'admin.nav.marketplace', icon: Store },
   { id: 'system', labelKey: 'admin.nav.system', icon: Settings },
   { id: 'dev', labelKey: 'admin.nav.development', icon: FlaskConical },
 ];
@@ -190,6 +192,7 @@ export const folderSections: Record<string, NavFolderSection> = {
         labelKey: 'admin.nav.contentAndSeo',
         items: [
           { href: '/admin/seo', labelKey: 'admin.nav.seo', icon: Search },
+          { href: '/admin/ab-tests', labelKey: 'admin.nav.abTests', icon: FlaskConical },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -714,6 +717,19 @@ export const folderSections: Record<string, NavFolderSection> = {
     ],
   },
 
+  marketplace: {
+    railId: 'marketplace',
+    title: 'admin.nav.marketplace',
+    groups: [
+      {
+        items: [
+          { href: '/admin/marketplace', labelKey: 'admin.nav.marketplaceBrowse', icon: Store },
+        ],
+        defaultOpen: true,
+      },
+    ],
+  },
+
   system: {
     railId: 'system',
     title: 'admin.nav.system',
@@ -801,13 +817,14 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/comptabilite') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/paiements')) return 'accounting';
   if (pathname.startsWith('/admin/emails') || pathname.startsWith('/admin/newsletter')) return 'emails';
   if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles') || pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/livraison')) return 'commerce';
-  if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell') || pathname.startsWith('/admin/ambassadeurs') || pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/membership') || pathname.startsWith('/admin/seo')) return 'marketing';
+  if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell') || pathname.startsWith('/admin/ambassadeurs') || pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/membership') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/ab-tests')) return 'marketing';
   if (pathname.startsWith('/admin/media') || pathname.startsWith('/admin/webinaires') || pathname.startsWith('/admin/blog')) return 'media';
   if (pathname.startsWith('/admin/rapports') || pathname.startsWith('/admin/analytics')) return 'dashboard';
   if (pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/diagnostics') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/monitoring') || pathname.startsWith('/admin/system/crons')) return 'dev';
   if (pathname.startsWith('/admin/telephonie')) return 'telephony';
   // CRM call center routes are in telephony folder pane but keep CRM rail active (paths start with /admin/crm/)
   if (pathname.startsWith('/admin/crm') || pathname.startsWith('/admin/scraper') || pathname.startsWith('/admin/chat')) return 'crm';
+  if (pathname.startsWith('/admin/marketplace')) return 'marketplace';
   if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/webhooks') || pathname.startsWith('/admin/securite') || pathname.startsWith('/admin/tutoriels') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/cms') || pathname.startsWith('/admin/galeries')) return 'system';
   return 'dashboard';
 }

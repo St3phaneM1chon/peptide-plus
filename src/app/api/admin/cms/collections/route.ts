@@ -106,7 +106,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
       name: parsed.data.name,
       slug: parsed.data.slug,
       description: parsed.data.description,
-      fields: parsed.data.fields as unknown as Record<string, unknown>[],
+      fields: JSON.parse(JSON.stringify(parsed.data.fields)),
       isActive: parsed.data.isActive,
     },
     include: {
@@ -151,7 +151,7 @@ export const PUT = withAdminGuard(async (request: NextRequest) => {
     where: { id },
     data: {
       ...updateData,
-      fields: updateData.fields ? (updateData.fields as unknown as Record<string, unknown>[]) : undefined,
+      fields: updateData.fields ? JSON.parse(JSON.stringify(updateData.fields)) : undefined,
     },
     include: {
       _count: { select: { items: true } },

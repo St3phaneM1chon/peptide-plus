@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
@@ -132,8 +133,8 @@ export const POST = withAdminGuard(async (request, ctx) => {
         name: data.name,
         slug,
         description: data.description ?? null,
-        fields: data.fields as unknown as Record<string, unknown>[],
-        settings: data.settings as unknown as Record<string, unknown>,
+        fields: data.fields as unknown as Prisma.InputJsonValue,
+        settings: data.settings as unknown as Prisma.InputJsonValue,
         isActive: data.isActive,
         createdById: session?.user?.id ?? '',
       },

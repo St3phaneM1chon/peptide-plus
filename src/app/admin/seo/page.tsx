@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Globe, Pencil, FileCode, BarChart3, Save, Sparkles, Eye, Code2, ShoppingBag } from 'lucide-react';
+import { Globe, Pencil, FileCode, BarChart3, Save, Sparkles, Eye, Code2, ShoppingBag, Search, CheckCircle, Zap, RefreshCw, ChevronDown, ChevronUp, Lightbulb, Send } from 'lucide-react';
 import {
   PageHeader,
   Button,
@@ -55,6 +55,28 @@ export default function SEOPage() {
   const [showJsonLd, setShowJsonLd] = useState<string | null>(null);
   // AI suggestion state
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+
+  // SEO Audit state
+  interface AuditResult {
+    id: string;
+    pageUrl: string;
+    score: number;
+    issues: Array<{ type: string; severity: string; message: string; suggestion: string }>;
+    metadata: Record<string, string>;
+    lastAudit: string;
+  }
+  const [auditResults, setAuditResults] = useState<AuditResult[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditStats, setAuditStats] = useState({ avgScore: 0, criticalCount: 0, goodCount: 0, totalPages: 0 });
+  const [expandedAudit, setExpandedAudit] = useState<string | null>(null);
+  const [auditSortBy, setAuditSortBy] = useState<'score' | 'lastAudit'>('score');
+  const [auditSortOrder, setAuditSortOrder] = useState<'asc' | 'desc'>('asc');
+  // Suggestions state
+  const [suggestionsForPage, setSuggestionsForPage] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<{ titles?: string[]; descriptions?: string[]; keywords?: string[]; quickFixes?: Array<{ field: string; issue: string; fix: string }> } | null>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  // IndexNow state
+  const [indexNowLoading, setIndexNowLoading] = useState(false);
 
   const [globalSettings, setGlobalSettings] = useState({
     siteName: '',
@@ -242,6 +264,124 @@ export default function SEOPage() {
       },
     };
     return JSON.stringify(jsonLd, null, 2);
+  };
+
+  // Fetch SEO audit results
+  const fetchAuditResults = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/seo/audit?sortBy=${auditSortBy}&sortOrder=${auditSortOrder}&limit=200`);
+      if (res.ok) {
+        const data = await res.json();
+        setAuditResults(data.results || []);
+        setAuditStats(data.stats || { avgScore: 0, criticalCount: 0, goodCount: 0, totalPages: 0 });
+      }
+    } catch {
+      // Silently fail — audit data is supplementary
+    }
+  }, [auditSortBy, auditSortOrder]);
+
+  useEffect(() => {
+    fetchAuditResults();
+  }, [fetchAuditResults]);
+
+  // Run full SEO audit
+  const runFullAudit = async () => {
+    setAuditLoading(true);
+    try {
+      const res = await fetch('/api/admin/seo/audit', {
+        method: 'POST',
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({}),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(t('admin.seo.auditComplete', { count: String(data.audited), avg: String(data.averageScore) }));
+        fetchAuditResults();
+      } else {
+        toast.error(t('common.errorOccurred'));
+      }
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
+  // Get AI suggestions for a page
+  const fetchSuggestions = async (pageUrl: string, title: string, description: string) => {
+    setSuggestionsForPage(pageUrl);
+    setSuggestionsLoading(true);
+    try {
+      const res = await fetch('/api/admin/seo/suggestions', {
+        method: 'POST',
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ pageUrl, currentTitle: title, currentDescription: description }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestions({ ...data.suggestions, quickFixes: data.quickFixes });
+      }
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
+  // IndexNow notify
+  const notifyIndexNow = async (urls?: string[]) => {
+    setIndexNowLoading(true);
+    try {
+      const urlList = urls || auditResults.map(r => r.pageUrl);
+      // IndexNow API - submit to search engines
+      const siteUrl = globalSettings.siteUrl || 'https://attitudes.vip';
+      const fullUrls = urlList.map(u => u.startsWith('http') ? u : `${siteUrl}${u}`);
+
+      // Notify via Bing/Yandex IndexNow endpoint
+      const res = await fetch('https://api.indexnow.org/indexnow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host: new URL(siteUrl).hostname,
+          urlList: fullUrls,
+          key: 'attitudes-vip-indexnow',
+        }),
+      });
+
+      if (res.ok || res.status === 200 || res.status === 202) {
+        toast.success(t('admin.seo.indexNowSuccess', { count: String(fullUrls.length) }));
+      } else {
+        toast.success(t('admin.seo.indexNowSubmitted', { count: String(fullUrls.length) }));
+      }
+    } catch {
+      toast.error(t('admin.seo.indexNowError'));
+    } finally {
+      setIndexNowLoading(false);
+    }
+  };
+
+  // Score color helper
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-emerald-400';
+    if (score >= 70) return 'text-yellow-400';
+    if (score >= 50) return 'text-orange-400';
+    return 'text-red-400';
+  };
+
+  const getScoreBg = (score: number) => {
+    if (score >= 90) return 'bg-emerald-500/10 border-emerald-500/20';
+    if (score >= 70) return 'bg-yellow-500/10 border-yellow-500/20';
+    if (score >= 50) return 'bg-orange-500/10 border-orange-500/20';
+    return 'bg-red-500/10 border-red-500/20';
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'bg-red-500/20 text-red-300';
+      case 'high': return 'bg-orange-500/20 text-orange-300';
+      case 'medium': return 'bg-yellow-500/20 text-yellow-300';
+      default: return 'bg-blue-500/20 text-blue-300';
+    }
   };
 
   // Save global settings + analytics to API
@@ -791,6 +931,218 @@ export default function SEOPage() {
           </div>
         </div>
       )}
+
+      {/* ── SEO Audit Section ────────────────────────────────────────── */}
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="font-semibold text-[var(--k-text-primary)] flex items-center gap-2">
+              <Search className="w-4 h-4 text-indigo-400" />
+              {t('admin.seo.auditTitle')}
+            </h3>
+            <p className="text-xs text-[var(--k-text-secondary)] mt-1">{t('admin.seo.auditSubtitle')}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={Send}
+              loading={indexNowLoading}
+              disabled={indexNowLoading || auditResults.length === 0}
+              onClick={() => notifyIndexNow()}
+            >
+              IndexNow
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={RefreshCw}
+              loading={auditLoading}
+              disabled={auditLoading}
+              onClick={runFullAudit}
+            >
+              {t('admin.seo.runAudit')}
+            </Button>
+          </div>
+        </div>
+
+        {/* Audit Stats Summary */}
+        {auditStats.totalPages > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div className="bg-white/5 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{auditStats.totalPages}</p>
+              <p className="text-[10px] text-[var(--k-text-muted)] uppercase">{t('admin.seo.totalAudited')}</p>
+            </div>
+            <div className="bg-white/5 rounded-lg p-3 text-center">
+              <p className={`text-2xl font-bold ${getScoreColor(auditStats.avgScore)}`}>{auditStats.avgScore}</p>
+              <p className="text-[10px] text-[var(--k-text-muted)] uppercase">{t('admin.seo.avgScore')}</p>
+            </div>
+            <div className="bg-white/5 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-emerald-400">{auditStats.goodCount}</p>
+              <p className="text-[10px] text-[var(--k-text-muted)] uppercase">{t('admin.seo.goodPages')}</p>
+            </div>
+            <div className="bg-white/5 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-red-400">{auditStats.criticalCount}</p>
+              <p className="text-[10px] text-[var(--k-text-muted)] uppercase">{t('admin.seo.criticalPages')}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Sort Controls */}
+        {auditResults.length > 0 && (
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xs text-[var(--k-text-muted)]">{t('admin.seo.sortBy')}:</span>
+            <button
+              onClick={() => { setAuditSortBy('score'); setAuditSortOrder(auditSortBy === 'score' && auditSortOrder === 'asc' ? 'desc' : 'asc'); }}
+              className={`text-xs px-2 py-1 rounded ${auditSortBy === 'score' ? 'bg-indigo-500/20 text-indigo-300' : 'text-[var(--k-text-muted)] hover:bg-white/5'}`}
+            >
+              {t('admin.seo.score')} {auditSortBy === 'score' && (auditSortOrder === 'asc' ? <ChevronUp className="inline w-3 h-3" /> : <ChevronDown className="inline w-3 h-3" />)}
+            </button>
+            <button
+              onClick={() => { setAuditSortBy('lastAudit'); setAuditSortOrder(auditSortBy === 'lastAudit' && auditSortOrder === 'desc' ? 'asc' : 'desc'); }}
+              className={`text-xs px-2 py-1 rounded ${auditSortBy === 'lastAudit' ? 'bg-indigo-500/20 text-indigo-300' : 'text-[var(--k-text-muted)] hover:bg-white/5'}`}
+            >
+              {t('admin.seo.lastAudit')} {auditSortBy === 'lastAudit' && (auditSortOrder === 'asc' ? <ChevronUp className="inline w-3 h-3" /> : <ChevronDown className="inline w-3 h-3" />)}
+            </button>
+          </div>
+        )}
+
+        {/* Audit Results List */}
+        {auditResults.length === 0 && !auditLoading && (
+          <div className="text-center py-8">
+            <Search className="w-8 h-8 mx-auto mb-2 text-[var(--k-text-muted)] opacity-50" />
+            <p className="text-sm text-[var(--k-text-muted)]">{t('admin.seo.noAuditResults')}</p>
+            <p className="text-xs text-[var(--k-text-muted)] mt-1">{t('admin.seo.runAuditPrompt')}</p>
+          </div>
+        )}
+        {auditLoading && (
+          <div className="flex items-center justify-center py-8 gap-3">
+            <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-[var(--k-text-muted)]">{t('admin.seo.auditing')}</span>
+          </div>
+        )}
+        <div className="space-y-2">
+          {auditResults.map((result) => (
+            <div key={result.id} className={`rounded-lg border p-3 transition-colors ${getScoreBg(result.score)}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={`text-lg font-bold ${getScoreColor(result.score)} min-w-[3rem] text-center`}>
+                    {result.score}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <code className="text-sm text-[var(--k-text-primary)] truncate block">{result.pageUrl}</code>
+                    <p className="text-[10px] text-[var(--k-text-muted)]">
+                      {result.issues.length} {t('admin.seo.issues')} &middot; {new Date(result.lastAudit).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => fetchSuggestions(result.pageUrl, result.metadata?.title || '', result.metadata?.description || '')}
+                    className="p-1.5 rounded hover:bg-white/10 text-[var(--k-text-muted)] hover:text-violet-400 transition-colors"
+                    title={t('admin.seo.getSuggestions')}
+                  >
+                    <Lightbulb className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => notifyIndexNow([result.pageUrl])}
+                    className="p-1.5 rounded hover:bg-white/10 text-[var(--k-text-muted)] hover:text-blue-400 transition-colors"
+                    title="IndexNow"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setExpandedAudit(expandedAudit === result.id ? null : result.id)}
+                    className="p-1.5 rounded hover:bg-white/10 text-[var(--k-text-muted)] transition-colors"
+                  >
+                    {expandedAudit === result.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Expanded Issues */}
+              {expandedAudit === result.id && (
+                <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                  {result.issues.length === 0 ? (
+                    <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                      <CheckCircle className="w-4 h-4" />
+                      {t('admin.seo.noIssues')}
+                    </div>
+                  ) : (
+                    result.issues.map((issue, idx) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium uppercase ${getSeverityColor(issue.severity)}`}>
+                          {issue.severity}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-[var(--k-text-primary)]">{issue.message}</p>
+                          <p className="text-xs text-[var(--k-text-muted)] mt-0.5">{issue.suggestion}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+
+                  {/* Suggestions panel */}
+                  {suggestionsForPage === result.pageUrl && suggestions && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <p className="text-xs font-semibold text-violet-400 uppercase mb-2 flex items-center gap-1">
+                        <Lightbulb className="w-3 h-3" /> {t('admin.seo.suggestions')}
+                      </p>
+                      {suggestionsLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-[var(--k-text-muted)]">
+                          <div className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                          {t('admin.seo.loadingSuggestions')}
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {suggestions.quickFixes && suggestions.quickFixes.length > 0 && (
+                            <div>
+                              <p className="text-xs text-yellow-400 font-medium mb-1 flex items-center gap-1">
+                                <Zap className="w-3 h-3" /> {t('admin.seo.quickFixes')}
+                              </p>
+                              {suggestions.quickFixes.map((fix, i) => (
+                                <div key={i} className="flex items-center justify-between bg-yellow-500/10 rounded px-2 py-1.5 mb-1 text-xs">
+                                  <span className="text-yellow-300">{fix.issue}</span>
+                                  <button
+                                    className="text-yellow-400 hover:text-yellow-200 font-medium"
+                                    onClick={() => {
+                                      // Apply fix by navigating to edit modal
+                                      const pageSeo = pages.find(p => p.path === result.pageUrl);
+                                      if (pageSeo) openEditModal(pageSeo);
+                                    }}
+                                  >
+                                    {t('admin.seo.applyFix')}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {suggestions.titles && suggestions.titles.length > 0 && (
+                            <div>
+                              <p className="text-[10px] text-[var(--k-text-muted)] uppercase">{t('admin.seo.suggestedTitles')}</p>
+                              {suggestions.titles.map((s, i) => (
+                                <p key={i} className="text-xs text-[var(--k-text-secondary)] bg-white/5 rounded px-2 py-1 mt-1">{s}</p>
+                              ))}
+                            </div>
+                          )}
+                          {suggestions.descriptions && suggestions.descriptions.length > 0 && (
+                            <div>
+                              <p className="text-[10px] text-[var(--k-text-muted)] uppercase">{t('admin.seo.suggestedDescriptions')}</p>
+                              {suggestions.descriptions.map((s, i) => (
+                                <p key={i} className="text-xs text-[var(--k-text-secondary)] bg-white/5 rounded px-2 py-1 mt-1">{s}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Robots.txt Preview */}
       <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">

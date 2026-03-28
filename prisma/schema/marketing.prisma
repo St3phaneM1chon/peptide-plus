@@ -66,3 +66,59 @@ model AdCampaignSnapshot {
   @@index([platform, date])
   @@index([tenantId])
 }
+
+// ---------------------------------------------------------------------------
+// SEO Audit Result (automated SEO auditing per page)
+// ---------------------------------------------------------------------------
+model SeoAuditResult {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  pageUrl   String
+  score     Int      // 0-100
+  issues    Json     @default("[]") // [{type, severity, message, suggestion}]
+  metadata  Json     @default("{}") // title, description, og, keywords found
+  lastAudit DateTime @default(now())
+
+  @@unique([tenantId, pageUrl])
+  @@index([tenantId, score])
+}
+
+// ---------------------------------------------------------------------------
+// A/B Test (split testing for pages)
+// ---------------------------------------------------------------------------
+model AbTest {
+  id        String    @id @default(cuid())
+  tenantId  String?
+  name      String
+  pageUrl   String
+  status    String    @default("draft") // draft, running, paused, completed
+  variants  Json      // [{id, name, content, trafficPercent}]
+  metrics   Json      @default("{}") // {impressions, conversions, conversionRate per variant}
+  startDate DateTime?
+  endDate   DateTime?
+  winnerId  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  impressions AbTestImpression[]
+
+  @@index([tenantId, status])
+}
+
+// ---------------------------------------------------------------------------
+// A/B Test Impression (visitor tracking for A/B tests)
+// ---------------------------------------------------------------------------
+model AbTestImpression {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  testId    String
+  variantId String
+  visitorId String
+  converted Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  test AbTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId, variantId])
+  @@index([tenantId, createdAt])
+}

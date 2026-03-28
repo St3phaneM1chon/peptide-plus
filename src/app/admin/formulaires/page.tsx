@@ -11,11 +11,11 @@ import {
   Plus, Pencil, Trash2, Copy, Eye, EyeOff, GripVertical,
   FileText, Mail, Phone, Hash, AlignLeft, ChevronDown,
   Radio, CheckSquare, Calendar, Upload, Star, EyeIcon,
-  Loader2, Download, ExternalLink, Settings, ArrowUp, ArrowDown, X,
+  Loader2, Download, Settings, ArrowUp, ArrowDown, X,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { Modal } from '@/components/admin/Modal';
-import { FormField, Input, Textarea } from '@/components/admin/FormField';
+import { FormField, Input } from '@/components/admin/FormField';
 import { EmptyState } from '@/components/admin/EmptyState';
 import {
   ContentList,
@@ -547,7 +547,7 @@ export default function FormBuilderPage() {
 
   const renderBuilder = () => (
     <Modal
-      open={showBuilder}
+      isOpen={showBuilder}
       onClose={() => setShowBuilder(false)}
       title={editingForm ? `Modifier: ${editingForm.name}` : 'Nouveau formulaire'}
       size="xl"
@@ -913,6 +913,7 @@ export default function FormBuilderPage() {
   return (
     <>
       <MobileSplitLayout
+        showDetail={!!selectedId}
         list={
           <ContentList
             items={contentItems}

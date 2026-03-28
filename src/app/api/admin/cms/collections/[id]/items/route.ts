@@ -85,7 +85,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
   const item = await prisma.cmsItem.create({
     data: {
       collectionId,
-      data: parsed.data.data as Record<string, unknown>,
+      data: JSON.parse(JSON.stringify(parsed.data.data)),
       slug: parsed.data.slug,
       isPublished: parsed.data.isPublished,
       sortOrder: parsed.data.sortOrder,
@@ -122,7 +122,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, context: { params
     where: { id: itemId },
     data: {
       ...updateData,
-      data: updateData.data ? (updateData.data as Record<string, unknown>) : undefined,
+      data: updateData.data ? (updateData.data as unknown as import('@prisma/client').Prisma.InputJsonValue) : undefined,
     },
   });
 
