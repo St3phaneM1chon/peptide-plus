@@ -45,32 +45,52 @@ const categories = [
 
 export default function IndividualSolutionsPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.10) 100%)',
+          borderBottom: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
           padding: '80px 24px',
           textAlign: 'center',
         }}
       >
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <span style={{ fontSize: '14px', fontWeight: 600, opacity: 0.8, display: 'block', marginBottom: '16px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', display: 'block', marginBottom: '16px', letterSpacing: '0.08em' }}>
             SOLUTIONS PARTICULIERS
           </span>
           <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
             Boostez votre carrière
           </h1>
-          <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7, marginBottom: '32px' }}>
-            Des formations conçues pour vous aider à acquérir de nouvelles compétences, 
+          <p style={{ fontSize: '18px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.7, marginBottom: '32px' }}>
+            Des formations conçues pour vous aider à acquérir de nouvelles compétences,
             obtenir des certifications reconnues et atteindre vos objectifs professionnels.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-            <Link href="/catalogue" className="btn" style={{ backgroundColor: 'white', color: 'var(--gray-500)', padding: '14px 28px' }}>
+            <Link
+              href="/catalogue"
+              className="btn"
+              style={{
+                background: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.20)',
+                color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                padding: '14px 28px',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
               Explorer les formations
             </Link>
-            <Link href="/auth/signup" className="btn" style={{ border: '2px solid white', color: 'white', padding: '14px 28px' }}>
+            <Link
+              href="/auth/signup"
+              className="btn"
+              style={{
+                border: '2px solid rgba(255,255,255,0.30)',
+                color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                padding: '14px 28px',
+                background: 'transparent',
+              }}
+            >
               Créer un compte gratuit
             </Link>
           </div>
@@ -80,7 +100,7 @@ export default function IndividualSolutionsPage() {
       {/* Benefits */}
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             Pourquoi nous choisir?
           </h2>
           <div
@@ -94,7 +114,9 @@ export default function IndividualSolutionsPage() {
               <div
                 key={i}
                 style={{
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                  backdropFilter: 'blur(20px)',
                   padding: '32px',
                   borderRadius: '12px',
                   display: 'flex',
@@ -103,10 +125,10 @@ export default function IndividualSolutionsPage() {
               >
                 <span style={{ fontSize: '32px' }}>{benefit.icon}</span>
                 <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                     {benefit.title}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)', lineHeight: 1.6 }}>{benefit.desc}</p>
+                  <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.6 }}>{benefit.desc}</p>
                 </div>
               </div>
             ))}
@@ -115,9 +137,16 @@ export default function IndividualSolutionsPage() {
       </section>
 
       {/* Categories */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
+      <section
+        style={{
+          background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+          borderTop: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          borderBottom: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          padding: '64px 24px',
+        }}
+      >
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             Catégories populaires
           </h2>
           <div
@@ -132,18 +161,20 @@ export default function IndividualSolutionsPage() {
                 key={i}
                 href={`/catalogue?categorie=${encodeURIComponent(cat.name)}`}
                 style={{
+                  display: 'block',
                   padding: '24px',
-                  backgroundColor: 'var(--gray-50)',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
                   borderRadius: '12px',
                   textAlign: 'center',
                   textDecoration: 'none',
                 }}
               >
                 <span style={{ fontSize: '32px', display: 'block', marginBottom: '12px' }}>{cat.icon}</span>
-                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>
                   {cat.name}
                 </h3>
-                <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{cat.count} formations</span>
+                <span style={{ fontSize: '12px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{cat.count} formations</span>
               </Link>
             ))}
           </div>
@@ -153,50 +184,104 @@ export default function IndividualSolutionsPage() {
       {/* Pricing */}
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             Options d'achat flexibles
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-            <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '16px', textAlign: 'center' }}>
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                backdropFilter: 'blur(20px)',
+                padding: '40px',
+                borderRadius: '16px',
+                textAlign: 'center',
+                color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+              }}
+            >
               <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>🎓</span>
-              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px' }}>
                 À l'unité
               </h3>
-              <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '16px' }}>
+              <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '16px' }}>
                 Achetez les formations qui vous intéressent, une à une.
               </p>
-              <p style={{ fontSize: '28px', fontWeight: 700, color: 'var(--gray-500)' }}>À partir de $49</p>
+              <p style={{ fontSize: '28px', fontWeight: 700 }}>À partir de $49</p>
             </div>
-            <div style={{ backgroundColor: 'var(--gray-500)', color: 'white', padding: '40px', borderRadius: '16px', textAlign: 'center' }}>
+            <div
+              style={{
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.30) 0%, rgba(168,85,247,0.20) 100%)',
+                border: '1px solid rgba(99,102,241,0.50)',
+                backdropFilter: 'blur(20px)',
+                padding: '40px',
+                borderRadius: '16px',
+                textAlign: 'center',
+                color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                position: 'relative',
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-12px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: '#22c55e',
+                  color: 'white',
+                  padding: '4px 16px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                }}
+              >
+                POPULAIRE
+              </span>
               <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>⭐</span>
               <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px' }}>
                 Abonnement Pro
               </h3>
-              <p style={{ fontSize: '14px', opacity: 0.9, marginBottom: '16px' }}>
+              <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '16px' }}>
                 Accès illimité à toutes les formations.
               </p>
               <p style={{ fontSize: '28px', fontWeight: 700 }}>$29/mois</p>
             </div>
-            <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '16px', textAlign: 'center' }}>
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                backdropFilter: 'blur(20px)',
+                padding: '40px',
+                borderRadius: '16px',
+                textAlign: 'center',
+                color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+              }}
+            >
               <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>🎁</span>
-              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px' }}>
                 Parcours certifiant
               </h3>
-              <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '16px' }}>
+              <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '16px' }}>
                 Ensemble de cours menant à une certification.
               </p>
-              <p style={{ fontSize: '28px', fontWeight: 700, color: 'var(--gray-500)' }}>À partir de $299</p>
+              <p style={{ fontSize: '28px', fontWeight: 700 }}>À partir de $299</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+      <section
+        style={{
+          background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+          borderTop: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          padding: '64px 24px',
+          textAlign: 'center',
+        }}
+      >
+        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
           Prêt à commencer?
         </h2>
-        <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+        <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '24px' }}>
           Créez votre compte gratuit et explorez nos formations.
         </p>
         <Link href="/auth/signup" className="btn btn-primary" style={{ padding: '14px 32px' }}>

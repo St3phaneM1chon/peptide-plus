@@ -55,41 +55,52 @@ const stats = [
 
 export default function PartnerSolutionsPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.10) 100%)',
+          borderBottom: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
           padding: '80px 24px',
           textAlign: 'center',
         }}
       >
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <span style={{ fontSize: '14px', fontWeight: 600, opacity: 0.8, display: 'block', marginBottom: '16px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', display: 'block', marginBottom: '16px', letterSpacing: '0.08em' }}>
             PROGRAMME PARTENAIRES
           </span>
           <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
             Développons ensemble
           </h1>
-          <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7, marginBottom: '32px' }}>
-            Rejoignez notre réseau de partenaires et bénéficiez de revenus récurrents 
+          <p style={{ fontSize: '18px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.7, marginBottom: '32px' }}>
+            Rejoignez notre réseau de partenaires et bénéficiez de revenus récurrents
             en proposant des formations de qualité à vos clients.
           </p>
-          <Link href="/contact?subject=partnership" className="btn" style={{ backgroundColor: 'white', color: 'var(--gray-500)', padding: '14px 28px' }}>
+          <Link
+            href="/contact?subject=partnership"
+            className="btn"
+            style={{
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.20)',
+              color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+              padding: '14px 28px',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
             Devenir partenaire
           </Link>
         </div>
       </section>
 
       {/* Stats */}
-      <section style={{ backgroundColor: 'white', padding: '48px 24px' }}>
+      <section style={{ padding: '48px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '32px', textAlign: 'center' }}>
             {stats.map((stat, i) => (
               <div key={i}>
-                <p style={{ fontSize: '36px', fontWeight: 700, color: 'var(--gray-500)', marginBottom: '4px' }}>{stat.value}</p>
-                <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{stat.label}</p>
+                <p style={{ fontSize: '36px', fontWeight: 700, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>{stat.value}</p>
+                <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{stat.label}</p>
               </div>
             ))}
           </div>
@@ -99,7 +110,7 @@ export default function PartnerSolutionsPage() {
       {/* Partner Types */}
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             Types de partenariat
           </h2>
           <div
@@ -113,16 +124,18 @@ export default function PartnerSolutionsPage() {
               <div
                 key={i}
                 style={{
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                  backdropFilter: 'blur(20px)',
                   borderRadius: '16px',
                   padding: '40px',
                 }}
               >
                 <span style={{ fontSize: '48px', display: 'block', marginBottom: '20px' }}>{type.icon}</span>
-                <h3 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '12px', color: 'var(--gray-500)' }}>
+                <h3 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '12px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                   {type.title}
                 </h3>
-                <p style={{ fontSize: '15px', color: 'var(--gray-400)', lineHeight: 1.7, marginBottom: '24px' }}>
+                <p style={{ fontSize: '15px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.7, marginBottom: '24px' }}>
                   {type.description}
                 </p>
                 <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -131,9 +144,9 @@ export default function PartnerSolutionsPage() {
                       key={j}
                       style={{
                         fontSize: '14px',
-                        color: 'var(--gray-500)',
+                        color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
                         padding: '10px 0',
-                        borderTop: j === 0 ? 'none' : '1px solid var(--gray-100)',
+                        borderTop: j === 0 ? 'none' : '1px solid rgba(255,255,255,0.08)',
                       }}
                     >
                       ✓ {benefit}
@@ -147,9 +160,16 @@ export default function PartnerSolutionsPage() {
       </section>
 
       {/* How it works */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
+      <section
+        style={{
+          background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+          borderTop: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          borderBottom: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          padding: '64px 24px',
+        }}
+      >
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             Comment ça marche?
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -164,7 +184,8 @@ export default function PartnerSolutionsPage() {
                   style={{
                     width: '48px',
                     height: '48px',
-                    backgroundColor: 'var(--gray-500)',
+                    background: 'linear-gradient(135deg, rgba(99,102,241,0.60) 0%, rgba(168,85,247,0.50) 100%)',
+                    border: '1px solid rgba(99,102,241,0.50)',
                     color: 'white',
                     borderRadius: '50%',
                     display: 'flex',
@@ -178,10 +199,10 @@ export default function PartnerSolutionsPage() {
                   {item.step}
                 </span>
                 <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px', color: 'var(--gray-500)' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                     {item.title}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{item.desc}</p>
+                  <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -191,10 +212,10 @@ export default function PartnerSolutionsPage() {
 
       {/* CTA */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
           Prêt à rejoindre notre réseau?
         </h2>
-        <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+        <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '24px' }}>
           Contactez-nous pour discuter de votre projet de partenariat.
         </p>
         <Link href="/contact?subject=partnership" className="btn btn-primary" style={{ padding: '14px 32px' }}>

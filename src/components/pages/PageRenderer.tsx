@@ -729,7 +729,7 @@ function UpdatedAtFooter({ updatedAt }: { updatedAt: Date }) {
         borderTop: '1px solid rgba(255,255,255,0.06)',
       }}
     >
-      Last updated: {new Date(updatedAt).toLocaleDateString('fr-CA')}
+      Dernière mise à jour: {new Date(updatedAt).toLocaleDateString('fr-CA')}
     </p>
   );
 }

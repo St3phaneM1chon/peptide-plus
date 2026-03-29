@@ -78,12 +78,13 @@ const useCases = [
 
 export default function UseCasesPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.10) 100%)',
+          borderBottom: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
           padding: '80px 24px',
           textAlign: 'center',
         }}
@@ -92,8 +93,8 @@ export default function UseCasesPage() {
           <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
             Cas d'usage
           </h1>
-          <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7 }}>
-            Découvrez comment nos formations répondent à vos défis spécifiques 
+          <p style={{ fontSize: '18px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.7 }}>
+            Découvrez comment nos formations répondent à vos défis spécifiques
             et génèrent des résultats mesurables.
           </p>
         </div>
@@ -107,7 +108,9 @@ export default function UseCasesPage() {
               <div
                 key={i}
                 style={{
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                  backdropFilter: 'blur(20px)',
                   borderRadius: '16px',
                   padding: '40px',
                 }}
@@ -121,7 +124,8 @@ export default function UseCasesPage() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: 'var(--gray-50)',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.08)',
                       borderRadius: '16px',
                       flexShrink: 0,
                     }}
@@ -129,7 +133,7 @@ export default function UseCasesPage() {
                     {useCase.icon}
                   </span>
                   <div>
-                    <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: 'var(--gray-500)' }}>
+                    <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                       {useCase.title}
                     </h2>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -139,9 +143,10 @@ export default function UseCasesPage() {
                           style={{
                             fontSize: '12px',
                             padding: '4px 10px',
-                            backgroundColor: 'var(--gray-100)',
+                            background: 'rgba(99,102,241,0.20)',
+                            border: '1px solid rgba(99,102,241,0.30)',
                             borderRadius: '12px',
-                            color: 'var(--gray-500)',
+                            color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
                           }}
                         >
                           {industry}
@@ -153,24 +158,24 @@ export default function UseCasesPage() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
                   <div>
-                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-400)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       Défi
                     </h3>
-                    <p style={{ fontSize: '15px', color: 'var(--gray-500)', lineHeight: 1.6 }}>{useCase.challenge}</p>
+                    <p style={{ fontSize: '15px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))', lineHeight: 1.6 }}>{useCase.challenge}</p>
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-400)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       Solution
                     </h3>
-                    <p style={{ fontSize: '15px', color: 'var(--gray-500)', lineHeight: 1.6 }}>{useCase.solution}</p>
+                    <p style={{ fontSize: '15px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))', lineHeight: 1.6 }}>{useCase.solution}</p>
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-400)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       Résultats
                     </h3>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                       {useCase.results.map((result, j) => (
-                        <li key={j} style={{ fontSize: '14px', color: 'var(--gray-500)', marginBottom: '4px' }}>
+                        <li key={j} style={{ fontSize: '14px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>
                           ✓ {result}
                         </li>
                       ))}
@@ -184,11 +189,18 @@ export default function UseCasesPage() {
       </section>
 
       {/* CTA */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+      <section
+        style={{
+          background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+          borderTop: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          padding: '64px 24px',
+          textAlign: 'center',
+        }}
+      >
+        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
           Vous avez un défi similaire?
         </h2>
-        <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+        <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '24px' }}>
           Discutons de votre situation et trouvons la solution adaptée.
         </p>
         <Link href="/demo" className="btn btn-primary" style={{ padding: '14px 32px' }}>
