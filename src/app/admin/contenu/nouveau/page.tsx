@@ -19,6 +19,7 @@ export default function NewPageTemplatePicker() {
   const [category, setCategory] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAi, setShowAi] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const categories = useMemo(() => getTemplateCategories(), []);
 
@@ -38,8 +39,10 @@ export default function NewPageTemplatePicker() {
   };
 
   const handleAi = () => {
-    if (aiPrompt.trim()) {
-      router.push(`/admin/contenu/editeur?ai=${encodeURIComponent(aiPrompt)}`);
+    const trimmed = aiPrompt.trim().slice(0, 500);
+    if (trimmed) {
+      setAiLoading(true);
+      router.push(`/admin/contenu/editeur?ai=${encodeURIComponent(trimmed)}`);
     }
   };
 
@@ -76,23 +79,46 @@ export default function NewPageTemplatePicker() {
             Créer avec l&apos;IA
           </button>
         ) : (
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={aiPrompt}
-              onChange={e => setAiPrompt(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAi()}
-              placeholder="Ex: Un site pour mon salon de coiffure à Montréal avec nos services, tarifs et prise de rendez-vous..."
-              className="flex-1 px-5 py-3 border rounded-xl text-sm bg-white dark:bg-zinc-800"
-              autoFocus
-            />
-            <button
-              onClick={handleAi}
-              disabled={!aiPrompt.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium disabled:opacity-50"
-            >
-              Générer
-            </button>
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={aiPrompt}
+                onChange={e => setAiPrompt(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAi()}
+                placeholder="Ex: Un site pour mon salon de coiffure à Montréal avec nos services, tarifs et prise de rendez-vous..."
+                className="flex-1 px-5 py-3 border rounded-xl text-sm bg-white dark:bg-zinc-800"
+                autoFocus
+              />
+              <button
+                onClick={handleAi}
+                disabled={!aiPrompt.trim() || aiLoading}
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium disabled:opacity-50 flex items-center gap-2"
+              >
+                {aiLoading ? (
+                  <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Génération...</>
+                ) : 'Générer'}
+              </button>
+            </div>
+            {/* AI Prompt Suggestions */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                'Site pour un restaurant gastronomique à Montréal',
+                'Page d\'atterrissage SaaS avec tarifs et FAQ',
+                'Portfolio photographe professionnel',
+                'Cabinet d\'avocats en droit des affaires',
+                'Boutique en ligne de produits artisanaux',
+                'Clinique dentaire familiale',
+              ].map((suggestion, i) => (
+                <button
+                  key={i}
+                  onClick={() => setAiPrompt(suggestion)}
+                  className="px-3 py-1.5 text-xs bg-white dark:bg-zinc-800 border border-purple-200 dark:border-purple-800 rounded-lg hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>

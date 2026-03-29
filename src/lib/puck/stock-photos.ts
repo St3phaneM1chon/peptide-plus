@@ -95,8 +95,12 @@ export async function searchStockPhotos(
   if (unsplash.status === 'fulfilled') results.push(...unsplash.value);
   if (pexels.status === 'fulfilled') results.push(...pexels.value);
 
-  // Interleave results from both sources
-  return results.sort(() => Math.random() - 0.5);
+  // Fisher-Yates shuffle to interleave results from both sources
+  for (let i = results.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [results[i], results[j]] = [results[j], results[i]];
+  }
+  return results;
 }
 
 /**

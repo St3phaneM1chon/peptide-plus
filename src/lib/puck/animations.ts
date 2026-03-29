@@ -13,7 +13,9 @@ export type AnimationType =
   | 'slideRight'
   | 'scale'
   | 'bounce'
-  | 'parallax';
+  | 'parallax'
+  | 'rotateIn'
+  | 'blur';
 
 export const animationVariants: Record<AnimationType, Variants> = {
   none: {
@@ -55,6 +57,14 @@ export const animationVariants: Record<AnimationType, Variants> = {
   parallax: {
     hidden: { opacity: 0, y: 60 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] } },
+  },
+  rotateIn: {
+    hidden: { opacity: 0, rotate: -5, scale: 0.95 },
+    visible: { opacity: 1, rotate: 0, scale: 1, transition: { duration: 0.6, ease: 'easeOut' } },
+  },
+  blur: {
+    hidden: { opacity: 0, filter: 'blur(10px)' },
+    visible: { opacity: 1, filter: 'blur(0px)', transition: { duration: 0.7, ease: 'easeOut' } },
   },
 };
 

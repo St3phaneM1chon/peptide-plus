@@ -1,0 +1,220 @@
+/* =============================================================================
+   Puck Editor Overrides — Koraline Dark Theme
+   Strategy: remap --puck-color-* custom properties so every hashed module
+   class inherits the dark palette without fighting obfuscated class names.
+   Scoped to .puck-editor-wrapper to avoid leaking into the page canvas.
+   ============================================================================= */
+
+/* 1. Remap Puck colour tokens → Koraline dark palette */
+.puck-editor-wrapper {
+  --puck-color-white:   #1A1A22;
+  --puck-color-grey-12: #111116;
+  --puck-color-grey-11: #0F0F14;
+  --puck-color-grey-10: #222230;
+  --puck-color-grey-09: rgba(255,255,255,0.08);
+  --puck-color-grey-08: rgba(255,255,255,0.55);
+  --puck-color-grey-07: rgba(255,255,255,0.40);
+  --puck-color-grey-06: rgba(255,255,255,0.30);
+  --puck-color-grey-05: rgba(255,255,255,0.25);
+  --puck-color-grey-04: rgba(255,255,255,0.70);
+  --puck-color-grey-03: rgba(255,255,255,0.85);
+  --puck-color-grey-02: rgba(255,255,255,0.92);
+  --puck-color-grey-01: #0A0A0F;
+  --puck-color-black:   rgba(255,255,255,0.95);
+
+  /* Brand blue (#2563eb → #1d4ed8) replaces Puck's azure scale */
+  --puck-color-azure-12: rgba(37,99,235,0.08);
+  --puck-color-azure-11: rgba(37,99,235,0.12);
+  --puck-color-azure-10: rgba(37,99,235,0.18);
+  --puck-color-azure-09: rgba(37,99,235,0.25);
+  --puck-color-azure-08: rgba(37,99,235,0.40);
+  --puck-color-azure-07: #3b82f6;
+  --puck-color-azure-06: #2563eb;
+  --puck-color-azure-05: #2563eb;
+  --puck-color-azure-04: #2563eb;
+  --puck-color-azure-03: #1d4ed8;
+  --puck-color-azure-02: #1e40af;
+  --puck-color-azure-01: #1e3a8a;
+}
+
+/* 2. Header — dark glass */
+.puck-editor-wrapper [class*="_PuckHeader_"] {
+  background: rgba(17,17,22,0.85) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+}
+
+/* 3. Left sidebar (component drawer) — glass */
+.puck-editor-wrapper [class*="_Sidebar--left_"] {
+  background: rgba(15,15,20,0.92) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-inline-end-color: rgba(255,255,255,0.06) !important;
+}
+
+/* 4. Right sidebar (fields panel) — glass */
+.puck-editor-wrapper [class*="_Sidebar--right_"] {
+  background: rgba(26,26,34,0.92) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-inline-start-color: rgba(255,255,255,0.06) !important;
+}
+
+/* 5. Canvas — dark shell, white page surface for preview contrast */
+.puck-editor-wrapper [class*="_PuckCanvas_"] {
+  background: #1a1a22 !important;
+}
+.puck-editor-wrapper [class*="_PuckCanvas-root_"] {
+  background: #ffffff !important;
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+/* 6. Publish button — Koraline blue gradient */
+.puck-editor-wrapper [class*="_Button--primary_"] {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 12px rgba(37,99,235,0.35) !important;
+}
+.puck-editor-wrapper [class*="_Button--primary_"]:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+  box-shadow: 0 4px 20px rgba(37,99,235,0.50) !important;
+}
+
+/* 7. Component drawer cards — hover states + rounded corners */
+.puck-editor-wrapper [class*="_DrawerItem-draggable_"] {
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  border-radius: 8px !important;
+  color: rgba(255,255,255,0.80) !important;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease !important;
+}
+.puck-editor-wrapper [class*="_DrawerItem-draggable_"]:hover {
+  background: rgba(37,99,235,0.12) !important;
+  border-color: rgba(37,99,235,0.35) !important;
+  box-shadow: 0 0 0 1px rgba(37,99,235,0.25) !important;
+  color: rgba(255,255,255,0.95) !important;
+}
+
+/* 8. Field inputs */
+.puck-editor-wrapper [class*="_Input-input_"] {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  border-radius: 8px !important;
+  color: rgba(255,255,255,0.90) !important;
+}
+.puck-editor-wrapper [class*="_Input-input_"]:focus {
+  border-color: #2563eb !important;
+  outline-color: rgba(37,99,235,0.30) !important;
+  background: rgba(255,255,255,0.07) !important;
+}
+
+/* 9. Category headers (component list titles) */
+.puck-editor-wrapper [class*="_ComponentList-title_"] {
+  color: rgba(99,162,255,0.80) !important;
+  letter-spacing: 0.06em;
+}
+.puck-editor-wrapper [class*="_ComponentList-title_"]:hover {
+  background: rgba(37,99,235,0.10) !important;
+  color: #93c5fd !important;
+}
+.puck-editor-wrapper [class*="_SidebarSection-title_"] {
+  background: rgba(255,255,255,0.03) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* 10. Drag / drop indicators — blue accent */
+.puck-editor-wrapper [class*="_DropZone--isDestination_"] {
+  outline-color: #2563eb !important;
+}
+.puck-editor-wrapper [data-dnd-placeholder] {
+  background: rgba(37,99,235,0.25) !important;
+}
+
+/* 11. Viewport controls bar */
+.puck-editor-wrapper [class*="_ViewportControls_"] {
+  background: rgba(15,15,20,0.92) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* 12. Object fields + loading overlays */
+.puck-editor-wrapper [class*="_ObjectField_"] {
+  background: rgba(255,255,255,0.03) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  border-radius: 8px !important;
+}
+.puck-editor-wrapper [class*="_PuckFields-loadingOverlay_"],
+.puck-editor-wrapper [class*="_SidebarSection-loadingOverlay_"] {
+  background: rgba(26,26,34,0.85) !important;
+}
+
+/* 13. Drag handles — visible on hover */
+.puck-editor-wrapper [class*="_DraggableComponent_"] {
+  position: relative;
+  transition: outline 0.15s ease;
+}
+.puck-editor-wrapper [class*="_DraggableComponent_"]:hover {
+  outline: 2px solid rgba(99,102,241,0.4);
+  outline-offset: -2px;
+}
+.puck-editor-wrapper [class*="_DraggableComponent_"]:hover::before {
+  content: '⠿';
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: rgba(99,102,241,0.8);
+  cursor: grab;
+  z-index: 10;
+  border-radius: 4px;
+  background: rgba(99,102,241,0.1);
+}
+.puck-editor-wrapper [class*="_DraggableComponent_"]:hover::after {
+  content: attr(data-puck-component-type);
+  position: absolute;
+  left: 4px;
+  top: -20px;
+  font-size: 10px;
+  color: rgba(99,102,241,0.7);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* 14. Selected component glow */
+.puck-editor-wrapper [class*="_DraggableComponent_"][class*="selected"] {
+  outline: 2px solid #6366f1 !important;
+  box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+}
+
+/* 15. Smooth scroll in preview */
+.puck-editor-wrapper [class*="_PuckPreview_"] {
+  scroll-behavior: smooth;
+}
+
+/* 16. Better component cards in drawer */
+.puck-editor-wrapper [class*="_ComponentListItem_"] {
+  transition: all 0.15s ease !important;
+}
+.puck-editor-wrapper [class*="_ComponentListItem_"]:hover {
+  transform: translateX(2px);
+  background: rgba(99,102,241,0.08) !important;
+}
+
+/* Hero particle animation */
+@keyframes float {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-20px) scale(1.2); }
+}
+
+/* Hero gradient animation */
+@keyframes heroGradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

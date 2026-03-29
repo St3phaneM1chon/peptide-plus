@@ -19,7 +19,7 @@ import {
   Filter, MessageSquare, ListChecks, Trophy, CheckSquare,
   ToggleRight, Bot, Building2, Palette, Boxes, GraduationCap,
   UserPlus, Medal, ShieldCheck, ExternalLink, Crown, Layers,
-  Store, RotateCcw, Share2, Type, Link2,
+  Store, RotateCcw, Share2, Type, Link2, Plus,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -177,6 +177,7 @@ export const folderSections: Record<string, NavFolderSection> = {
       {
         labelKey: 'admin.nav.websitePages',
         items: [
+          { href: '/admin/contenu/nouveau', labelKey: 'admin.nav.newPage', icon: Plus },
           { href: '/admin/contenu/editeur', labelKey: 'admin.nav.visualEditor', icon: Sparkles },
           { href: '/admin/contenu', labelKey: 'admin.nav.pageBuilder', icon: Layout },
           { href: '/admin/blog', labelKey: 'admin.nav.blog', icon: PenLine },

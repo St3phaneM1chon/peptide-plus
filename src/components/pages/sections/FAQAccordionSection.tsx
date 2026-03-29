@@ -51,8 +51,29 @@ function AccordionItem({ question, answer }: { question: string; answer: string 
 }
 
 export function FAQAccordionRenderer({ section }: { section: FAQAccordionSectionType }) {
+  const items = section.items || [];
+
+  // Generate FAQ Schema.org structured data for SEO
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map(item => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  };
+
   return (
     <div>
+      {/* FAQ Schema.org structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {section.title && (
         <h2
           className="text-2xl font-bold mb-6 text-center"
@@ -62,7 +83,7 @@ export function FAQAccordionRenderer({ section }: { section: FAQAccordionSection
         </h2>
       )}
       <div className="space-y-3 max-w-3xl mx-auto">
-        {(section.items || []).map((item, i) => (
+        {items.map((item, i) => (
           <AccordionItem key={i} question={item.question} answer={item.answer} />
         ))}
       </div>

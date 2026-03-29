@@ -17,6 +17,8 @@ const requestSchema = z.object({
   prompt: z.string().min(3).max(2000),
   context: z.string().optional(), // Industry, existing page context
   language: z.string().default('fr'),
+  mode: z.enum(['generate', 'modify', 'enhance']).default('generate'),
+  existingSections: z.any().optional(), // Current sections for modify/enhance mode
 });
 
 // Available section types for the AI to use
@@ -29,6 +31,7 @@ Available section types (use exact type names):
 - text: Text block (content, align: left|center|right)
 - gallery: Image gallery (title, columns: 2|3|4, images: [{url, alt, caption}])
 - video: Video embed (title, videoUrl)
+- background_video: Vidéo de fond (title, subtitle, videoUrl, overlayOpacity, ctaText, ctaUrl, height)
 - team: Team members (title, members: [{name, role, imageUrl}])
 - testimonials: Testimonials (title, items: [{quote, author, role}])
 - stats: Statistics (items: [{value, label}])
@@ -39,14 +42,33 @@ Available section types (use exact type names):
 - map: Google Maps (title, embedUrl, height)
 - countdown: Countdown timer (title, targetDate)
 - logo_carousel: Partner logos (title, logos: [{url, name}])
+- process_steps: Étapes/Processus (title, subtitle, steps: [{icon, title, description}])
+- tabs: Onglets (tabs: [{title, content}])
+- accordion: Accordéon (items: [{title, content}])
+- social_links: Réseaux sociaux (title, facebook, instagram, twitter, linkedin, tiktok, youtube)
+- spacer: Espace (height: 1rem|2rem|4rem|6rem)
+- divider: Séparateur (style: solid|dotted|dashed|gradient)
 
-Each section should have: { id: "sec_XXX", type: "TYPE", data: { ...props, animation: "none|fadeIn|slideUp" } }
+Each section should have: { id: "sec_XXX", type: "TYPE", data: { ...props, animation: "none|fadeIn|slideUp|slideLeft|slideRight|scale|bounce|parallax" } }
+
+ANIMATION GUIDE:
+- hero: fadeIn or parallax
+- features: slideUp (stagger effect on grid items)
+- cta: fadeIn
+- testimonials: fadeIn
+- stats: slideUp
+- team: slideUp
+- gallery: fadeIn
+- pricing_table: slideUp
+- faq_accordion: fadeIn
+- newsletter: fadeIn
+- countdown: fadeIn
 `;
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { prompt, context, language } = requestSchema.parse(body);
+    const { prompt, context, language, mode, existingSections } = requestSchema.parse(body);
 
     // Use Anthropic Claude if available, otherwise fall back to OpenAI
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -56,24 +78,35 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
       return NextResponse.json({ error: 'Aucune clé API IA configurée' }, { status: 503 });
     }
 
-    const systemPrompt = `Tu es Aurelia, l'assistante IA de la Suite Koraline. Tu génères des sections de page web en JSON.
+    const systemPrompt = `Tu es Aurelia, l'assistante IA de la Suite Koraline — une designer web experte. Tu génères des sections de page web en JSON.
 ${AVAILABLE_SECTIONS}
 
 RULES:
-- Respond ONLY with a valid JSON array of sections
+- Respond ONLY with a valid JSON array of sections. NO markdown, NO explanation, NO backticks.
 - Each section must have id (sec_XXX), type, and data
-- Use French text content (Québec French)
-- Make content professional and relevant to the user's request
-- Use appropriate animations (fadeIn for hero, slideUp for features, etc.)
-- Generate 3-7 sections that make a complete, compelling page
+- Use French text content (Québec French — tu/vous selon le contexte)
+- Write compelling, professional marketing copy — pas de texte générique
+- Adapt le ton au secteur: formel pour avocats/comptables, chaleureux pour restaurants/spas
+- Use appropriate animations per the ANIMATION GUIDE above
+- Generate 4-8 sections that form a complete, conversion-optimized page
 - Use emojis as icons in features (🚀, 💡, 🔒, etc.)
-- Prices in CAD ($)`;
+- Prices in CAD ($)
+- Start with a hero, end with a CTA or contact_form
+- Add stats or testimonials for social proof
+- For e-commerce: include featured_products. For courses: include featured_courses
+- Color scheme suggestions: dark hero (#0f172a/#1e293b), accent CTA (#2563eb), light testimonials (#f8fafc)
+- Include SEO-friendly headings and descriptions
+- Make phone numbers use format +1 (XXX) XXX-XXXX
+- For addresses, use plausible Québec addresses`;
 
-    const userPrompt = `${context ? `Contexte: ${context}\n` : ''}Crée les sections de page pour: ${prompt}
-
-Langue: ${language === 'fr' ? 'français québécois' : 'English'}
-
-Réponds UNIQUEMENT avec le JSON array, sans markdown ni explication.`;
+    let userPrompt: string;
+    if (mode === 'modify' && existingSections) {
+      userPrompt = `Sections actuelles de la page:\n${JSON.stringify(existingSections, null, 1)}\n\nModification demandée: ${prompt}\n\nRetourne le JSON array complet des sections (modifiées + existantes). Réponds UNIQUEMENT avec le JSON array.`;
+    } else if (mode === 'enhance' && existingSections) {
+      userPrompt = `Sections actuelles:\n${JSON.stringify(existingSections, null, 1)}\n\nAméliore cette page: ${prompt}\n\nRetourne le JSON array complet des sections améliorées. Réponds UNIQUEMENT avec le JSON array.`;
+    } else {
+      userPrompt = `${context ? `Contexte: ${context}\n` : ''}Crée les sections de page pour: ${prompt}\n\nLangue: ${language === 'fr' ? 'français québécois' : 'English'}\n\nRéponds UNIQUEMENT avec le JSON array, sans markdown ni explication.`;
+    }
 
     let sections: unknown[] = [];
 

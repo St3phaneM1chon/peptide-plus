@@ -26,8 +26,9 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
       sec('hero', { title: 'Solutions professionnelles pour votre entreprise', subtitle: 'Expert en transformation numérique depuis 2010', ctaText: 'Nos services', ctaUrl: '#services', ctaSecondaryText: 'Nous contacter', variant: 'centered', animation: 'fadeIn', backgroundColor: '#0f172a', textColor: '#ffffff' }, 1),
       sec('stats', { items: [{ value: '500+', label: 'Clients satisfaits' }, { value: '15+', label: 'Années d\'expérience' }, { value: '99%', label: 'Taux de satisfaction' }, { value: '24/7', label: 'Support' }], animation: 'slideUp' }, 2),
       sec('features', { title: 'Nos services', columns: '3', items: [{ icon: '💼', title: 'Conseil stratégique', description: 'Accompagnement personnalisé pour votre croissance' }, { icon: '🔧', title: 'Solutions sur mesure', description: 'Technologies adaptées à vos besoins' }, { icon: '📊', title: 'Analyse de données', description: 'Décisions éclairées par les données' }], animation: 'slideUp' }, 3),
-      sec('testimonials', { title: 'Ce que nos clients disent', items: [{ quote: 'Un partenaire de confiance qui comprend nos enjeux.', author: 'Marie Tremblay', role: 'Directrice, TechCo' }, { quote: 'Résultats concrets et mesurables dès le premier mois.', author: 'Pierre Gagnon', role: 'CEO, InnovatePlus' }], animation: 'fadeIn', backgroundColor: '#f8fafc' }, 4),
-      sec('cta', { title: 'Prêt à transformer votre entreprise?', subtitle: 'Prenez rendez-vous pour une consultation gratuite', buttonText: 'Planifier un appel', buttonUrl: '#contact', animation: 'fadeIn', backgroundColor: '#2563eb', textColor: '#ffffff' }, 5),
+      sec('process_steps', { title: 'Notre approche', subtitle: 'Un processus éprouvé en 4 étapes', steps: [{ icon: '🔍', title: 'Analyse', description: 'Compréhension de vos enjeux et objectifs' }, { icon: '📋', title: 'Stratégie', description: 'Plan d\'action personnalisé et mesurable' }, { icon: '⚡', title: 'Exécution', description: 'Mise en œuvre agile et itérative' }, { icon: '📈', title: 'Résultats', description: 'Suivi des performances et optimisation' }], animation: 'slideUp' }, 4),
+      sec('testimonials', { title: 'Ce que nos clients disent', items: [{ quote: 'Un partenaire de confiance qui comprend nos enjeux.', author: 'Marie Tremblay', role: 'Directrice, TechCo', rating: '5' }, { quote: 'Résultats concrets et mesurables dès le premier mois.', author: 'Pierre Gagnon', role: 'CEO, InnovatePlus', rating: '5' }], animation: 'fadeIn', backgroundColor: '#f8fafc' }, 5),
+      sec('cta', { title: 'Prêt à transformer votre entreprise?', subtitle: 'Prenez rendez-vous pour une consultation gratuite', buttonText: 'Planifier un appel', buttonUrl: '#contact', animation: 'fadeIn', backgroundColor: '#2563eb', textColor: '#ffffff' }, 6),
     ],
   },
   {
@@ -66,7 +67,9 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
       sec('features', { title: 'Notre Menu', subtitle: 'Saveurs du terroir québécois', columns: '3', items: [{ icon: '🥗', title: 'Entrées', description: 'À partir de 12$' }, { icon: '🥩', title: 'Plats principaux', description: 'À partir de 24$' }, { icon: '🍰', title: 'Desserts', description: 'À partir de 9$' }], animation: 'slideUp' }, 2),
       sec('gallery', { title: 'Notre ambiance', columns: '4', images: [{ url: '', alt: 'Salle à manger' }, { url: '', alt: 'Cuisine ouverte' }, { url: '', alt: 'Terrasse d\'été' }, { url: '', alt: 'Bar à cocktails' }], animation: 'fadeIn' }, 3),
       sec('stats', { items: [{ value: '4.8/5', label: 'Note Google' }, { value: '2000+', label: 'Avis clients' }, { value: '30+', label: 'Années' }], animation: 'slideUp' }, 4),
-      sec('map', { title: 'Nous trouver', embedUrl: '', height: '350', animation: 'none' }, 5),
+      sec('testimonials', { title: 'Ce que nos clients disent', items: [{ quote: 'La meilleure table en ville! Service impeccable et plats divins.', author: 'Sophie M.', role: 'Cliente régulière', rating: '5' }, { quote: 'Un coup de cœur. On y retourne chaque mois avec plaisir.', author: 'Marc L.', role: 'Via Google', rating: '5' }], animation: 'fadeIn', backgroundColor: '#f8fafc' }, 5),
+      sec('map', { title: 'Nous trouver', embedUrl: '', height: '350', animation: 'none' }, 6),
+      sec('cta', { title: 'Réservez votre table dès maintenant', subtitle: 'Places limitées — Réservation recommandée pour le week-end', buttonText: 'Réserver en ligne', buttonUrl: '#', animation: 'fadeIn', backgroundColor: '#7f1d1d', textColor: '#ffffff' }, 7),
     ],
   },
   // ═══════════════════════════════════════
@@ -136,11 +139,13 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
   {
     id: 'consultant', name: 'Consultant', description: 'Site de consultant indépendant', category: 'Services professionnels', thumbnail: '🎯',
     sections: [
-      sec('hero', { title: 'Transformez votre entreprise', subtitle: 'Consultant en stratégie numérique et transformation', ctaText: 'Planifier un appel', variant: 'centered', animation: 'fadeIn' }, 1),
-      sec('features', { title: 'Mon expertise', columns: '3', items: [{ icon: '🎯', title: 'Stratégie', description: 'Plan de croissance sur mesure' }, { icon: '📱', title: 'Numérique', description: 'Transformation digitale' }, { icon: '📈', title: 'Performance', description: 'Optimisation des processus' }], animation: 'slideUp' }, 2),
-      sec('stats', { items: [{ value: '150+', label: 'Mandats complétés' }, { value: '45%', label: 'Croissance moyenne' }, { value: '10+', label: 'Industries' }], animation: 'slideUp' }, 3),
-      sec('testimonials', { title: 'Résultats clients', items: [{ quote: 'ROI de 300% en 6 mois grâce à la stratégie mise en place.', author: 'Marc B.', role: 'VP Marketing, GroupeXYZ' }], animation: 'fadeIn', backgroundColor: '#f8fafc' }, 4),
-      sec('contact_form', { title: 'Discutons de votre projet', animation: 'fadeIn' }, 5),
+      sec('hero', { title: 'Accélérez votre croissance avec un expert à vos côtés', subtitle: 'Consultant en stratégie numérique — 15 ans d\'expérience, +150 mandats complétés', ctaText: 'Planifier un appel gratuit', ctaSecondaryText: 'Voir mes résultats', variant: 'gradient', animation: 'fadeIn', backgroundColor: '#1e293b', textColor: '#ffffff' }, 1),
+      sec('logo_carousel', { title: 'Clients qui me font confiance', logos: [{ url: '', name: 'Desjardins' }, { url: '', name: 'Hydro-Québec' }, { url: '', name: 'CGI' }, { url: '', name: 'Ubisoft' }], animation: 'fadeIn', backgroundColor: '#f8fafc' }, 2),
+      sec('features', { title: 'Mon expertise', subtitle: 'Des solutions concrètes pour chaque défi', columns: '3', items: [{ icon: '🎯', title: 'Stratégie', description: 'Plan de croissance sur mesure avec objectifs mesurables' }, { icon: '📱', title: 'Numérique', description: 'Transformation digitale et automatisation des processus' }, { icon: '📈', title: 'Performance', description: 'Optimisation KPI et augmentation du ROI' }], animation: 'slideUp' }, 3),
+      sec('process_steps', { title: 'Mon approche en 4 étapes', subtitle: 'Un processus éprouvé qui donne des résultats', steps: [{ icon: '☎️', title: 'Appel découverte', description: 'Compréhension de vos enjeux (30 min, gratuit)' }, { icon: '📋', title: 'Diagnostic', description: 'Analyse approfondie et identification des leviers' }, { icon: '⚡', title: 'Plan d\'action', description: 'Stratégie sur mesure avec jalons clairs' }, { icon: '🚀', title: 'Exécution', description: 'Accompagnement main dans la main' }], animation: 'slideUp' }, 4),
+      sec('stats', { items: [{ value: '150+', label: 'Mandats complétés' }, { value: '45%', label: 'Croissance moyenne' }, { value: '10+', label: 'Industries' }, { value: '300%', label: 'ROI moyen' }], animation: 'slideUp' }, 5),
+      sec('testimonials', { title: 'Ce que mes clients disent', layout: 'grid', items: [{ quote: 'ROI de 300% en 6 mois grâce à la stratégie mise en place. Un investissement qui a changé notre trajectoire.', author: 'Marc B.', role: 'VP Marketing, GroupeXYZ', rating: '5' }, { quote: 'Enfin un consultant qui livre des résultats concrets, pas juste des PowerPoints.', author: 'Sarah L.', role: 'CEO, TechStartup', rating: '5' }], animation: 'fadeIn', backgroundColor: '#f8fafc' }, 6),
+      sec('cta', { title: 'Prêt à passer au prochain niveau?', subtitle: 'Réservez un appel découverte gratuit de 30 minutes', buttonText: 'Planifier un appel', buttonUrl: '#', buttonStyle: 'gradient', animation: 'fadeIn', backgroundColor: '#1e293b', textColor: '#ffffff' }, 7),
     ],
   },
   {
@@ -166,11 +171,15 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
   {
     id: 'startup', name: 'Startup Tech', description: 'Page produit pour startup technologique', category: 'Tech', thumbnail: '🚀',
     sections: [
-      sec('hero', { title: 'L\'IA qui révolutionne votre workflow', subtitle: 'Automatisez 80% de vos tâches répétitives en 5 minutes', ctaText: 'Essai gratuit 14 jours', ctaUrl: '#', ctaSecondaryText: 'Voir la démo', variant: 'gradient', animation: 'fadeIn', backgroundColor: '#312e81', textColor: '#ffffff' }, 1),
-      sec('logo_carousel', { title: 'Adopté par +500 entreprises', logos: [{ url: '', name: 'Startup 1' }, { url: '', name: 'Startup 2' }, { url: '', name: 'Startup 3' }, { url: '', name: 'Startup 4' }], animation: 'fadeIn' }, 2),
-      sec('features', { title: 'Fonctionnalités clés', columns: '3', items: [{ icon: '🤖', title: 'IA avancée', description: 'Modèles entraînés sur vos données' }, { icon: '🔗', title: 'Intégrations', description: 'Slack, Notion, Jira, +50 outils' }, { icon: '📊', title: 'Analytics', description: 'Tableaux de bord en temps réel' }], animation: 'slideUp' }, 3),
-      sec('testimonials', { title: 'Ce que disent nos utilisateurs', items: [{ quote: 'On a économisé 20 heures par semaine grâce à cette plateforme.', author: 'Alexandre P.', role: 'CTO, FintechQC' }], animation: 'fadeIn', backgroundColor: '#f8fafc' }, 4),
-      sec('pricing_table', { title: 'Forfaits', plans: [{ name: 'Starter', price: '0$', period: '/mois', features: '100 automatisations\n1 utilisateur\nCommunauté', ctaText: 'Gratuit', highlighted: 'false' }, { name: 'Growth', price: '49$', period: '/mois', features: 'Illimité\n10 utilisateurs\nSupport prioritaire\nAPI', ctaText: 'Essai gratuit', highlighted: 'true' }], animation: 'slideUp' }, 5),
+      sec('hero', { title: 'L\'IA qui révolutionne votre workflow', subtitle: 'Automatisez 80% de vos tâches répétitives en 5 minutes. Rejoint par +500 entreprises québécoises.', ctaText: 'Essai gratuit 14 jours', ctaUrl: '#', ctaSecondaryText: 'Voir la démo en 2 min', variant: 'particles', animation: 'fadeIn', backgroundColor: '#312e81', textColor: '#ffffff' }, 1),
+      sec('logo_carousel', { title: 'Adopté par des entreprises de toutes tailles', logos: [{ url: '', name: 'Desjardins' }, { url: '', name: 'Lightspeed' }, { url: '', name: 'Element AI' }, { url: '', name: 'Shopify' }, { url: '', name: 'CGI' }], animation: 'fadeIn', backgroundColor: '#f8fafc' }, 2),
+      sec('features', { title: 'Fonctionnalités qui font la différence', subtitle: 'Conçu pour les équipes qui veulent aller plus vite', columns: '3', items: [{ icon: '🤖', title: 'IA de pointe', description: 'Modèles entraînés sur VOS données — résultats en 5 minutes' }, { icon: '🔗', title: '+50 intégrations', description: 'Slack, Notion, Jira, Teams, HubSpot et plus encore' }, { icon: '📊', title: 'Analytics en temps réel', description: 'Tableaux de bord personnalisables, rapports automatisés' }], animation: 'slideUp' }, 3),
+      sec('process_steps', { title: 'Opérationnel en 3 étapes', steps: [{ icon: '1️⃣', title: 'Inscrivez-vous', description: 'Créez votre compte en 30 secondes' }, { icon: '2️⃣', title: 'Connectez vos outils', description: 'Intégration en un clic avec vos apps' }, { icon: '3️⃣', title: 'Profitez de l\'IA', description: 'L\'automatisation commence immédiatement' }], animation: 'slideUp' }, 4),
+      sec('stats', { items: [{ value: '500+', label: 'Entreprises' }, { value: '80%', label: 'Temps économisé' }, { value: '20h', label: 'Libérées/semaine' }, { value: '4.9/5', label: 'Satisfaction' }], animation: 'slideUp' }, 5),
+      sec('testimonials', { title: 'Ce que disent nos utilisateurs', layout: 'grid', items: [{ quote: 'On a économisé 20 heures par semaine. L\'investissement a été rentabilisé dès le premier mois.', author: 'Alexandre P.', role: 'CTO, FintechQC', rating: '5' }, { quote: 'L\'intégration Slack a changé notre façon de collaborer. Indispensable.', author: 'Julie M.', role: 'COO, StartupMTL', rating: '5' }], animation: 'fadeIn', backgroundColor: '#f8fafc' }, 6),
+      sec('pricing_table', { title: 'Des forfaits simples', subtitle: 'Pas de surprise. Annulez à tout moment.', plans: [{ name: 'Starter', price: '0$', period: '/mois', features: '100 automatisations\n1 utilisateur\nCommunauté\nDocumentation', ctaText: 'Commencer gratuitement', highlighted: 'false' }, { name: 'Growth', price: '49$', period: '/mois', features: 'Automatisations illimitées\n10 utilisateurs\nSupport prioritaire\nAPI complète\nAnalytics avancés', ctaText: 'Essai gratuit 14 jours', highlighted: 'true' }, { name: 'Enterprise', price: 'Sur mesure', period: '', features: 'Tout Growth\nUtilisateurs illimités\nGestionnaire dédié\nSLA 99.9%\nFormation incluse', ctaText: 'Nous contacter', highlighted: 'false' }], animation: 'slideUp' }, 7),
+      sec('faq_accordion', { title: 'Questions fréquentes', items: [{ question: 'Puis-je essayer gratuitement?', answer: 'Oui! Le plan Starter est gratuit à vie avec 100 automatisations par mois. Le plan Growth offre 14 jours d\'essai gratuit.' }, { question: 'Mes données sont-elles sécurisées?', answer: 'Absolument. Hébergement canadien, chiffrement AES-256, conforme LPRPDE et Loi 25.' }, { question: 'Combien de temps pour démarrer?', answer: 'La plupart de nos clients sont opérationnels en moins de 5 minutes grâce à nos intégrations en un clic.' }], animation: 'fadeIn' }, 8),
+      sec('cta', { title: 'Prêt à transformer votre productivité?', subtitle: 'Rejoignez +500 équipes qui travaillent plus intelligemment', buttonText: 'Commencer gratuitement', buttonUrl: '#', buttonStyle: 'gradient', animation: 'fadeIn', backgroundColor: '#312e81', textColor: '#ffffff' }, 9),
     ],
   },
   // ═══════════════════════════════════════
@@ -279,4 +288,28 @@ export function getTemplatesByCategory(category: string): PageTemplate[] {
 
 export function getTemplateCategories(): string[] {
   return [...new Set(PAGE_TEMPLATES.map(t => t.category))];
+}
+
+/** Most popular templates shown first in suggestions */
+export function getPopularTemplates(limit = 6): PageTemplate[] {
+  const popularIds = ['business', 'landing', 'restaurant', 'ecommerce', 'portfolio', 'consultant'];
+  return popularIds
+    .map(id => PAGE_TEMPLATES.find(t => t.id === id))
+    .filter((t): t is PageTemplate => t !== undefined)
+    .slice(0, limit);
+}
+
+/** Get total section count across all templates */
+export function getTemplateTotalSections(): number {
+  return PAGE_TEMPLATES.reduce((acc, t) => acc + t.sections.length, 0);
+}
+
+/** Search templates by name, description, or category */
+export function searchTemplates(query: string): PageTemplate[] {
+  const q = query.toLowerCase();
+  return PAGE_TEMPLATES.filter(t =>
+    t.name.toLowerCase().includes(q) ||
+    t.description.toLowerCase().includes(q) ||
+    t.category.toLowerCase().includes(q)
+  );
 }

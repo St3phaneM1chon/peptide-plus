@@ -8,11 +8,13 @@
  * - Edit existing: /admin/contenu/editeur?id=pg1
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
+import { getTemplateById } from '@/lib/puck/templates';
+import { FONT_PRESETS, getFontPresetById } from '@/lib/puck/font-presets';
 
 // Lazy load PuckEditor (it's heavy — ~200KB)
 const PuckEditor = dynamic(() => import('@/components/admin/PuckEditor'), {
@@ -41,6 +43,18 @@ interface PageData {
 }
 
 export default function VisualEditorPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <VisualEditorInner />
+    </Suspense>
+  );
+}
+
+function VisualEditorInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pageId = searchParams.get('id');
@@ -51,6 +65,8 @@ export default function VisualEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [fontPreset, setFontPreset] = useState('system');
 
   // Load existing page or create new
   useEffect(() => {
@@ -119,8 +135,8 @@ export default function VisualEditorPage() {
     }
   }, [pageId, templateParam, aiParam, router]);
 
-  // Save handler — called by PuckEditor on publish
-  const handleSave = useCallback(async (sections: Array<{ id: string; type: string; data: Record<string, unknown> }>) => {
+  // Save handler — called by PuckEditor on publish, or ⌘S for draft
+  const handleSave = useCallback(async (sections: Array<{ id: string; type: string; data: Record<string, unknown> }>, publish = true) => {
     if (!page) return;
     setSaving(true);
 
@@ -137,7 +153,7 @@ export default function VisualEditorPage() {
         metaTitle: page.metaTitle,
         metaDescription: page.metaDescription,
         template: 'sections',
-        isPublished: true,
+        isPublished: publish,
         sections: JSON.stringify(sections),
       };
 
@@ -149,13 +165,14 @@ export default function VisualEditorPage() {
 
       if (res.ok) {
         const data = await res.json();
-        toast.success('Page sauvegardée et publiée!');
+        toast.success(publish ? 'Page sauvegardée et publiée!' : 'Brouillon sauvegardé');
 
         // Update page ID if new
         if (!page.id && data.page?.id) {
           setPage(prev => prev ? { ...prev, id: data.page.id } : prev);
           // Update URL without reload
-          window.history.replaceState(null, '', `/admin/contenu/editeur?id=${data.page.id}`);
+          const safeId = String(data.page.id).replace(/[^a-zA-Z0-9_-]/g, '');
+          window.history.replaceState(null, '', `/admin/contenu/editeur?id=${safeId}`);
         }
       } else {
         const err = await res.json();
@@ -191,6 +208,109 @@ export default function VisualEditorPage() {
           Aurelia IA génère votre page...
         </div>
       )}
+
+      {/* Page Actions Bar */}
+      <div className="fixed top-3 right-48 z-40 flex items-center gap-2">
+        {page.id && page.slug && (
+          <a
+            href={`/p/${page.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-1.5 shadow-lg"
+            title="Voir la page publiée"
+          >
+            👁 Prévisualiser
+          </a>
+        )}
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="px-3 py-1.5 bg-zinc-800 text-white text-xs rounded-lg hover:bg-zinc-700 transition-colors flex items-center gap-1.5 shadow-lg"
+          title="Paramètres de la page"
+          aria-expanded={showSettings}
+          aria-controls="page-settings-panel"
+        >
+          ⚙️ Paramètres
+        </button>
+      </div>
+
+      {/* Page Settings Panel */}
+      {showSettings && (
+        <div className="fixed top-12 right-32 z-[999] w-80 bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-3" role="dialog" aria-label="Paramètres de la page">
+          <h3 className="font-semibold text-sm">Paramètres de la page</h3>
+          <div>
+            <label className="text-xs font-medium text-zinc-500">Titre</label>
+            <input
+              type="text"
+              value={page.title}
+              onChange={e => setPage(prev => prev ? { ...prev, title: e.target.value } : prev)}
+              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm dark:bg-zinc-800 dark:border-zinc-700"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-zinc-500">Slug (URL)</label>
+            <div className="flex items-center mt-1">
+              <span className="text-xs text-zinc-400 mr-1">/p/</span>
+              <input
+                type="text"
+                value={page.slug}
+                onChange={e => setPage(prev => prev ? { ...prev, slug: e.target.value.replace(/[^a-z0-9-]/g, '') } : prev)}
+                className="flex-1 px-3 py-2 border rounded-lg text-sm dark:bg-zinc-800 dark:border-zinc-700"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-zinc-500">Meta Title (SEO)</label>
+            <input
+              type="text"
+              value={page.metaTitle}
+              onChange={e => setPage(prev => prev ? { ...prev, metaTitle: e.target.value } : prev)}
+              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm dark:bg-zinc-800 dark:border-zinc-700"
+              placeholder={page.title}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-zinc-500">Meta Description (SEO)</label>
+            <textarea
+              value={page.metaDescription}
+              onChange={e => setPage(prev => prev ? { ...prev, metaDescription: e.target.value } : prev)}
+              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm dark:bg-zinc-800 dark:border-zinc-700"
+              rows={2}
+              placeholder="Description pour les moteurs de recherche..."
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-zinc-500">Typographie</label>
+            <select
+              value={fontPreset}
+              onChange={e => setFontPreset(e.target.value)}
+              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm dark:bg-zinc-800 dark:border-zinc-700"
+            >
+              {FONT_PRESETS.map(f => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={() => setShowSettings(false)}
+            className="w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
+            Fermer
+          </button>
+        </div>
+      )}
+
+      {/* Font preset injection */}
+      {(() => {
+        const fp = getFontPresetById(fontPreset);
+        return fp && fp.googleImport ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+            <link rel="stylesheet" href={fp.googleImport} />
+            <style>{`.puck-editor-wrapper { --font-heading: ${fp.heading}; --font-body: ${fp.body}; font-family: ${fp.body}; } .puck-editor-wrapper h1, .puck-editor-wrapper h2, .puck-editor-wrapper h3 { font-family: ${fp.heading}; }`}</style>
+          </>
+        ) : null;
+      })()}
+
       <PuckEditor
         initialData={page.sections}
         onSave={handleSave}
@@ -199,9 +319,6 @@ export default function VisualEditorPage() {
     </div>
   );
 }
-
-// Import template library
-import { getTemplateById } from '@/lib/puck/templates';
 
 /**
  * Get template data from the central templates library (25 templates)
