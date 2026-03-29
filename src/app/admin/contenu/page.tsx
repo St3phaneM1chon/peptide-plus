@@ -511,11 +511,11 @@ export default function ContenuPage() {
         actions={
           <div className="flex gap-2">
             <a
-              href="/admin/contenu/editeur"
+              href="/admin/contenu/nouveau"
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-sm"
             >
               <Sparkles className="w-4 h-4" />
-              Éditeur visuel
+              Nouvelle page visuelle
             </a>
             <Button
               variant="primary"
