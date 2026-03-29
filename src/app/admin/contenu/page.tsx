@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, FileText, HelpCircle, Pencil, Trash2, ExternalLink, Eye, EyeOff, Calendar, Clock, ArrowRight, FileSearch } from 'lucide-react';
+import { Plus, FileText, HelpCircle, Pencil, Trash2, ExternalLink, Eye, EyeOff, Calendar, Clock, ArrowRight, FileSearch, Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
 import { Modal } from '@/components/admin/Modal';
@@ -509,13 +509,22 @@ export default function ContenuPage() {
         title={t('admin.content.title')}
         subtitle={t('admin.content.subtitle', { pages: String(pages.length), faqs: String(faqs.length) })}
         actions={
-          <Button
-            variant="primary"
-            icon={Plus}
-            onClick={() => activeTab === 'pages' ? openPageModal() : openFaqModal()}
-          >
-            {activeTab === 'pages' ? t('admin.content.newPage') : t('admin.content.newFaq')}
-          </Button>
+          <div className="flex gap-2">
+            <a
+              href="/admin/contenu/editeur"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-sm"
+            >
+              <Sparkles className="w-4 h-4" />
+              Éditeur visuel
+            </a>
+            <Button
+              variant="primary"
+              icon={Plus}
+              onClick={() => activeTab === 'pages' ? openPageModal() : openFaqModal()}
+            >
+              {activeTab === 'pages' ? t('admin.content.newPage') : t('admin.content.newFaq')}
+            </Button>
+          </div>
         }
       />
 
@@ -679,6 +688,13 @@ export default function ContenuPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <Button size="sm" variant="ghost" icon={Pencil} onClick={() => openPageModal(page)} />
+                        <a
+                          href={`/admin/contenu/editeur?id=${page.id}`}
+                          className="p-1.5 text-slate-400 hover:text-purple-600 rounded hover:bg-purple-50 transition-colors"
+                          title="Éditeur visuel (Puck)"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                        </a>
                         <button
                           onClick={() => openScheduleModal(page.id, 'page', page.title)}
                           className="p-1.5 text-slate-400 hover:text-amber-600 rounded hover:bg-amber-50 transition-colors"
