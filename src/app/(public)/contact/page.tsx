@@ -8,10 +8,27 @@ const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const title = `Contactez-nous | ${siteName}`;
+  const description = `Contactez l'équipe ${siteName}. Nous sommes là pour vous aider à réussir votre transformation numérique.`;
+  const url = `${appUrl}/contact`;
+
   return {
-    title: `Contact - ${siteName}`,
-    description: `Get in touch with ${siteName}. We are here to help.`,
-    alternates: { canonical: `${appUrl}/contact` },
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName,
+      locale: 'fr_CA',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
   };
 }
 

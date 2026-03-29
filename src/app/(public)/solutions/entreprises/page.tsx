@@ -63,37 +63,68 @@ const plans = [
 
 export default function EnterpriseSolutionsPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.10) 100%)',
+          borderBottom: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
           padding: '80px 24px',
         }}
       >
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: '14px', fontWeight: 600, opacity: 0.8, display: 'block', marginBottom: '16px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', display: 'block', marginBottom: '16px', letterSpacing: '0.08em' }}>
               SOLUTIONS ENTREPRISES
             </span>
             <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
               Développez les compétences de vos équipes
             </h1>
-            <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7, marginBottom: '32px' }}>
-              Une plateforme complète pour gérer la formation de vos employés, 
+            <p style={{ fontSize: '18px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.7, marginBottom: '32px' }}>
+              Une plateforme complète pour gérer la formation de vos employés,
               suivre leur progression et mesurer l'impact sur votre organisation.
             </p>
             <div style={{ display: 'flex', gap: '16px' }}>
-              <Link href="/demo" className="btn" style={{ backgroundColor: 'white', color: 'var(--gray-500)', padding: '14px 28px' }}>
+              <Link
+                href="/demo"
+                className="btn"
+                style={{
+                  background: 'rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.20)',
+                  color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                  padding: '14px 28px',
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
                 Demander une démo
               </Link>
-              <Link href="/contact" className="btn" style={{ border: '2px solid white', color: 'white', padding: '14px 28px' }}>
+              <Link
+                href="/contact"
+                className="btn"
+                style={{
+                  border: '2px solid rgba(255,255,255,0.30)',
+                  color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                  padding: '14px 28px',
+                  background: 'transparent',
+                }}
+              >
                 Nous contacter
               </Link>
             </div>
           </div>
-          <div style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', aspectRatio: '4/3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+              backdropFilter: 'blur(20px)',
+              borderRadius: '16px',
+              aspectRatio: '4/3',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <span style={{ fontSize: '80px' }}>🏢</span>
           </div>
         </div>
@@ -102,7 +133,7 @@ export default function EnterpriseSolutionsPage() {
       {/* Benefits */}
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             Tout ce dont vous avez besoin
           </h2>
           <div
@@ -116,7 +147,9 @@ export default function EnterpriseSolutionsPage() {
               <div
                 key={i}
                 style={{
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                  backdropFilter: 'blur(20px)',
                   padding: '32px',
                   borderRadius: '12px',
                   display: 'flex',
@@ -125,10 +158,10 @@ export default function EnterpriseSolutionsPage() {
               >
                 <span style={{ fontSize: '32px' }}>{benefit.icon}</span>
                 <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                     {benefit.title}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)', lineHeight: 1.6 }}>{benefit.desc}</p>
+                  <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.6 }}>{benefit.desc}</p>
                 </div>
               </div>
             ))}
@@ -137,12 +170,19 @@ export default function EnterpriseSolutionsPage() {
       </section>
 
       {/* Pricing */}
-      <section style={{ backgroundColor: 'white', padding: '80px 24px' }}>
+      <section
+        style={{
+          background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+          borderTop: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          borderBottom: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          padding: '80px 24px',
+        }}
+      >
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '16px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '32px', fontWeight: 700, textAlign: 'center', marginBottom: '16px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             Tarification simple et transparente
           </h2>
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)', textAlign: 'center', marginBottom: '48px' }}>
+          <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', textAlign: 'center', marginBottom: '48px' }}>
             Choisissez le plan adapté à la taille de votre entreprise.
           </p>
           <div
@@ -156,8 +196,14 @@ export default function EnterpriseSolutionsPage() {
               <div
                 key={i}
                 style={{
-                  backgroundColor: plan.popular ? 'var(--gray-500)' : 'var(--gray-50)',
-                  color: plan.popular ? 'white' : 'inherit',
+                  background: plan.popular
+                    ? 'linear-gradient(135deg, rgba(99,102,241,0.30) 0%, rgba(168,85,247,0.20) 100%)'
+                    : 'rgba(255,255,255,0.04)',
+                  border: plan.popular
+                    ? '1px solid rgba(99,102,241,0.50)'
+                    : '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                  backdropFilter: 'blur(20px)',
+                  color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
                   padding: '40px',
                   borderRadius: '16px',
                   position: 'relative',
@@ -192,8 +238,9 @@ export default function EnterpriseSolutionsPage() {
                       key={j}
                       style={{
                         padding: '10px 0',
-                        borderTop: j === 0 ? 'none' : `1px solid ${plan.popular ? 'rgba(255,255,255,0.1)' : 'var(--gray-200)'}`,
+                        borderTop: j === 0 ? 'none' : '1px solid rgba(255,255,255,0.08)',
                         fontSize: '14px',
+                        color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
                       }}
                     >
                       ✓ {feature}
@@ -207,8 +254,14 @@ export default function EnterpriseSolutionsPage() {
                     display: 'block',
                     textAlign: 'center',
                     padding: '14px',
-                    backgroundColor: plan.popular ? 'white' : 'var(--gray-500)',
-                    color: plan.popular ? 'var(--gray-500)' : 'white',
+                    background: plan.popular
+                      ? 'rgba(255,255,255,0.15)'
+                      : 'rgba(99,102,241,0.20)',
+                    border: plan.popular
+                      ? '1px solid rgba(255,255,255,0.25)'
+                      : '1px solid rgba(99,102,241,0.40)',
+                    color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                    borderRadius: '10px',
                   }}
                 >
                   {plan.cta}
@@ -221,12 +274,12 @@ export default function EnterpriseSolutionsPage() {
 
       {/* Logos */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-        <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '32px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '32px' }}>
           Ils nous font confiance
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '48px', opacity: 0.5 }}>
           {['Desjardins', 'Hydro-Québec', 'Bell', 'Bombardier', 'CGI'].map((company, i) => (
-            <span key={i} style={{ fontSize: '20px', fontWeight: 600, color: 'var(--gray-400)' }}>{company}</span>
+            <span key={i} style={{ fontSize: '20px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>{company}</span>
           ))}
         </div>
       </section>

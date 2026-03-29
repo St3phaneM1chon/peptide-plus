@@ -77,21 +77,77 @@ export default function PricingPage() {
 
   return (
     <div style={{ backgroundColor: 'var(--gray-100)' }}>
-      {/* Hero */}
+      {/* Hero — dark glass */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, #0a0a14 0%, #0d1226 50%, #0a0a14 100%)',
           color: 'white',
-          padding: '80px 24px',
+          padding: '96px 24px 80px',
           textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '16px' }}>
-          {t('pricing.title')}
-        </h1>
-        <p style={{ fontSize: '18px', opacity: 0.9 }}>
-          {t('pricing.subtitle')}
-        </p>
+        {/* Ambient glow blobs */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: '-80px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '600px',
+            height: '400px',
+            background: 'radial-gradient(ellipse, rgba(0, 122, 255, 0.18) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            bottom: '-60px',
+            right: '10%',
+            width: '300px',
+            height: '300px',
+            background: 'radial-gradient(ellipse, rgba(48, 209, 88, 0.10) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div style={{ position: 'relative', maxWidth: '720px', margin: '0 auto' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              marginBottom: '16px',
+              padding: '4px 14px',
+              borderRadius: '9999px',
+              background: 'rgba(0,122,255,0.15)',
+              border: '1px solid rgba(0,122,255,0.35)',
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.06em',
+              color: 'var(--ios-blue, #0A84FF)',
+              textTransform: 'uppercase',
+            }}
+          >
+            Essai gratuit — sans engagement
+          </span>
+          <h1
+            className="font-heading"
+            style={{
+              fontSize: 'clamp(32px, 5vw, 48px)',
+              fontWeight: 700,
+              marginBottom: '16px',
+              letterSpacing: '-0.5px',
+              lineHeight: 1.15,
+            }}
+          >
+            {t('pricing.title')}
+          </h1>
+          <p style={{ fontSize: '18px', opacity: 0.75, lineHeight: 1.65 }}>
+            {t('pricing.subtitle')}
+          </p>
+        </div>
       </section>
 
       {/* Individual Plans */}
@@ -114,6 +170,8 @@ export default function PricingPage() {
                   borderRadius: '16px',
                   padding: '40px',
                   position: 'relative',
+                  border: plan.popular ? '1.5px solid rgba(0,122,255,0.45)' : '1px solid transparent',
+                  boxShadow: plan.popular ? 'var(--ios-shadow-glass, 0 8px 40px rgba(0,0,0,0.12))' : 'var(--ios-shadow-card, 0 1px 3px rgba(0,0,0,0.08))',
                 }}
               >
                 {plan.popular && (
@@ -123,12 +181,14 @@ export default function PricingPage() {
                       top: '-12px',
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      backgroundColor: '#22c55e',
+                      backgroundColor: 'var(--ios-green, #30D158)',
                       color: 'white',
                       padding: '4px 16px',
-                      borderRadius: '12px',
+                      borderRadius: '9999px',
                       fontSize: '12px',
                       fontWeight: 600,
+                      letterSpacing: '0.04em',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {t('pricing.popular')}
@@ -193,6 +253,8 @@ export default function PricingPage() {
                   borderRadius: '16px',
                   padding: '40px',
                   position: 'relative',
+                  border: plan.popular ? '1.5px solid rgba(0,122,255,0.45)' : '1px solid transparent',
+                  boxShadow: plan.popular ? 'var(--ios-shadow-glass, 0 8px 40px rgba(0,0,0,0.12))' : 'var(--ios-shadow-card, 0 1px 3px rgba(0,0,0,0.08))',
                 }}
               >
                 {plan.popular && (
@@ -202,12 +264,14 @@ export default function PricingPage() {
                       top: '-12px',
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      backgroundColor: '#22c55e',
+                      backgroundColor: 'var(--ios-green, #30D158)',
                       color: 'white',
                       padding: '4px 16px',
-                      borderRadius: '12px',
+                      borderRadius: '9999px',
                       fontSize: '12px',
                       fontWeight: 600,
+                      letterSpacing: '0.04em',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {t('pricing.recommended')}

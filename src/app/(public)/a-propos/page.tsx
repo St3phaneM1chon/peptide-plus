@@ -9,10 +9,27 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getContentPage('about');
+  const title = page?.metaTitle || `À propos | ${siteName}`;
+  const description = page?.metaDescription || `Découvrez l'équipe et la mission d'${siteName}, votre partenaire en transformation numérique.`;
+  const url = `${appUrl}/a-propos`;
+
   return {
-    title: page?.metaTitle || `About - ${siteName}`,
-    description: page?.metaDescription || `Learn more about ${siteName}.`,
-    alternates: { canonical: `${appUrl}/a-propos` },
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName,
+      locale: 'fr_CA',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
   };
 }
 

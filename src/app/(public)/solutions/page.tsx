@@ -5,6 +5,7 @@
  */
 
 import Link from 'next/link';
+import { MotionDiv } from '@/components/koraline/MotionDiv';
 
 // metadata moved to layout for client components
 
@@ -43,25 +44,28 @@ const industries = [
 
 export default function SolutionsPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.10) 100%)',
+          borderBottom: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
           padding: '80px 24px',
           textAlign: 'center',
         }}
       >
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
-            Des solutions adaptées à vos besoins
-          </h1>
-          <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7 }}>
-            Que vous soyez une entreprise, un professionnel indépendant ou un partenaire, 
-            nous avons une solution pour vous.
-          </p>
-        </div>
+        <MotionDiv animation="slideUp">
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
+              Des solutions adaptées à vos besoins
+            </h1>
+            <p style={{ fontSize: '18px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.7 }}>
+              Que vous soyez une entreprise, un professionnel indépendant ou un partenaire,
+              nous avons une solution pour vous.
+            </p>
+          </div>
+        </MotionDiv>
       </section>
 
       {/* Solutions */}
@@ -75,73 +79,88 @@ export default function SolutionsPage() {
             }}
           >
             {solutions.map((solution, i) => (
-              <Link
-                key={i}
-                href={solution.href}
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: '16px',
-                  padding: '40px',
-                  textDecoration: 'none',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                <span style={{ fontSize: '48px', display: 'block', marginBottom: '20px' }}>{solution.icon}</span>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px', color: 'var(--gray-500)' }}>
-                  {solution.title}
-                </h2>
-                <p style={{ fontSize: '15px', color: 'var(--gray-400)', lineHeight: 1.7, marginBottom: '24px' }}>
-                  {solution.description}
-                </p>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {solution.features.map((feature, j) => (
-                    <li
-                      key={j}
-                      style={{
-                        fontSize: '14px',
-                        color: 'var(--gray-500)',
-                        padding: '8px 0',
-                        borderTop: j === 0 ? 'none' : '1px solid var(--gray-100)',
-                      }}
-                    >
-                      ✓ {feature}
-                    </li>
-                  ))}
-                </ul>
-                <span
+              <MotionDiv key={i} animation="fadeInOnScroll" delay={i * 0.1}>
+                <Link
+                  href={solution.href}
                   style={{
-                    display: 'inline-block',
-                    marginTop: '24px',
-                    color: 'var(--gray-500)',
-                    fontWeight: 600,
-                    fontSize: '14px',
+                    display: 'block',
+                    background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                    border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                    backdropFilter: 'blur(20px)',
+                    borderRadius: '16px',
+                    padding: '40px',
+                    textDecoration: 'none',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 8px 40px rgba(0,0,0,0.32)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.borderColor = 'var(--k-border-subtle, rgba(255,255,255,0.06))';
                   }}
                 >
-                  En savoir plus →
-                </span>
-              </Link>
+                  <span style={{ fontSize: '48px', display: 'block', marginBottom: '20px' }}>{solution.icon}</span>
+                  <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
+                    {solution.title}
+                  </h2>
+                  <p style={{ fontSize: '15px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.7, marginBottom: '24px' }}>
+                    {solution.description}
+                  </p>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {solution.features.map((feature, j) => (
+                      <li
+                        key={j}
+                        style={{
+                          fontSize: '14px',
+                          color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
+                          padding: '8px 0',
+                          borderTop: j === 0 ? 'none' : '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                        }}
+                      >
+                        ✓ {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      marginTop: '24px',
+                      color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                      fontWeight: 600,
+                      fontSize: '14px',
+                    }}
+                  >
+                    En savoir plus →
+                  </span>
+                </Link>
+              </MotionDiv>
             ))}
           </div>
         </div>
       </section>
 
       {/* Industries */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
+      <section
+        style={{
+          background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+          borderTop: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          borderBottom: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+          padding: '64px 24px',
+        }}
+      >
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '16px', color: 'var(--gray-500)' }}>
-            Solutions par industrie
-          </h2>
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)', textAlign: 'center', marginBottom: '40px' }}>
-            Des formations spécialisées pour chaque secteur d'activité.
-          </p>
+          <MotionDiv animation="fadeInOnScroll">
+            <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '16px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
+              Solutions par industrie
+            </h2>
+            <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', textAlign: 'center', marginBottom: '40px' }}>
+              Des formations spécialisées pour chaque secteur d'activité.
+            </p>
+          </MotionDiv>
           <div
             style={{
               display: 'grid',
@@ -150,24 +169,35 @@ export default function SolutionsPage() {
             }}
           >
             {industries.map((industry, i) => (
-              <Link
-                key={i}
-                href={`/catalogue?industrie=${encodeURIComponent(industry.name)}`}
-                style={{
-                  padding: '24px',
-                  backgroundColor: 'var(--gray-50)',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                  textDecoration: 'none',
-                  transition: 'background 0.2s ease',
-                }}
-              >
-                <span style={{ fontSize: '32px', display: 'block', marginBottom: '12px' }}>{industry.icon}</span>
-                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
-                  {industry.name}
-                </h3>
-                <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{industry.count} formations</span>
-              </Link>
+              <MotionDiv key={i} animation="fadeInOnScroll" delay={i * 0.08}>
+                <Link
+                  href={`/catalogue?industrie=${encodeURIComponent(industry.name)}`}
+                  style={{
+                    display: 'block',
+                    padding: '24px',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid var(--k-border-subtle, rgba(255,255,255,0.06))',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    textDecoration: 'none',
+                    transition: 'background 0.2s ease, border-color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                    e.currentTarget.style.borderColor = 'var(--k-border-subtle, rgba(255,255,255,0.06))';
+                  }}
+                >
+                  <span style={{ fontSize: '32px', display: 'block', marginBottom: '12px' }}>{industry.icon}</span>
+                  <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>
+                    {industry.name}
+                  </h3>
+                  <span style={{ fontSize: '12px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{industry.count} formations</span>
+                </Link>
+              </MotionDiv>
             ))}
           </div>
         </div>
@@ -175,15 +205,17 @@ export default function SolutionsPage() {
 
       {/* CTA */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
-          Besoin d'aide pour choisir?
-        </h2>
-        <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
-          Nos conseillers sont disponibles pour vous accompagner dans votre choix.
-        </p>
-        <Link href="/contact" className="btn btn-primary" style={{ padding: '14px 32px' }}>
-          Contactez-nous
-        </Link>
+        <MotionDiv animation="fadeInOnScroll">
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
+            Besoin d'aide pour choisir?
+          </h2>
+          <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '24px' }}>
+            Nos conseillers sont disponibles pour vous accompagner dans votre choix.
+          </p>
+          <Link href="/contact" className="btn btn-primary" style={{ padding: '14px 32px' }}>
+            Contactez-nous
+          </Link>
+        </MotionDiv>
       </section>
     </div>
   );

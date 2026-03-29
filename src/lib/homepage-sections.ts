@@ -19,6 +19,8 @@ export interface HeroSection {
   imageUrl?: string;
   ctaLabel: string;
   ctaHref: string;
+  cta2Label?: string;
+  cta2Href?: string;
 }
 
 export interface FeaturedProductsSection {

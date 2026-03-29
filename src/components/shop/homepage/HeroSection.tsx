@@ -50,19 +50,33 @@ export default function HeroSection({ config }: Props) {
         </MotionDiv>
 
         <MotionDiv animation="slideUp" delay={0.3}>
-          <Link
-            href={config.ctaHref}
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white text-lg transition-all duration-300 hover:scale-105"
-            style={{
-              background: 'var(--k-gradient-primary)',
-              boxShadow: 'var(--k-glow-primary)',
-            }}
-          >
-            {config.ctaLabel}
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href={config.ctaHref}
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white text-lg transition-all duration-300 hover:scale-105"
+              style={{
+                background: 'var(--k-gradient-primary)',
+                boxShadow: 'var(--k-glow-primary)',
+              }}
+            >
+              {config.ctaLabel}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+            {config.cta2Label && config.cta2Href && (
+              <Link
+                href={config.cta2Href}
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 border"
+                style={{
+                  color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                  borderColor: 'var(--k-border-default, rgba(255,255,255,0.10))',
+                }}
+              >
+                {config.cta2Label}
+              </Link>
+            )}
+          </div>
         </MotionDiv>
       </div>
     </section>
