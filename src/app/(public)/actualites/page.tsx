@@ -71,11 +71,12 @@ export default function NewsPage() {
   const otherNews = articles.filter(n => !n.isFeatured);
 
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(168,85,247,0.15) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
           color: 'white',
           padding: '64px 24px',
           textAlign: 'center',
@@ -90,7 +91,7 @@ export default function NewsPage() {
       {/* Loading State */}
       {loading && (
         <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
+          <p style={{ fontSize: '16px', color: 'var(--k-text-secondary)' }}>
             Chargement des actualites...
           </p>
         </section>
@@ -99,7 +100,7 @@ export default function NewsPage() {
       {/* Empty State */}
       {!loading && articles.length === 0 && (
         <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
+          <p style={{ fontSize: '16px', color: 'var(--k-text-secondary)' }}>
             Aucune actualite disponible pour le moment.
           </p>
         </section>
@@ -109,7 +110,7 @@ export default function NewsPage() {
       {!loading && featuredNews.length > 0 && (
         <section style={{ padding: '64px 24px' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '32px', color: 'var(--gray-500)' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '32px', color: 'var(--k-text-primary)' }}>
               A la une
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '24px' }}>
@@ -118,7 +119,9 @@ export default function NewsPage() {
                   key={item.id}
                   href={`/actualites/${item.slug}`}
                   style={{
-                    backgroundColor: 'white',
+                    background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
                     borderRadius: '16px',
                     padding: '32px',
                     textDecoration: 'none',
@@ -128,7 +131,7 @@ export default function NewsPage() {
                     <span
                       style={{
                         padding: '4px 10px',
-                        backgroundColor: typeColors[item.type] || 'var(--gray-500)',
+                        backgroundColor: typeColors[item.type] || '#6366f1',
                         color: 'white',
                         borderRadius: '10px',
                         fontSize: '11px',
@@ -137,12 +140,12 @@ export default function NewsPage() {
                     >
                       {item.type}
                     </span>
-                    <span style={{ fontSize: '13px', color: 'var(--gray-400)' }}>{formatDate(item.publishedAt, locale)}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--k-text-secondary)' }}>{formatDate(item.publishedAt, locale)}</span>
                   </div>
-                  <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '12px', color: 'var(--gray-500)' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '12px', color: 'var(--k-text-primary)' }}>
                     {item.title}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)', lineHeight: 1.6 }}>
+                  <p style={{ fontSize: '14px', color: 'var(--k-text-secondary)', lineHeight: 1.6 }}>
                     {item.excerpt}
                   </p>
                 </Link>
@@ -154,9 +157,9 @@ export default function NewsPage() {
 
       {/* Timeline */}
       {!loading && otherNews.length > 0 && (
-        <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
+        <section style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '64px 24px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '32px', color: 'var(--gray-500)' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '32px', color: 'var(--k-text-primary)' }}>
               Toutes les actualites
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -168,21 +171,23 @@ export default function NewsPage() {
                     display: 'flex',
                     gap: '24px',
                     padding: '24px',
-                    backgroundColor: 'var(--gray-50)',
+                    background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
                     borderRadius: '12px',
                     textDecoration: 'none',
                     alignItems: 'flex-start',
                   }}
                 >
                   <div style={{ width: '100px', flexShrink: 0 }}>
-                    <span style={{ fontSize: '13px', color: 'var(--gray-400)' }}>{formatDate(item.publishedAt, locale)}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--k-text-secondary)' }}>{formatDate(item.publishedAt, locale)}</span>
                   </div>
                   <div>
                     <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', alignItems: 'center' }}>
                       <span
                         style={{
                           padding: '3px 8px',
-                          backgroundColor: typeColors[item.type] || 'var(--gray-500)',
+                          backgroundColor: typeColors[item.type] || '#6366f1',
                           color: 'white',
                           borderRadius: '8px',
                           fontSize: '10px',
@@ -192,10 +197,10 @@ export default function NewsPage() {
                         {item.type}
                       </span>
                     </div>
-                    <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: 'var(--gray-500)' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: 'var(--k-text-primary)' }}>
                       {item.title}
                     </h3>
-                    <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{item.excerpt}</p>
+                    <p style={{ fontSize: '14px', color: 'var(--k-text-secondary)' }}>{item.excerpt}</p>
                   </div>
                 </Link>
               ))}
@@ -206,13 +211,13 @@ export default function NewsPage() {
 
       {/* Press Contact */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary)' }}>
           Contact presse
         </h2>
-        <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+        <p style={{ fontSize: '16px', color: 'var(--k-text-secondary)', marginBottom: '24px' }}>
           Pour toute demande media, contactez notre equipe de relations publiques.
         </p>
-        <p style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
+        <p style={{ fontSize: '14px', color: 'var(--k-text-primary)' }}>
           presse@formationspro.com | 514-555-0199
         </p>
       </section>

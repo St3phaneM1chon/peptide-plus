@@ -44,11 +44,11 @@ export default function TestimonialsPage() {
   const videoTestimonials = testimonials.filter((t) => !!t.videoUrl);
 
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(59,130,246,0.10))',
           color: 'white',
           padding: '80px 24px',
           textAlign: 'center',
@@ -68,11 +68,11 @@ export default function TestimonialsPage() {
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {loading ? (
-            <p style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: '16px' }}>
+            <p style={{ textAlign: 'center', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', fontSize: '16px' }}>
               {t('testimonials.loading') || 'Chargement des témoignages...'}
             </p>
           ) : textTestimonials.length === 0 ? (
-            <p style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: '16px' }}>
+            <p style={{ textAlign: 'center', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', fontSize: '16px' }}>
               {t('testimonials.noTestimonials') || 'Aucun témoignage pour le moment.'}
             </p>
           ) : (
@@ -87,7 +87,9 @@ export default function TestimonialsPage() {
                 <div
                   key={testimonial.id}
                   style={{
-                    backgroundColor: 'white',
+                    background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
                     borderRadius: '16px',
                     padding: '32px',
                   }}
@@ -103,7 +105,7 @@ export default function TestimonialsPage() {
                   <blockquote
                     style={{
                       fontSize: '16px',
-                      color: 'var(--gray-500)',
+                      color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
                       lineHeight: 1.7,
                       marginBottom: '24px',
                       fontStyle: 'italic',
@@ -119,7 +121,7 @@ export default function TestimonialsPage() {
                         width: '48px',
                         height: '48px',
                         borderRadius: '50%',
-                        backgroundColor: 'var(--gray-200)',
+                        backgroundColor: 'rgba(255,255,255,0.08)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -139,10 +141,10 @@ export default function TestimonialsPage() {
                       )}
                     </div>
                     <div>
-                      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '2px' }}>
+                      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '2px' }}>
                         {testimonial.name}
                       </p>
-                      <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+                      <p style={{ fontSize: '13px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                         {[testimonial.role, testimonial.company].filter(Boolean).join(', ')}
                       </p>
                     </div>
@@ -156,9 +158,9 @@ export default function TestimonialsPage() {
 
       {/* Video Testimonials */}
       {!loading && videoTestimonials.length > 0 && (
-        <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
+        <section style={{ background: 'var(--k-glass-regular, rgba(255,255,255,0.08))', backdropFilter: 'blur(20px)', padding: '64px 24px' }}>
           <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-            <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px', color: 'var(--gray-500)' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
               {t('testimonials.videoTitle') || 'Témoignages vidéo'}
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
@@ -166,14 +168,16 @@ export default function TestimonialsPage() {
                 <div
                   key={video.id}
                   style={{
-                    backgroundColor: 'var(--gray-50)',
+                    background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
                     borderRadius: '12px',
                     overflow: 'hidden',
                   }}
                 >
                   <div
                     style={{
-                      backgroundColor: 'var(--gray-200)',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
                       aspectRatio: '16/9',
                       display: 'flex',
                       alignItems: 'center',
@@ -183,10 +187,10 @@ export default function TestimonialsPage() {
                     <span style={{ fontSize: '48px' }}>&#9654;&#65039;</span>
                   </div>
                   <div style={{ padding: '20px' }}>
-                    <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>
                       {video.content}
                     </p>
-                    <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                       {[video.company, video.videoDuration].filter(Boolean).join(' \u2022 ')}
                     </p>
                   </div>
@@ -200,10 +204,10 @@ export default function TestimonialsPage() {
       {/* Stats */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '48px', fontWeight: 700, color: 'var(--gray-500)', marginBottom: '8px' }}>
+          <h2 style={{ fontSize: '48px', fontWeight: 700, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '8px' }}>
             4.8/5
           </h2>
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '8px' }}>
+          <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '8px' }}>
             {t('testimonials.avgRating') || 'Note moyenne basée sur 2,500+ avis'}
           </p>
           <div style={{ fontSize: '24px' }}>&#11088;&#11088;&#11088;&#11088;&#11088;</div>

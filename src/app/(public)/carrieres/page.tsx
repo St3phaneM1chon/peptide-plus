@@ -56,11 +56,12 @@ const benefits = [
 
 export default function CareersPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(168,85,247,0.15) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
           color: 'white',
           padding: '80px 24px',
           textAlign: 'center',
@@ -77,13 +78,13 @@ export default function CareersPage() {
       </section>
 
       {/* Culture */}
-      <section style={{ padding: '80px 24px', backgroundColor: 'white' }}>
+      <section style={{ padding: '80px 24px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+            <h2 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary)' }}>
               Pourquoi nous rejoindre?
             </h2>
-            <p style={{ fontSize: '16px', color: 'var(--gray-400)', maxWidth: '600px', margin: '0 auto' }}>
+            <p style={{ fontSize: '16px', color: 'var(--k-text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
               Une culture d'entreprise axée sur l'innovation, la collaboration et le bien-être.
             </p>
           </div>
@@ -102,16 +103,18 @@ export default function CareersPage() {
                   display: 'flex',
                   gap: '16px',
                   padding: '24px',
-                  backgroundColor: 'var(--gray-50)',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '12px',
                 }}
               >
                 <span style={{ fontSize: '32px' }}>{benefit.icon}</span>
                 <div>
-                  <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: 'var(--gray-500)' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: 'var(--k-text-primary)' }}>
                     {benefit.title}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{benefit.desc}</p>
+                  <p style={{ fontSize: '14px', color: 'var(--k-text-secondary)' }}>{benefit.desc}</p>
                 </div>
               </div>
             ))}
@@ -123,10 +126,10 @@ export default function CareersPage() {
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+            <h2 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary)' }}>
               Postes ouverts
             </h2>
-            <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
+            <p style={{ fontSize: '16px', color: 'var(--k-text-secondary)' }}>
               {openPositions.length} postes disponibles actuellement
             </p>
           </div>
@@ -139,14 +142,15 @@ export default function CareersPage() {
                 style={{
                   display: 'block',
                   padding: '24px',
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '12px',
-                  border: '1px solid var(--gray-200)',
                   textDecoration: 'none',
                   transition: 'box-shadow 0.2s ease, transform 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
@@ -156,10 +160,10 @@ export default function CareersPage() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--k-text-primary)' }}>
                       {job.title}
                     </h3>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '14px', color: 'var(--gray-400)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '14px', color: 'var(--k-text-secondary)' }}>
                       <span>📁 {job.department}</span>
                       <span>📍 {job.location}</span>
                       <span>⏰ {job.type}</span>
@@ -168,10 +172,11 @@ export default function CareersPage() {
                   <span
                     style={{
                       padding: '8px 16px',
-                      backgroundColor: 'var(--gray-100)',
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.08)',
                       borderRadius: '20px',
                       fontSize: '13px',
-                      color: 'var(--gray-500)',
+                      color: 'var(--k-text-primary)',
                       fontWeight: 500,
                     }}
                   >
@@ -187,16 +192,17 @@ export default function CareersPage() {
             style={{
               marginTop: '48px',
               padding: '32px',
-              backgroundColor: 'white',
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              backdropFilter: 'blur(12px)',
               borderRadius: '12px',
-              border: '2px dashed var(--gray-200)',
+              border: '2px dashed rgba(255,255,255,0.15)',
               textAlign: 'center',
             }}
           >
-            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--k-text-primary)' }}>
               Candidature spontanée
             </h3>
-            <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--k-text-secondary)', marginBottom: '16px' }}>
               Vous ne trouvez pas le poste idéal? Envoyez-nous votre CV!
             </p>
             <Link
@@ -210,14 +216,14 @@ export default function CareersPage() {
       </section>
 
       {/* Values */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
+      <section style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '64px 24px', textAlign: 'center' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <span style={{ fontSize: '48px', display: 'block', marginBottom: '24px' }}>🌟</span>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary)' }}>
             Nos valeurs au quotidien
           </h2>
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)', lineHeight: 1.7 }}>
-            Transparence, innovation et collaboration sont au cœur de notre culture. 
+          <p style={{ fontSize: '16px', color: 'var(--k-text-secondary)', lineHeight: 1.7 }}>
+            Transparence, innovation et collaboration sont au cœur de notre culture.
             Nous croyons en l'autonomie, la prise d'initiative et le respect mutuel.
           </p>
         </div>

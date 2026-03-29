@@ -59,11 +59,12 @@ const coverage = [
 
 export default function PressPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(168,85,247,0.15) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
           color: 'white',
           padding: '80px 24px',
           textAlign: 'center',
@@ -80,7 +81,7 @@ export default function PressPage() {
       {/* Press releases */}
       <section style={{ padding: '64px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--k-text-primary)' }}>
             Communiqués de presse
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -93,18 +94,20 @@ export default function PressPage() {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '20px 24px',
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '12px',
                   textDecoration: 'none',
                 }}
               >
                 <div>
-                  <span style={{ fontSize: '13px', color: 'var(--gray-400)' }}>{release.date}</span>
-                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--gray-500)', marginTop: '4px' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--k-text-secondary)' }}>{release.date}</span>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--k-text-primary)', marginTop: '4px' }}>
                     {release.title}
                   </h3>
                 </div>
-                <span style={{ color: 'var(--gray-400)' }}>→</span>
+                <span style={{ color: 'var(--k-text-secondary)' }}>→</span>
               </Link>
             ))}
           </div>
@@ -114,7 +117,7 @@ export default function PressPage() {
               display: 'block',
               textAlign: 'center',
               marginTop: '24px',
-              color: 'var(--gray-500)',
+              color: 'var(--k-text-primary)',
               fontWeight: 500,
             }}
           >
@@ -124,12 +127,12 @@ export default function PressPage() {
       </section>
 
       {/* Media assets */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
+      <section style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '64px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--k-text-primary)' }}>
             Kit média
           </h2>
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '32px' }}>
+          <p style={{ fontSize: '16px', color: 'var(--k-text-secondary)', marginBottom: '32px' }}>
             Téléchargez nos ressources officielles pour vos publications.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
@@ -142,15 +145,17 @@ export default function PressPage() {
                   alignItems: 'center',
                   gap: '12px',
                   padding: '16px 20px',
-                  backgroundColor: 'var(--gray-50)',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '8px',
                   textDecoration: 'none',
                 }}
               >
                 <span style={{ fontSize: '24px' }}>📁</span>
                 <div>
-                  <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-500)' }}>{asset.name}</p>
-                  <p style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{asset.size}</p>
+                  <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-primary)' }}>{asset.name}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--k-text-secondary)' }}>{asset.size}</p>
                 </div>
               </a>
             ))}
@@ -166,7 +171,7 @@ export default function PressPage() {
       {/* Coverage */}
       <section style={{ padding: '64px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--k-text-primary)' }}>
             Dans les médias
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -178,17 +183,19 @@ export default function PressPage() {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '20px 24px',
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '12px',
                 }}
               >
                 <div>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-500)' }}>{item.outlet}</span>
-                  <h3 style={{ fontSize: '15px', color: 'var(--gray-400)', marginTop: '4px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--k-text-primary)' }}>{item.outlet}</span>
+                  <h3 style={{ fontSize: '15px', color: 'var(--k-text-secondary)', marginTop: '4px' }}>
                     {item.title}
                   </h3>
                 </div>
-                <span style={{ fontSize: '13px', color: 'var(--gray-400)' }}>{item.date}</span>
+                <span style={{ fontSize: '13px', color: 'var(--k-text-secondary)' }}>{item.date}</span>
               </div>
             ))}
           </div>
@@ -196,16 +203,16 @@ export default function PressPage() {
       </section>
 
       {/* Contact */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
+      <section style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '64px 24px', textAlign: 'center' }}>
         <div style={{ maxWidth: '500px', margin: '0 auto' }}>
           <span style={{ fontSize: '48px', display: 'block', marginBottom: '24px' }}>📰</span>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary)' }}>
             Contact presse
           </h2>
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+          <p style={{ fontSize: '16px', color: 'var(--k-text-secondary)', marginBottom: '24px' }}>
             Pour toute demande média, interview ou information complémentaire.
           </p>
-          <div style={{ fontSize: '15px', color: 'var(--gray-500)' }}>
+          <div style={{ fontSize: '15px', color: 'var(--k-text-primary)' }}>
             <p>📧 presse@formationspro.com</p>
             <p>📞 514-555-0199</p>
           </div>

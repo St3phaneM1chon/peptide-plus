@@ -33,11 +33,11 @@ export default function ClientsPage() {
   ];
 
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(59,130,246,0.10))',
           color: 'white',
           padding: '80px 24px',
           textAlign: 'center',
@@ -54,13 +54,13 @@ export default function ClientsPage() {
       </section>
 
       {/* Stats */}
-      <section style={{ backgroundColor: 'white', padding: '48px 24px' }}>
+      <section style={{ background: 'var(--k-glass-regular, rgba(255,255,255,0.08))', backdropFilter: 'blur(20px)', padding: '48px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '32px', textAlign: 'center' }}>
             {stats.map((stat, i) => (
               <div key={i}>
-                <p style={{ fontSize: '40px', fontWeight: 700, color: 'var(--gray-500)', marginBottom: '4px' }}>{stat.value}</p>
-                <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{stat.label}</p>
+                <p style={{ fontSize: '40px', fontWeight: 700, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>{stat.value}</p>
+                <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{stat.label}</p>
               </div>
             ))}
           </div>
@@ -70,7 +70,7 @@ export default function ClientsPage() {
       {/* Client logos */}
       <section style={{ padding: '64px 24px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             {t('clients.someClients')}
           </h2>
           <div
@@ -84,17 +84,19 @@ export default function ClientsPage() {
               <div
                 key={i}
                 style={{
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(20px)',
                   padding: '24px',
                   borderRadius: '12px',
                   textAlign: 'center',
+                  border: '1px solid rgba(255,255,255,0.08)',
                 }}
               >
                 <span style={{ fontSize: '32px', display: 'block', marginBottom: '12px' }}>{client.logo}</span>
-                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '2px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '2px' }}>
                   {client.name}
                 </h3>
-                <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{client.industry}</span>
+                <span style={{ fontSize: '11px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{client.industry}</span>
               </div>
             ))}
           </div>
@@ -102,15 +104,17 @@ export default function ClientsPage() {
       </section>
 
       {/* Links */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
+      <section style={{ background: 'var(--k-glass-regular, rgba(255,255,255,0.08))', backdropFilter: 'blur(20px)', padding: '64px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
             <Link
               href="/clients/temoignages"
               style={{
                 padding: '32px',
-                backgroundColor: 'var(--gray-50)',
+                background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                backdropFilter: 'blur(20px)',
                 borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.08)',
                 textDecoration: 'none',
                 display: 'flex',
                 alignItems: 'center',
@@ -119,10 +123,10 @@ export default function ClientsPage() {
             >
               <span style={{ fontSize: '40px' }}>💬</span>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>
                   {t('clients.testimonialsTitle')}
                 </h3>
-                <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
+                <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                   {t('clients.testimonialsDesc')}
                 </p>
               </div>
@@ -131,8 +135,10 @@ export default function ClientsPage() {
               href="/clients/etudes-de-cas"
               style={{
                 padding: '32px',
-                backgroundColor: 'var(--gray-50)',
+                background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                backdropFilter: 'blur(20px)',
                 borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.08)',
                 textDecoration: 'none',
                 display: 'flex',
                 alignItems: 'center',
@@ -141,10 +147,10 @@ export default function ClientsPage() {
             >
               <span style={{ fontSize: '40px' }}>📊</span>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>
                   {t('clients.caseStudiesTitle')}
                 </h3>
-                <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
+                <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                   {t('clients.caseStudiesDesc')}
                 </p>
               </div>
@@ -153,8 +159,10 @@ export default function ClientsPage() {
               href="/clients/references"
               style={{
                 padding: '32px',
-                backgroundColor: 'var(--gray-50)',
+                background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                backdropFilter: 'blur(20px)',
                 borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.08)',
                 textDecoration: 'none',
                 display: 'flex',
                 alignItems: 'center',
@@ -163,10 +171,10 @@ export default function ClientsPage() {
             >
               <span style={{ fontSize: '40px' }}>🏆</span>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>
                   {t('clients.referencesTitle')}
                 </h3>
-                <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
+                <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                   {t('clients.referencesDesc')}
                 </p>
               </div>
@@ -177,10 +185,10 @@ export default function ClientsPage() {
 
       {/* CTA */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
           {t('clients.ctaTitle')}
         </h2>
-        <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+        <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '24px' }}>
           {t('clients.ctaText')}
         </p>
         <Link href="/demo" className="btn btn-primary" style={{ padding: '14px 32px' }}>

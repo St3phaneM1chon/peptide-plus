@@ -67,11 +67,11 @@ export default function CaseStudiesPage() {
   const otherStudies = caseStudies.filter(cs => !cs.featured);
 
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(59,130,246,0.10))',
           color: 'white',
           padding: '80px 24px',
           textAlign: 'center',
@@ -90,7 +90,7 @@ export default function CaseStudiesPage() {
       {/* Featured */}
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '40px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '40px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             {t('caseStudies.featured')}
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '32px' }}>
@@ -99,7 +99,9 @@ export default function CaseStudiesPage() {
                 key={study.id}
                 href={`/clients/etudes-de-cas/${study.id}`}
                 style={{
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '16px',
                   overflow: 'hidden',
                   textDecoration: 'none',
@@ -108,7 +110,7 @@ export default function CaseStudiesPage() {
               >
                 <div
                   style={{
-                    backgroundColor: 'var(--gray-200)',
+                    backgroundColor: 'rgba(255,255,255,0.08)',
                     height: '200px',
                     display: 'flex',
                     alignItems: 'center',
@@ -119,17 +121,17 @@ export default function CaseStudiesPage() {
                 </div>
                 <div style={{ padding: '32px' }}>
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: 'var(--gray-100)', borderRadius: '12px', color: 'var(--gray-500)' }}>
+                    <span style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '12px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                       {study.company}
                     </span>
-                    <span style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: 'var(--gray-100)', borderRadius: '12px', color: 'var(--gray-400)' }}>
+                    <span style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '12px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                       {study.industry}
                     </span>
                   </div>
-                  <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '12px', color: 'var(--gray-500)' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '12px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                     {study.title}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)', lineHeight: 1.6, marginBottom: '20px' }}>
+                  <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.6, marginBottom: '20px' }}>
                     {study.summary}
                   </p>
                   <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -157,9 +159,9 @@ export default function CaseStudiesPage() {
       </section>
 
       {/* Other case studies */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
+      <section style={{ background: 'var(--k-glass-regular, rgba(255,255,255,0.08))', backdropFilter: 'blur(20px)', padding: '64px 24px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '40px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '40px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
             {t('caseStudies.otherStudies')}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -169,7 +171,9 @@ export default function CaseStudiesPage() {
                 href={`/clients/etudes-de-cas/${study.id}`}
                 style={{
                   padding: '24px',
-                  backgroundColor: 'var(--gray-50)',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '12px',
                   textDecoration: 'none',
                   display: 'flex',
@@ -180,15 +184,15 @@ export default function CaseStudiesPage() {
               >
                 <div>
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-500)' }}>{study.company}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>• {study.industry}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>{study.company}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>• {study.industry}</span>
                   </div>
-                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>
                     {study.title}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{study.summary}</p>
+                  <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{study.summary}</p>
                 </div>
-                <span style={{ fontSize: '14px', color: 'var(--gray-500)', fontWeight: 500, flexShrink: 0 }}>
+                <span style={{ fontSize: '14px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))', fontWeight: 500, flexShrink: 0 }}>
                   {t('caseStudies.readMore')}
                 </span>
               </Link>
@@ -199,10 +203,10 @@ export default function CaseStudiesPage() {
 
       {/* CTA */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
           {t('caseStudies.ctaTitle')}
         </h2>
-        <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+        <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '24px' }}>
           {t('caseStudies.ctaText')}
         </p>
         <Link href="/demo" className="btn btn-primary" style={{ padding: '14px 32px' }}>

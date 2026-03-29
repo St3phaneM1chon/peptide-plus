@@ -76,11 +76,12 @@ const pastWebinars = [
 
 export default function WebinarsPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(168,85,247,0.15) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
           color: 'white',
           padding: '64px 24px',
           textAlign: 'center',
@@ -97,7 +98,7 @@ export default function WebinarsPage() {
       {/* Upcoming */}
       <section style={{ padding: '64px 24px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--k-text-primary)' }}>
             Prochains webinaires
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -105,7 +106,9 @@ export default function WebinarsPage() {
               <div
                 key={webinar.id}
                 style={{
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '16px',
                   padding: '32px',
                   display: 'flex',
@@ -118,7 +121,8 @@ export default function WebinarsPage() {
                     width: '120px',
                     textAlign: 'center',
                     padding: '20px',
-                    backgroundColor: 'var(--gray-500)',
+                    background: 'linear-gradient(135deg, rgba(99,102,241,0.4), rgba(168,85,247,0.3))',
+                    border: '1px solid rgba(255,255,255,0.12)',
                     color: 'white',
                     borderRadius: '12px',
                     flexShrink: 0,
@@ -129,10 +133,10 @@ export default function WebinarsPage() {
                   <p style={{ fontSize: '14px' }}>{webinar.date.split(' ').slice(1).join(' ')}</p>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px', color: 'var(--k-text-primary)' }}>
                     {webinar.title}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '12px' }}>
+                  <p style={{ fontSize: '14px', color: 'var(--k-text-secondary)', marginBottom: '12px' }}>
                     {webinar.time} • Présenté par {webinar.speaker}, {webinar.speakerRole}
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -141,7 +145,7 @@ export default function WebinarsPage() {
                         height: '6px',
                         flex: 1,
                         maxWidth: '200px',
-                        backgroundColor: 'var(--gray-100)',
+                        backgroundColor: 'rgba(255,255,255,0.08)',
                         borderRadius: '3px',
                         overflow: 'hidden',
                       }}
@@ -154,7 +158,7 @@ export default function WebinarsPage() {
                         }}
                       />
                     </div>
-                    <span style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--k-text-secondary)' }}>
                       {webinar.registered}/{webinar.spots} inscrits
                     </span>
                   </div>
@@ -169,9 +173,9 @@ export default function WebinarsPage() {
       </section>
 
       {/* Past webinars */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
+      <section style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '64px 24px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--k-text-primary)' }}>
             Replays disponibles
           </h2>
           <div
@@ -186,7 +190,9 @@ export default function WebinarsPage() {
                 key={webinar.id}
                 href={`/webinars/${webinar.id}`}
                 style={{
-                  backgroundColor: 'var(--gray-50)',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '12px',
                   overflow: 'hidden',
                   textDecoration: 'none',
@@ -194,7 +200,7 @@ export default function WebinarsPage() {
               >
                 <div
                   style={{
-                    backgroundColor: 'var(--gray-200)',
+                    background: 'rgba(255,255,255,0.05)',
                     height: '160px',
                     display: 'flex',
                     alignItems: 'center',
@@ -223,17 +229,18 @@ export default function WebinarsPage() {
                     style={{
                       fontSize: '11px',
                       padding: '3px 8px',
-                      backgroundColor: 'var(--gray-200)',
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.08)',
                       borderRadius: '8px',
-                      color: 'var(--gray-500)',
+                      color: 'var(--k-text-secondary)',
                     }}
                   >
                     {webinar.category}
                   </span>
-                  <h3 style={{ fontSize: '16px', fontWeight: 600, margin: '8px 0', color: 'var(--gray-500)' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, margin: '8px 0', color: 'var(--k-text-primary)' }}>
                     {webinar.title}
                   </h3>
-                  <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--k-text-secondary)' }}>
                     {webinar.date} • {webinar.views.toLocaleString()} vues
                   </p>
                 </div>
@@ -246,10 +253,10 @@ export default function WebinarsPage() {
       {/* Newsletter */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
         <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--k-text-primary)' }}>
             Ne manquez aucun webinaire
           </h2>
-          <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+          <p style={{ fontSize: '14px', color: 'var(--k-text-secondary)', marginBottom: '24px' }}>
             Inscrivez-vous pour être notifié de nos prochains événements.
           </p>
           <form style={{ display: 'flex', gap: '12px' }}>

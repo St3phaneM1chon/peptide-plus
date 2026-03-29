@@ -49,7 +49,7 @@ export default function DemoPage() {
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '64px 24px' }}>
         <div
           style={{
@@ -61,10 +61,10 @@ export default function DemoPage() {
         >
           {/* Left - Info */}
           <div>
-            <h1 className="font-heading" style={{ fontSize: '36px', fontWeight: 700, marginBottom: '24px', color: 'var(--gray-500)' }}>
+            <h1 className="font-heading" style={{ fontSize: '36px', fontWeight: 700, marginBottom: '24px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
               {t('demo.title')}
             </h1>
-            <p style={{ fontSize: '16px', color: 'var(--gray-400)', lineHeight: 1.7, marginBottom: '40px' }}>
+            <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: 1.7, marginBottom: '40px' }}>
               {t('demo.heroText')}
             </p>
 
@@ -78,10 +78,10 @@ export default function DemoPage() {
                 <div key={i} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                   <span style={{ fontSize: '28px' }}>{item.icon}</span>
                   <div>
-                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '4px' }}>
                       {item.title}
                     </h3>
-                    <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{item.desc}</p>
+                    <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -92,15 +92,17 @@ export default function DemoPage() {
               style={{
                 marginTop: '48px',
                 padding: '24px',
-                backgroundColor: 'white',
+                background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                backdropFilter: 'blur(20px)',
                 borderRadius: '12px',
-                borderLeft: '4px solid var(--gray-500)',
+                borderLeft: '4px solid rgba(99,102,241,0.60)',
+                border: '1px solid rgba(255,255,255,0.08)',
               }}
             >
-              <p style={{ fontSize: '14px', fontStyle: 'italic', color: 'var(--gray-500)', marginBottom: '12px' }}>
+              <p style={{ fontSize: '14px', fontStyle: 'italic', color: 'var(--k-text-primary, rgba(255,255,255,0.95))', marginBottom: '12px' }}>
                 &ldquo;{t('demo.testimonialQuote')}&rdquo;
               </p>
-              <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+              <p style={{ fontSize: '13px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                 {t('demo.testimonialAuthor')}
               </p>
             </div>
@@ -109,28 +111,30 @@ export default function DemoPage() {
           {/* Right - Form */}
           <div
             style={{
-              backgroundColor: 'white',
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: '16px',
               padding: '40px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
             }}
           >
             {sent ? (
               <div style={{ textAlign: 'center', padding: '48px 0' }}>
                 <span style={{ fontSize: '64px', display: 'block', marginBottom: '24px' }}>🎉</span>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px', color: 'var(--gray-500)' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                   {t('demo.successTitle')}
                 </h2>
-                <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '8px' }}>
+                <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '8px' }}>
                   {t('demo.successText')}
                 </p>
-                <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
+                <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                   {t('demo.successEmail')}
                 </p>
               </div>
             ) : (
               <>
-                <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', color: 'var(--gray-500)' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                   {t('demo.formTitle')}
                 </h2>
 
@@ -262,9 +266,9 @@ export default function DemoPage() {
                   </button>
                   </fieldset>
 
-                  <p style={{ fontSize: '12px', color: 'var(--gray-400)', textAlign: 'center', marginTop: '16px' }}>
+                  <p style={{ fontSize: '12px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', textAlign: 'center', marginTop: '16px' }}>
                     {t('demo.privacyText')}{' '}
-                    <a href="/mentions-legales/confidentialite" style={{ color: 'var(--gray-500)' }}>
+                    <a href="/mentions-legales/confidentialite" style={{ color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>
                       {t('demo.privacyLink')}
                     </a>.
                   </p>

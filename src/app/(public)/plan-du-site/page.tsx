@@ -103,11 +103,12 @@ const siteStructure = [
 
 export default function SitemapPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(168,85,247,0.15) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
           color: 'white',
           padding: '64px 24px',
           textAlign: 'center',
@@ -137,10 +138,10 @@ export default function SitemapPage() {
                   style={{
                     fontSize: '16px',
                     fontWeight: 600,
-                    color: 'var(--gray-500)',
+                    color: 'var(--k-text-primary)',
                     marginBottom: '16px',
                     paddingBottom: '8px',
-                    borderBottom: '2px solid var(--gray-200)',
+                    borderBottom: '2px solid rgba(255,255,255,0.08)',
                   }}
                 >
                   {section.section}
@@ -152,7 +153,7 @@ export default function SitemapPage() {
                         href={link.href}
                         style={{
                           fontSize: '14px',
-                          color: 'var(--gray-400)',
+                          color: 'var(--k-text-secondary)',
                           textDecoration: 'none',
                           transition: 'color 0.2s ease',
                         }}

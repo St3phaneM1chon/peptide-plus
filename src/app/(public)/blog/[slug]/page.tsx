@@ -256,15 +256,16 @@ export default async function BlogPostPage({ params }: PageProps) {
   }
 
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ backgroundColor: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       <JsonLd data={blogPostSchema(post)} />
       <JsonLd data={breadcrumbSchema(title, slug)} />
 
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
           padding: '64px 24px',
           textAlign: 'center',
         }}
@@ -335,7 +336,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           <p
             style={{
               fontSize: '18px',
-              color: 'var(--gray-400)',
+              color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
               lineHeight: 1.7,
               marginBottom: '32px',
               fontStyle: 'italic',
@@ -347,15 +348,16 @@ export default async function BlogPostPage({ params }: PageProps) {
 
         {content ? (
           <div
+            className="prose prose-invert prose-lg max-w-none"
             style={{
               fontSize: '16px',
               lineHeight: 1.8,
-              color: 'var(--gray-500)',
+              color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
             }}
             dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'span', 'blockquote', 'img', 'figure', 'figcaption', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'div', 'sub', 'sup', 'hr'], ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'] }) }}
           />
         ) : (
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
+          <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
             Le contenu de cet article sera bientôt disponible.
           </p>
         )}
@@ -371,8 +373,10 @@ export default async function BlogPostPage({ params }: PageProps) {
           style={{
             display: 'inline-block',
             padding: '12px 32px',
-            backgroundColor: 'var(--gray-500)',
-            color: 'white',
+            background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
             borderRadius: '8px',
             textDecoration: 'none',
             fontSize: '14px',

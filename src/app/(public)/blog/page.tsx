@@ -160,13 +160,14 @@ export default async function BlogPage() {
   // Empty state
   if (posts.length === 0) {
     return (
-      <div style={{ backgroundColor: 'var(--gray-100)' }}>
+      <div style={{ backgroundColor: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
         <JsonLd data={blogListSchema([])} />
         {/* Hero */}
         <section
           style={{
-            backgroundColor: 'var(--gray-500)',
-            color: 'white',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
             padding: '64px 24px',
             textAlign: 'center',
           }}
@@ -192,31 +193,31 @@ export default async function BlogPage() {
                 fontSize: '24px',
                 fontWeight: 700,
                 marginBottom: '12px',
-                color: 'var(--gray-500)',
+                color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
               }}
             >
               {t('blog.noArticlesYet') || 'No articles yet'}
             </h2>
-            <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
+            <p style={{ fontSize: '16px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
               {t('blog.comingSoon') || 'Check back soon for upcoming articles.'}
             </p>
           </div>
         </section>
 
         {/* Newsletter */}
-        <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
+        <section style={{ background: 'var(--k-glass-thin, rgba(255,255,255,0.05))', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '64px 24px', textAlign: 'center' }}>
           <div style={{ maxWidth: '500px', margin: '0 auto' }}>
             <h2
               style={{
                 fontSize: '24px',
                 fontWeight: 700,
                 marginBottom: '16px',
-                color: 'var(--gray-500)',
+                color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
               }}
             >
               {t('blog.stayInformed') || 'Stay Informed'}
             </h2>
-            <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '24px' }}>
               {t('blog.newsletterCta') || 'Receive our latest articles directly in your inbox.'}
             </p>
           </div>
@@ -226,14 +227,15 @@ export default async function BlogPage() {
   }
 
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ backgroundColor: 'var(--k-bg-base, #0a0a0f)', minHeight: '100vh' }}>
       <JsonLd data={blogListSchema(posts)} />
 
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
           padding: '64px 24px',
           textAlign: 'center',
         }}
@@ -254,7 +256,9 @@ export default async function BlogPage() {
                 display: 'grid',
                 gridTemplateColumns: '1.5fr 1fr',
                 gap: '48px',
-                backgroundColor: 'white',
+                background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '16px',
                 overflow: 'hidden',
                 textDecoration: 'none',
@@ -263,7 +267,7 @@ export default async function BlogPage() {
               <div
                 style={{
                   position: 'relative',
-                  backgroundColor: 'var(--gray-200)',
+                  backgroundColor: 'rgba(255,255,255,0.04)',
                   minHeight: '300px',
                   display: 'flex',
                   alignItems: 'center',
@@ -296,11 +300,11 @@ export default async function BlogPage() {
                   style={{
                     display: 'inline-block',
                     padding: '6px 12px',
-                    backgroundColor: 'var(--gray-100)',
+                    backgroundColor: 'rgba(255,255,255,0.08)',
                     borderRadius: '12px',
                     fontSize: '12px',
                     fontWeight: 600,
-                    color: 'var(--gray-500)',
+                    color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
                     marginBottom: '16px',
                     alignSelf: 'flex-start',
                   }}
@@ -312,7 +316,7 @@ export default async function BlogPage() {
                     fontSize: '28px',
                     fontWeight: 700,
                     marginBottom: '16px',
-                    color: 'var(--gray-500)',
+                    color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
                   }}
                 >
                   {featuredPost.title}
@@ -320,14 +324,14 @@ export default async function BlogPage() {
                 <p
                   style={{
                     fontSize: '16px',
-                    color: 'var(--gray-400)',
+                    color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
                     lineHeight: 1.7,
                     marginBottom: '24px',
                   }}
                 >
                   {featuredPost.excerpt}
                 </p>
-                <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+                <p style={{ fontSize: '13px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                   {featuredPost.author} &bull; {formatDate(featuredPost.publishedAt, locale)} &bull;{' '}
                   {featuredPost.readTime} {t('blog.readTime') || 'min de lecture'}
                 </p>
@@ -346,9 +350,9 @@ export default async function BlogPage() {
               href={i === 0 ? '/blog' : `/blog?category=${encodeURIComponent(cat)}`}
               style={{
                 padding: '8px 16px',
-                backgroundColor: i === 0 ? 'var(--gray-500)' : 'white',
-                color: i === 0 ? 'white' : 'var(--gray-500)',
-                border: 'none',
+                backgroundColor: i === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
+                color: i === 0 ? 'var(--k-text-primary, rgba(255,255,255,0.95))' : 'var(--k-text-secondary, rgba(255,255,255,0.60))',
+                border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '20px',
                 fontSize: '14px',
                 cursor: 'pointer',
@@ -376,7 +380,9 @@ export default async function BlogPage() {
                 key={post.slug}
                 href={`/blog/${post.slug}`}
                 style={{
-                  backgroundColor: 'white',
+                  background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '12px',
                   overflow: 'hidden',
                   textDecoration: 'none',
@@ -385,7 +391,7 @@ export default async function BlogPage() {
                 <div
                   style={{
                     position: 'relative',
-                    backgroundColor: 'var(--gray-200)',
+                    backgroundColor: 'rgba(255,255,255,0.04)',
                     height: '180px',
                     display: 'flex',
                     alignItems: 'center',
@@ -411,11 +417,11 @@ export default async function BlogPage() {
                     style={{
                       display: 'inline-block',
                       padding: '4px 10px',
-                      backgroundColor: 'var(--gray-100)',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
                       borderRadius: '10px',
                       fontSize: '11px',
                       fontWeight: 600,
-                      color: 'var(--gray-500)',
+                      color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
                       marginBottom: '12px',
                     }}
                   >
@@ -426,7 +432,7 @@ export default async function BlogPage() {
                       fontSize: '18px',
                       fontWeight: 600,
                       marginBottom: '8px',
-                      color: 'var(--gray-500)',
+                      color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
                     }}
                   >
                     {post.title}
@@ -434,14 +440,14 @@ export default async function BlogPage() {
                   <p
                     style={{
                       fontSize: '14px',
-                      color: 'var(--gray-400)',
+                      color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
                       lineHeight: 1.6,
                       marginBottom: '16px',
                     }}
                   >
                     {post.excerpt}
                   </p>
-                  <p style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
+                  <p style={{ fontSize: '12px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>
                     {formatDate(post.publishedAt, locale)} &bull; {post.readTime} min
                   </p>
                 </div>
@@ -452,19 +458,19 @@ export default async function BlogPage() {
       </section>
 
       {/* Newsletter */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
+      <section style={{ background: 'var(--k-glass-thin, rgba(255,255,255,0.05))', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '64px 24px', textAlign: 'center' }}>
         <div style={{ maxWidth: '500px', margin: '0 auto' }}>
           <h2
             style={{
               fontSize: '24px',
               fontWeight: 700,
               marginBottom: '16px',
-              color: 'var(--gray-500)',
+              color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
             }}
           >
             {t('blog.stayInformed') || 'Restez informé'}
           </h2>
-          <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+          <p style={{ fontSize: '14px', color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', marginBottom: '24px' }}>
             {t('blog.newsletterCta') || 'Recevez nos derniers articles directement dans votre boîte courriel.'}
           </p>
         </div>
