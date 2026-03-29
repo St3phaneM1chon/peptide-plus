@@ -45,10 +45,12 @@ export default function VisualEditorPage() {
   const router = useRouter();
   const pageId = searchParams.get('id');
   const templateParam = searchParams.get('template');
+  const aiParam = searchParams.get('ai');
 
   const [page, setPage] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   // Load existing page or create new
   useEffect(() => {
@@ -69,8 +71,40 @@ export default function VisualEditorPage() {
           router.push('/admin/contenu');
         })
         .finally(() => setLoading(false));
+    } else if (aiParam) {
+      // AI-generated page
+      setPage({
+        title: 'Page générée par IA',
+        slug: `page-ai-${Date.now().toString(36)}`,
+        content: '',
+        metaTitle: '',
+        metaDescription: '',
+        template: 'sections',
+        isPublished: false,
+        sections: [],
+      });
+      setLoading(false);
+      setAiGenerating(true);
+
+      // Call AI generate API
+      fetch('/api/admin/page-builder/ai-generate', {
+        method: 'POST',
+        headers: { ...addCSRFHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiParam, language: 'fr' }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.sections && data.sections.length > 0) {
+            setPage(prev => prev ? { ...prev, sections: data.sections } : prev);
+            toast.success(`${data.sections.length} sections générées par Aurelia IA`);
+          } else {
+            toast.error('L\'IA n\'a pas pu générer de sections. Essayez un prompt plus détaillé.');
+          }
+        })
+        .catch(() => toast.error('Erreur de connexion à l\'IA'))
+        .finally(() => setAiGenerating(false));
     } else {
-      // New page
+      // New page with template or blank
       setPage({
         title: 'Nouvelle page',
         slug: `page-${Date.now().toString(36)}`,
@@ -83,7 +117,7 @@ export default function VisualEditorPage() {
       });
       setLoading(false);
     }
-  }, [pageId, templateParam, router]);
+  }, [pageId, templateParam, aiParam, router]);
 
   // Save handler — called by PuckEditor on publish
   const handleSave = useCallback(async (sections: Array<{ id: string; type: string; data: Record<string, unknown> }>) => {
@@ -149,6 +183,12 @@ export default function VisualEditorPage() {
       {saving && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-blue-500 text-white text-center py-1 text-sm">
           Sauvegarde en cours...
+        </div>
+      )}
+      {aiGenerating && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-center py-2 text-sm flex items-center justify-center gap-2">
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          Aurelia IA génère votre page...
         </div>
       )}
       <PuckEditor
