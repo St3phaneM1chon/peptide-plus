@@ -259,6 +259,55 @@ export async function POST(
     const successMessage = (settings?.successMessage as string) || 'Thank you for your submission!';
     const redirectUrl = (settings?.redirectUrl as string) || undefined;
 
+    // Auto-create CRM lead from form submission (fire-and-forget)
+    if (form.tenantId) {
+      const emailField = fieldDefs.find(f => f.type === 'email');
+      const nameField = fieldDefs.find(f => f.type === 'text' && /name|nom/i.test(f.label || f.id));
+      const phoneField = fieldDefs.find(f => f.type === 'phone' || (f.type === 'text' && /phone|tel/i.test(f.label || f.id)));
+      const email = emailField ? (cleanData[emailField.id] as string) : undefined;
+      const name = nameField ? (cleanData[nameField.id] as string) : undefined;
+
+      if (email) {
+        try {
+          // Check for existing lead with same email (dedup)
+          const existingLead = await prisma.crmLead.findFirst({
+            where: { tenantId: form.tenantId, email },
+            select: { id: true },
+          });
+
+          if (!existingLead) {
+            await prisma.crmLead.create({
+              data: {
+                tenantId: form.tenantId,
+                email,
+                contactName: name || email.split('@')[0],
+                phone: phoneField ? (cleanData[phoneField.id] as string) || null : null,
+                source: 'WEB',
+                status: 'NEW',
+                tags: [`form:${slug}`],
+                customFields: cleanData as unknown as Prisma.InputJsonValue,
+              },
+            });
+          }
+
+          // Dispatch cross-module event for workflow triggers
+          const { dispatchModuleEvent } = await import('@/lib/events/cross-module-dispatcher');
+          await dispatchModuleEvent({
+            type: 'FORM_SUBMITTED',
+            tenantId: form.tenantId,
+            entityId: submission.id,
+            data: { formSlug: slug, email, name },
+          });
+        } catch (crmError) {
+          // Non-blocking: form submission succeeds even if CRM fails
+          logger.warn('[Form→CRM] Lead creation failed', {
+            formId: form.id,
+            error: crmError instanceof Error ? crmError.message : String(crmError),
+          });
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       submissionId: submission.id,

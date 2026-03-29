@@ -123,6 +123,71 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       },
     });
 
+    // Inventory rollback: restore stock when return is APPROVED or COMPLETED
+    if (data.status && ['APPROVED', 'COMPLETED'].includes(data.status) && existing.status === 'PENDING') {
+      try {
+        const returnWithOrder = await prisma.returnRequest.findUnique({
+          where: { id: data.id },
+          include: {
+            order: {
+              select: {
+                id: true,
+                tenantId: true,
+                orderNumber: true,
+                items: {
+                  select: { productId: true, optionId: true, quantity: true, productName: true },
+                },
+              },
+            },
+          },
+        });
+
+        if (returnWithOrder?.order?.items) {
+          for (const item of returnWithOrder.order.items) {
+            // Restore stock on product option (source of truth) or product
+            if (item.optionId) {
+              await prisma.productOption.update({
+                where: { id: item.optionId },
+                data: { stockQuantity: { increment: item.quantity } },
+              });
+            }
+            // Also update aggregate product stock
+            await prisma.product.update({
+              where: { id: item.productId },
+              data: { stockQuantity: { increment: item.quantity } },
+            });
+
+            // Create inventory transaction for audit trail
+            await prisma.inventoryTransaction.create({
+              data: {
+                tenantId: returnWithOrder.order.tenantId,
+                productId: item.productId,
+                optionId: item.optionId,
+                type: 'RETURN',
+                quantity: item.quantity,
+                unitCost: 0, // WAC recalculated on next purchase
+                runningWAC: 0,
+                orderId: returnWithOrder.order.id,
+                reason: `Return #${data.id.slice(-8)} — ${item.productName}`,
+                createdBy: session.user?.id || 'system',
+              },
+            });
+          }
+
+          logger.info('[Returns] Inventory restored for approved return', {
+            returnId: data.id,
+            orderId: returnWithOrder.order.id,
+            itemCount: returnWithOrder.order.items.length,
+          });
+        }
+      } catch (invError) {
+        logger.error('[Returns] Inventory rollback failed (non-blocking)', {
+          returnId: data.id,
+          error: invError instanceof Error ? invError.message : String(invError),
+        });
+      }
+    }
+
     await logAdminAction({
       adminUserId: session.user?.id || '',
       action: 'RETURN_REQUEST_UPDATE',
