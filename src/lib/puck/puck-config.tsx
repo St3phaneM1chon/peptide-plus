@@ -358,9 +358,9 @@ export const puckConfig: Config = {
         subtitle: 'Des outils pensés pour votre croissance, dès le premier jour',
         columns: '3',
         items: [
-          { icon: '🚀', title: 'Rapide', description: 'Performance optimisée pour votre entreprise.' },
-          { icon: '🔒', title: 'Sécurisé', description: 'Protection de vos données garantie.' },
-          { icon: '💡', title: 'Intuitif', description: 'Interface simple et agréable à utiliser.' },
+          { icon: '🚀', title: 'Performance', description: 'Technologies de pointe pour un site rapide et fiable, même sous forte charge.' },
+          { icon: '🔒', title: 'Sécurité', description: 'Chiffrement de bout en bout et conformité complète aux normes canadiennes.' },
+          { icon: '💡', title: 'Simplicité', description: 'Interface intuitive que votre équipe maîtrisera en quelques minutes.' },
         ],
         animation: 'slideUp',
         paddingTop: '4rem',
@@ -1265,7 +1265,7 @@ export const puckConfig: Config = {
         },
         ...commonFields,
       },
-      defaultProps: { title: 'Contactez-nous', subtitle: 'Nous vous répondrons dans les plus brefs délais', successMessage: 'Merci! Nous vous répondrons rapidement.', formStyle: 'card', animation: 'fadeIn', paddingTop: '4rem', paddingBottom: '4rem', backgroundColor: '', textColor: '' },
+      defaultProps: { title: 'Parlons de votre projet', subtitle: 'Remplissez le formulaire et nous vous répondrons sous 24 heures', successMessage: 'Merci pour votre message! Notre équipe vous contactera très bientôt.', formStyle: 'card', animation: 'fadeIn', paddingTop: '4rem', paddingBottom: '4rem', backgroundColor: '', textColor: '' },
       render: ({ title, subtitle, successMessage, formStyle, animation, paddingTop, paddingBottom, backgroundColor, textColor }: Record<string, string>) => {
         const wrapperClass =
           formStyle === 'card'
@@ -1306,7 +1306,7 @@ export const puckConfig: Config = {
         disclaimer: { type: 'text', label: 'Mention légale' },
         ...commonFields,
       },
-      defaultProps: { title: 'Restez informé', subtitle: 'Recevez nos dernières nouvelles', buttonText: 'S\'abonner', disclaimer: 'En vous inscrivant, vous acceptez notre politique de confidentialité.', animation: 'fadeIn', paddingTop: '4rem', paddingBottom: '4rem', backgroundColor: '#f8fafc', textColor: '' },
+      defaultProps: { title: 'Ne manquez rien', subtitle: 'Recevez nos conseils exclusifs et offres spéciales directement dans votre boîte courriel', buttonText: 'S\'abonner gratuitement', disclaimer: 'En vous inscrivant, vous acceptez notre politique de confidentialité. Désabonnement en un clic.', animation: 'fadeIn', paddingTop: '4rem', paddingBottom: '4rem', backgroundColor: '#f8fafc', textColor: '' },
       render: ({ title, subtitle, buttonText, disclaimer, animation, paddingTop, paddingBottom, backgroundColor, textColor }: Record<string, string>) =>
         withAnimation(
           <div className="text-center space-y-4 max-w-xl mx-auto">
@@ -1568,8 +1568,8 @@ export const puckConfig: Config = {
         title: 'Ce que nos clients disent',
         layout: 'grid',
         items: [
-          { quote: 'Koraline a transformé notre façon de travailler!', author: 'Marie L.', role: 'CEO, TechCo', rating: '5' },
-          { quote: 'Le meilleur investissement pour notre entreprise.', author: 'Pierre G.', role: 'Fondateur, StartupXYZ', rating: '5' },
+          { quote: 'Un service exceptionnel qui a transformé notre entreprise. Les résultats ont dépassé toutes nos attentes.', author: 'Marie Lavoie', role: 'Directrice générale, TechCo', rating: '5' },
+          { quote: 'Le meilleur investissement que nous ayons fait cette année. ROI visible dès le premier mois.', author: 'Pierre Gagnon', role: 'Fondateur, StartupXYZ', rating: '5' },
         ],
         animation: 'fadeIn',
         paddingTop: '4rem',

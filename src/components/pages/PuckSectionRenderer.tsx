@@ -738,14 +738,19 @@ function TeamSection({ props }: { props: Record<string, unknown> }) {
         {has(props.title) && <h2 className="text-3xl font-bold text-center" style={{ color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>{String(props.title)}</h2>}
         <motion.div className="grid md:grid-cols-3 gap-8" variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }}>
           {members.map((m, i) => (
-            <motion.div key={i} variants={staggerChild} className="text-center space-y-3">
-              {m.imageUrl
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={m.imageUrl} alt={m.name} className="w-32 h-32 rounded-full mx-auto object-cover" style={{ border: '2px solid rgba(255,255,255,0.12)' }} />
-                : <div className="w-32 h-32 rounded-full mx-auto flex items-center justify-center text-4xl" style={{ background: 'var(--k-glass-regular, rgba(255,255,255,0.08))', border: '2px solid rgba(255,255,255,0.12)' }}>👤</div>
-              }
-              <h3 className="font-semibold text-lg" style={{ color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>{m.name}</h3>
-              {m.role && <p className="opacity-70" style={{ color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{m.role}</p>}
+            <motion.div key={i} variants={staggerChild} className="text-center space-y-4 p-6 rounded-xl transition-all duration-300 hover:translate-y-[-2px]" style={{ background: 'var(--k-glass-regular, rgba(255,255,255,0.05))', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="relative mx-auto w-28 h-28">
+                {m.imageUrl
+                  ? <img src={m.imageUrl} alt={m.name} className="w-28 h-28 rounded-full object-cover" style={{ border: '3px solid rgba(99,102,241,0.3)' }} loading="lazy" />
+                  : <div className="w-28 h-28 rounded-full flex items-center justify-center text-3xl font-bold text-white" style={{ background: `linear-gradient(135deg, hsl(${(i * 60 + 240) % 360}, 70%, 50%), hsl(${(i * 60 + 280) % 360}, 70%, 40%))`, border: '3px solid rgba(255,255,255,0.15)' }}>
+                      {m.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                }
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg" style={{ color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}>{m.name}</h3>
+                {m.role ? <p className="text-sm opacity-70 mt-1" style={{ color: 'var(--k-accent, #6366f1)' }}>{m.role}</p> : null}
+              </div>
             </motion.div>
           ))}
         </motion.div>
@@ -812,11 +817,11 @@ function StatsSection({ props }: { props: Record<string, unknown> }) {
   const cols = stats.length === 3 ? 'md:grid-cols-3' : stats.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-4';
   return (
     <SectionWrapper animation={props.animation as string} paddingTop={props.paddingTop as string} paddingBottom={props.paddingBottom as string} backgroundColor={props.backgroundColor as string} textColor={props.textColor as string}>
-      <motion.div className={`grid grid-cols-2 ${cols} gap-8`} variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+      <motion.div className={`grid grid-cols-2 ${cols} gap-6`} variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }}>
         {stats.map((s, i) => (
-          <motion.div key={i} variants={staggerChild} className="text-center">
-            <div className="text-4xl md:text-5xl font-bold mb-2" style={{ color: 'var(--k-accent, #6366f1)' }}>{s.value}</div>
-            <div className="text-sm opacity-70" style={{ color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{s.label}</div>
+          <motion.div key={i} variants={staggerChild} className="text-center p-6 rounded-xl" style={{ background: 'var(--k-glass-regular, rgba(255,255,255,0.06))', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="text-4xl md:text-5xl font-bold mb-2" style={{ color: 'var(--k-accent, #6366f1)', fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+            <div className="text-sm font-medium" style={{ color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}>{s.label}</div>
           </motion.div>
         ))}
       </motion.div>
